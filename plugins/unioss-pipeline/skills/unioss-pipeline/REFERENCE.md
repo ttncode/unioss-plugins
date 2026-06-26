@@ -1,0 +1,103 @@
+---
+name: unioss-pipeline reference
+---
+
+# UNIOSS Pipeline — Shared Reference
+
+## Repos & Prefixes
+
+| Repo        | Path (under project root) | GitLab Project ID | Ticket prefix |
+| ----------- | ------------------------- | ----------------- | ------------- |
+| AdminPage   | `AdminPage/`              | 32                | `AP#[IID]`    |
+| FrontEnd    | `FrontEnd/`               | 31                | `FE#[IID]`    |
+
+Both are CodeIgniter 3 / PHP 8.1. The only divergence: FrontEnd skips PHPUnit unit tests.
+
+## Artifact Layout (project root `_plan/`)
+
+Visible (the human reads these):
+- `<PREFIX>#[IID]_INVESTIGATION.md`, `<PREFIX>#[IID]_REPORT.md` (vi)
+- `<PREFIX>#[IID]_IMPLEMENTATION_V{n}.md`
+- `<PREFIX>#[IID]_CHANGES.md`, `<PREFIX>#[IID]_REVIEW.md`, `<PREFIX>#[IID]_TEST_RESULTS.md`
+- `UT_#[IID]_[YYYYMMDD]_V1` (full PHPUnit run, AdminPage only)
+
+Hidden (tracking only) in `_plan/.pipeline/<PREFIX>#[IID]/`:
+- `RAW_TICKET_DATA.json`, `TICKET_SUMMARY.md`, `pipeline-state.json`
+
+`<PREFIX>` is `AP` or `FE`, decided from the ticket URL.
+
+## GitLab (read-only)
+
+- Host: `https://gitlab.unioss.jp`. Token from `~/.zshrc.local` (`export GITLAB_TOKEN=...`) or `process.env.GITLAB_TOKEN`.
+- URL regex: `/https:\/\/([^/]+)\/([^/]+)\/([^/]+)(?:\/-\/|\/)(work_items|issues)\/(\d+)/` → groups: host, namespace, repo, type, IID.
+- Endpoints (GET, header `PRIVATE-TOKEN`): `/api/v4/projects/:id/issues/:iid`, `.../issues/:iid/notes?per_page=100`, `.../issues/:iid/links`.
+- ⛔ Never POST/PUT/DELETE. Never print the token.
+
+## Database (non-interactive: `-i`, not `-it`)
+
+```bash
+# Production data
+docker exec -i mysql-unioss3 mysql -u root -pProotW -e "USE _unioss; SHOW TABLES;"
+# Testing data (imported during PHPUnit runs)
+docker exec -i mysql-unioss3 mysql -u root -pProotW -e "USE testing_DB; SHOW TABLES;"
+```
+
+## MCP (tester)
+
+Browser verification uses the Playwright and/or chrome-devtools MCP servers. The tester drives the affected UI flow and snapshots when useful.
+
+## Branches, Base & Protected Branches
+
+- **Base branch:** always create feature branches from `v3-master`. Fetch first: `git fetch origin && git checkout v3-master && git pull`.
+- **⛔ Protected — NEVER commit, push, force-push, rebase, or otherwise modify these branches (local or remote):** `master`, `v3-master`, `develop`, `v3-develop`, `v3-develop-tps`. Before any `git commit`/`git push`, verify the current branch is NOT one of these — abort if it is.
+- **Branch naming.** The *origin repo* is the repo the ticket URL belongs to (`AdminPage` or `FrontEnd`).
+  - Origin repo: `feature/v3/#[IID]`
+  - Every OTHER repo that is changed: `feature/v3/[ORIGIN_REPO]#[IID]`
+
+  Example — `…/AdminPage/-/work_items/1834` (origin = AdminPage):
+
+  | Repo changed  | Branch                      |
+  | ------------- | --------------------------- |
+  | AdminPage     | `feature/v3/#1834`          |
+  | FrontEnd      | `feature/v3/AdminPage#1834` |
+  | common-models | `feature/v3/AdminPage#1834` |
+  | common-helper | `feature/v3/AdminPage#1834` |
+
+  Example — `…/FrontEnd/-/work_items/391` (origin = FrontEnd):
+
+  | Repo changed  | Branch                    |
+  | ------------- | ------------------------- |
+  | FrontEnd      | `feature/v3/#391`         |
+  | AdminPage     | `feature/v3/FrontEnd#391` |
+  | common-models | `feature/v3/FrontEnd#391` |
+  | common-helper | `feature/v3/FrontEnd#391` |
+
+## Commit Message
+
+Format: `#[IID] - [Message]` — single imperative subject line, English.
+Example: `#1834 - Remove the price form from the product editing screen`.
+
+## Submodules (common-models / common-helper)
+
+| Submodule     | Canonical source (EDIT HERE) | Consumed in apps (do NOT edit here)                                          |
+| ------------- | ---------------------------- | ---------------------------------------------------------------------------- |
+| common-models | `submodules/common-models/`  | `AdminPage/application/models/common`, `FrontEnd/application/models/common`   |
+| common-helper | `submodules/common-helper/`  | `AdminPage/application/helpers/common`, `FrontEnd/application/helpers/common` |
+
+**Edit flow (common code is edited ONLY in the canonical source, never inside the apps):**
+1. In the canonical source (`submodules/common-models` or `submodules/common-helper`): `git fetch origin && git checkout v3-master && git pull && git checkout -b feature/v3/[ORIGIN]#[IID]`.
+2. Edit the files there; commit with the `#[IID] - …` message.
+3. **Push** the submodule feature branch to remote (required so the apps can pull it).
+4. In each consuming app that needs the change, cd into the consuming path (`application/models/common` or `application/helpers/common`) and run `git fetch origin && git checkout feature/v3/[ORIGIN]#[IID] && git pull` — this moves the app's submodule pointer to the updated branch.
+
+Only common-submodule feature branches are pushed; AdminPage/FrontEnd app branches are committed locally only (no push, no MR).
+
+**Human helpers (zsh, run from inside an app repo)** — interactive; the agent runs the equivalent plain `git` commands instead, but these document the intended paths/ops:
+- `ussub` — show submodule branch status (`application/models/common`, `application/helpers/common`).
+- `ussub_gp` — fetch + pull the current branch of both submodules.
+- `ussub_gbf` — fzf-pick a submodule + branch, then checkout + pull (interactive → agent uses plain `git checkout`/`git pull`).
+
+## Rules
+
+- `${CLAUDE_PLUGIN_ROOT}/rules/clean-code-php.md`, `${CLAUDE_PLUGIN_ROOT}/rules/clean-code-javascript.md`.
+- Reference screens: `_docs/ECSITE_SCREENS.md` (verify ECSite user-facing impact).

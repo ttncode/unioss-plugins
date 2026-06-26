@@ -1,0 +1,71 @@
+---
+name: unioss-pipeline
+description: UNIOSS A→Z ticket pipeline orchestrator. Given a GitLab ticket URL, drives investigator → (clarify) → planner → GATE → coder → reviewer → GATE → tester → branch+commit, stopping for human approval at the gates. Use when the user runs /unioss-pipeline <URL> or asks to run the full UNIOSS ticket pipeline.
+---
+
+# UNIOSS Pipeline Orchestrator (main thread)
+
+Read `REFERENCE.md` (this dir) first — it holds the branch, protected-branch, submodule, and commit-message rules you must follow. You run in the MAIN thread. Dispatch read-only stages as subagents; run the coder yourself; own the gates.
+
+## State & resume
+State file: `_plan/.pipeline/<PREFIX>#[IID]/pipeline-state.json` — `{ stage, gate_decisions, plan_version, review_counts, test_status }`. On start, if state exists for this ticket, offer to resume from the last completed stage. Update it after every stage.
+
+## Step 0 — Show the plan and get the go-ahead
+
+Parse the URL first (REFERENCE regex) → IID + origin repo → prefix `AP`/`FE`. Then print this table (substitute `<PREFIX>`, `[IID]`, and the origin repo into the branch row per REFERENCE branch naming) and **stop — ask the user to confirm before proceeding**:
+
+```
+┌─────────────┬──────────────────────┬───────────────────────────────────────────────────────────────┐
+│    Step     │         Who          │                            You do                             │
+├─────────────┼──────────────────────┼───────────────────────────────────────────────────────────────┤
+│ Investigate │ subagent (opus)      │ — produces _plan/<PREFIX>#[IID]_INVESTIGATION.md + _REPORT.md  │
+├─────────────┼──────────────────────┼───────────────────────────────────────────────────────────────┤
+│ 🛑 GATE 0   │ main thread          │ Only if unclear — brainstorms open questions with you         │
+├─────────────┼──────────────────────┼───────────────────────────────────────────────────────────────┤
+│ Plan        │ subagent (opus)      │ — _plan/<PREFIX>#[IID]_IMPLEMENTATION_V1.md (code + estimates) │
+├─────────────┼──────────────────────┼───────────────────────────────────────────────────────────────┤
+│ 🛑 GATE 1   │ you                  │ Approve the plan or request edits (→ V2/V3)                   │
+├─────────────┼──────────────────────┼───────────────────────────────────────────────────────────────┤
+│ Code        │ main thread (sonnet) │ applies plan + fast PHPUnit → _<PREFIX>#[IID]_CHANGES.md       │
+├─────────────┼──────────────────────┼───────────────────────────────────────────────────────────────┤
+│ Review      │ subagent (opus)      │ — _plan/<PREFIX>#[IID]_REVIEW.md (severity-indexed)           │
+├─────────────┼──────────────────────┼───────────────────────────────────────────────────────────────┤
+│ 🛑 GATE 2   │ you                  │ fix (loop) or accept (→ full PHPUnit → UT_#[IID]_...)         │
+├─────────────┼──────────────────────┼───────────────────────────────────────────────────────────────┤
+│ Verify      │ subagent (sonnet)    │ DB + Playwright UI flow → _TEST_RESULTS.md                    │
+├─────────────┼──────────────────────┼───────────────────────────────────────────────────────────────┤
+│ Finalize    │ main thread          │ branch feature/v3/#[IID] + commit (no push/MR)                │
+└─────────────┴──────────────────────┴───────────────────────────────────────────────────────────────┘
+```
+
+Wait for the user to say to proceed. Do not run any stage until they confirm.
+
+## Flow
+
+1. **Parse** the URL → IID + origin repo → prefix `AP`/`FE`. Create `_plan/.pipeline/<PREFIX>#[IID]/`.
+
+2. **Investigator** — dispatch the `unioss-investigator` subagent with the URL. It writes INVESTIGATION.md + REPORT.md and returns a clarity verdict + open-question count.
+
+3. **GATE 0 — Clarify (conditional).** If verdict is `NEEDS_CLARIFICATION`: invoke the **`superpowers:brainstorming` skill** in THIS thread and work the numbered Open Questions with the user through it; then append a `## Clarifications` section to INVESTIGATION.md capturing the resolutions. If `CLEAR`: skip.
+
+4. **Planner** — dispatch `unioss-planner` with the investigation path. It writes IMPLEMENTATION_V1.md and returns the path + estimate points.
+
+5. **GATE 1 — Plan approval.** Present the plan summary + links. The plan contains exact code, so this is a real code approval. If the user requests edits, re-dispatch the planner with the feedback (produces _V2/_V3) and re-present until approved.
+
+6. **Coder (in this thread)** — invoke the `unioss-implement` skill: apply the approved plan, run migrations if required, fast-verify new PHPUnit tests (AdminPage), write CHANGES.md. The coder creates the correct feature branch off `v3-master` per the REFERENCE branch rules **before** its first edit in each repo, and follows the REFERENCE submodule flow for any common-models/common-helper change.
+
+7. **Reviewer** — dispatch `unioss-reviewer` with the CHANGES.md path. It writes REVIEW.md and returns severity counts + top findings.
+
+8. **GATE 2 — Review fix/accept.** Present findings by severity.
+   - **fix** → invoke `unioss-implement` to apply fixes + re-run filtered tests → ask "re-review or proceed?"; if re-review, go to step 7.
+   - **accept** → (AdminPage) invoke `unioss-implement` full mode: uncomment the dump-import line, run the full suite → `_plan/UT_#[IID]_[YYYYMMDD]_V1`.
+
+9. **Tester** — dispatch `unioss-tester` with the CHANGES.md path + acceptance criteria. It writes TEST_RESULTS.md and returns pass/fail. (Both repos.) If the tester reports any UI criteria as SKIPPED (no browser MCP), note that explicitly — do NOT treat SKIPPED as a pass.
+
+10. **Finalize** — for every repo the coder touched, commit on its feature branch using the REFERENCE commit format `#[IID] - [Message]`. Per REFERENCE: AdminPage/FrontEnd app branches are committed locally only (no push, no MR); common-models/common-helper submodule branches are pushed and the consuming apps' pointers updated. Never touch a protected branch. Present a final summary: branch names per repo, plan, changes, review status, test status, links. If UI verification was SKIPPED, surface "UI verification: SKIPPED — no browser MCP configured" prominently. STOP.
+
+## Rules
+- Never edit source except via the `unioss-implement` coder step.
+- Honor the gates — never run past Step 0, GATE 1, or GATE 2 without an explicit user decision.
+- **Protected branches** (`master`, `v3-master`, `develop`, `v3-develop`, `v3-develop-tps`) are read-only — never commit, push, or modify them. All work happens on `feature/v3/...` branches cut from `v3-master`. Verify the current branch before any commit/push.
+- Keep main context lean: rely on subagents' returned summaries; read full artifacts only when needed for a gate.
