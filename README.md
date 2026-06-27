@@ -1,22 +1,46 @@
 # ttnplugins
 
-ttncode's Claude Code marketplace. One plugin:
+Claude Code plugins by **ttncode**.
 
-- **unioss-pipeline** — the UNIOSS A→Z ticket pipeline (gated investigator → planner → coder → reviewer → tester, with PHPUnit + Playwright verification). Bundles the Playwright MCP and a setup doctor.
+## Plugins
 
-## Install (Windows / macOS / Linux)
+### unioss-pipeline
 
-```text
-/plugin marketplace add <git-url-of-this-repo>
+An end-to-end ticket pipeline for UNIOSS projects. It automates the full development cycle through gated stages:
+
+**Investigator → Planner → Coder → Reviewer → Tester**
+
+Each stage requires approval before proceeding. Verification is powered by PHPUnit and Playwright.
+
+#### Features
+
+- **Gated pipeline** — stops for your approval at every stage transition
+- **Automated investigation** — fetches and summarizes GitLab tickets
+- **Implementation planning** — generates structured implementation plans with file-level change maps
+- **Code review** — checks for security, style, correctness, and dead references
+- **PHPUnit testing** — runs tests inside Docker containers
+- **Playwright E2E** — browser-based UI verification via bundled MCP server
+- **Environment doctor** — checks and guides dependency setup
+
+## Installation
+
+```
+/plugin marketplace add https://github.com/ttncode/ttnplugins
 /plugin install unioss-pipeline
 /unioss-doctor
 ```
 
-`/unioss-doctor` checks dependencies, offers to install the light ones (node, jq), and guides you through Docker, the unioss containers, and the `GITLAB_TOKEN` secret.
+`/unioss-doctor` checks your environment and guides you through any missing dependencies.
 
-## Run a ticket
+## Usage
 
-```text
+```
+/unioss-pipeline <gitlab-ticket-url>
+```
+
+Example:
+
+```
 /unioss-pipeline https://gitlab.unioss.jp/unioss/AdminPage/-/work_items/1834
 ```
 
@@ -24,4 +48,17 @@ The pipeline prints its plan and stops for your approval at each gate.
 
 ## Requirements
 
-- Node.js, jq, Docker + the `mysql-unioss3` / `php-unioss3` containers, and a `GITLAB_TOKEN` env var. Run `/unioss-doctor` to check.
+| Dependency                | Required | Notes                         |
+| ------------------------- | -------- | ----------------------------- |
+| Node.js                   | Yes      | Runtime for hooks and scripts |
+| jq                        | Yes      | JSON processing               |
+| Docker                    | Yes      | Container runtime             |
+| `mysql-unioss3` container | Yes      | Database                      |
+| `php-unioss3` container   | Yes      | PHP runtime                   |
+| `GITLAB_TOKEN` env var    | Yes      | GitLab API access             |
+
+Run `/unioss-doctor` to check all dependencies at once.
+
+## License
+
+[MIT](LICENSE)
