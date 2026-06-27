@@ -9,7 +9,7 @@ description: Template for UNIOSS implementation plans. All sections are required
 
 - All sections below are **mandatory**. No `TBD` may remain when complete.
 - Use identifier prefixes: `REQ-`, `CON-`, `SEC-`, `GUD-`, `PAT-`, `ALT-`, `DEP-`, `RISK-`, `ASSUMPTION-`, `TASK-`, `TEST-`
-- Save to `_plan/` at project root. Naming: `#[IID]_IMPLEMENTATION_V1.md` (increment version if prior exists)
+- Save to `.walkthrough/` at project root. Naming: `#[IID]_IMPLEMENTATION_V1.md` (increment version if prior exists)
 - Language: **English in main language**. Translate source text to English. Keep technical terms in Japanese.
 - Status badge colors: `Planned` → blue · `In progress` → yellow · `Completed` → brightgreen · `On Hold` → orange · `Deprecated` → red
 

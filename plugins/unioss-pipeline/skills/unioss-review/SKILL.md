@@ -15,7 +15,7 @@ You will analyze recently modified code and Ensure that the edited or newly adde
 
 ### Step 1 — Scope from the pipeline
 
-Read `_plan/<PREFIX>#[IID]_CHANGES.md` to get the changed files and repo. `cd` into that repo (`AdminPage` or `FrontEnd`).
+Read `.walkthrough/<PREFIX>#[IID]_CHANGES.md` to get the changed files and repo. `cd` into that repo (`AdminPage` or `FrontEnd`).
 
 ### Step 2 — Read the diff
 
@@ -43,7 +43,7 @@ reset per file.
 
 ### Step 6 — Output the Report
 
-Write the report to `_plan/<PREFIX>#[IID]_REVIEW.md` and return the severity counts (🔴/🟡/🟢) plus the top-priority list — do not paste the full report body.
+Write the report to `.walkthrough/<PREFIX>#[IID]_REVIEW.md` and return the severity counts (🔴/🟡/🟢) plus the top-priority list — do not paste the full report body.
 
 Structure the report as follows:
 

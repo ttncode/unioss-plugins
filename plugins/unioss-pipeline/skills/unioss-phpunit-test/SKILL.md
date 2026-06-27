@@ -144,7 +144,7 @@ The pipeline imports a SQL dump into the DB on every full run — slow and unnec
    `exec('mysql -u unioss -ptestPassWord < ' . $db_dump_dir, $output, $retval);`
 2. Run the whole suite and save the report:
    ```bash
-   docker exec -it php-unioss3 sh -lc "cd /var/www/html/AdminPage && ./vendor/phpunit/phpunit/phpunit -c application/tests/phpunit.xml --testdox" > _plan/UT_#[IID]_[YYYYMMDD]_V1
+   docker exec -it php-unioss3 sh -lc "cd /var/www/html/AdminPage && ./vendor/phpunit/phpunit/phpunit -c application/tests/phpunit.xml --testdox" > .walkthrough/UT_#[IID]_[YYYYMMDD]_V1
    ```
    > `-it` needs a TTY; drop `-t` (use `-i`) when running non-interactively.
 

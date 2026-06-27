@@ -13,7 +13,7 @@ name: unioss-pipeline reference
 
 Both are CodeIgniter 3 / PHP 8.1. The only divergence: FrontEnd skips PHPUnit unit tests.
 
-## Artifact Layout (project root `_plan/`)
+## Artifact Layout (project root `.walkthrough/`)
 
 Visible (the human reads these):
 - `<PREFIX>#[IID]_INVESTIGATION.md`, `<PREFIX>#[IID]_REPORT.md` (vi)
@@ -21,7 +21,7 @@ Visible (the human reads these):
 - `<PREFIX>#[IID]_CHANGES.md`, `<PREFIX>#[IID]_REVIEW.md`, `<PREFIX>#[IID]_TEST_RESULTS.md`
 - `UT_#[IID]_[YYYYMMDD]_V1` (full PHPUnit run, AdminPage only)
 
-Hidden (tracking only) in `_plan/.pipeline/<PREFIX>#[IID]/`:
+Hidden (tracking only) in `.walkthrough/.pipeline/<PREFIX>#[IID]/`:
 - `RAW_TICKET_DATA.json`, `TICKET_SUMMARY.md`, `pipeline-state.json`
 
 `<PREFIX>` is `AP` or `FE`, decided from the ticket URL.
