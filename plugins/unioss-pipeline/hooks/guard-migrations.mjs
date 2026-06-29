@@ -11,12 +11,22 @@ process.stdin.on('end', () => {
   if (!f.includes('application/migrations/')) process.exit(0);
   const base = basename(f);
   let planFiles = [];
-  try { planFiles = readdirSync('_plan').filter((n) => /IMPLEMENTATION/.test(n) && n.endsWith('.md')); } catch { planFiles = []; }
-  const referenced = planFiles.some((n) => {
-    try { return readFileSync(`_plan/${n}`, 'utf8').includes(base); } catch { return false; }
+  try {
+    const dirs = readdirSync('.walkthrough', { withFileTypes: true });
+    for (const entry of dirs) {
+      if (!entry.isDirectory() || entry.name.startsWith('.')) continue;
+      const sub = `.walkthrough/${entry.name}`;
+      try {
+        const files = readdirSync(sub).filter((n) => /IMPLEMENTATION/.test(n) && n.endsWith('.md'));
+        planFiles.push(...files.map((n) => `${sub}/${n}`));
+      } catch { /* skip unreadable subdir */ }
+    }
+  } catch { planFiles = []; }
+  const referenced = planFiles.some((fullPath) => {
+    try { return readFileSync(fullPath, 'utf8').includes(base); } catch { return false; }
   });
   if (!referenced) {
-    process.stderr.write(`Blocked: ${base} is not referenced by any _plan/*IMPLEMENTATION*.md. Add it to the plan first.\n`);
+    process.stderr.write(`Blocked: ${base} is not referenced by any implementation plan under .walkthrough/. Add it to the plan first.\n`);
     process.exit(2);
   }
   process.exit(0);
