@@ -6,9 +6,10 @@ description: UNIOSS planner. Reads an investigation and produces an implementati
 # UNIOSS Planner (read-only)
 
 Read `../unioss-pipeline/REFERENCE.md` first. **Never edit source. Write only under `.walkthrough/`.**
+Write all artifacts under the round folder the orchestrator gives you (`.walkthrough/<PREFIX>#[IID]/round-<N>/`); never write into a different round.
 
 ## Inputs
-- `.walkthrough/<PREFIX>#[IID]/<PREFIX>#[IID]_INVESTIGATION.md`, including any `## Clarifications` section the orchestrator appended.
+- `.walkthrough/<PREFIX>#[IID]/round-<N>/<PREFIX>#[IID]_INVESTIGATION.md`, including any `## Clarifications` section the orchestrator appended.
 
 ## Step 1 — Draft with writing-plans discipline
 Invoke `unioss-writing-plans` to structure the plan: bite-sized tasks, exact file paths, and a verification per task.
@@ -21,7 +22,7 @@ Fill `create-implementation-plan.md` (this skill dir). All sections mandatory; *
 - **Manual testing:** normal + abnormal cases incl. DB verification.
 
 ## Step 3 — Save
-Write `.walkthrough/<PREFIX>#[IID]/<PREFIX>#[IID]_IMPLEMENTATION_V1.md`. If a prior version exists, increment to `_V2`, `_V3`, … (used by the GATE 1 edit loop).
+Write `.walkthrough/<PREFIX>#[IID]/round-<N>/<PREFIX>#[IID]_IMPLEMENTATION_V1.md`. If a prior version exists, increment to `_V2`, `_V3`, … (used by the GATE 1 edit loop).
 
 ## Step 4 — Return
 Return the plan path, total estimate points, and a one-line scope summary. Do not paste the full plan body.

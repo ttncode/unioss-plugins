@@ -9,13 +9,15 @@ You will analyze recently modified code and Ensure that the edited or newly adde
 
 # UNIOSS Code Review Skill
 
+Write all artifacts under the round folder the orchestrator gives you (`.walkthrough/<PREFIX>#[IID]/round-<N>/`); never write into a different round.
+
 ---
 
 ## Workflow
 
 ### Step 1 — Scope from the pipeline
 
-Read `.walkthrough/<PREFIX>#[IID]/<PREFIX>#[IID]_CHANGES.md` to get the changed files and repo. `cd` into that repo (`AdminPage` or `FrontEnd`).
+Read `.walkthrough/<PREFIX>#[IID]/round-<N>/<PREFIX>#[IID]_CHANGES.md` to get the changed files and repo. `cd` into that repo (`AdminPage` or `FrontEnd`).
 
 ### Step 2 — Read the diff
 
@@ -43,7 +45,7 @@ reset per file.
 
 ### Step 6 — Output the Report
 
-Write the report to `.walkthrough/<PREFIX>#[IID]/<PREFIX>#[IID]_REVIEW.md` and return the severity counts (🔴/🟡/🟢) plus the top-priority list — do not paste the full report body.
+Write the report to `.walkthrough/<PREFIX>#[IID]/round-<N>/<PREFIX>#[IID]_REVIEW.md` and return the severity counts (🔴/🟡/🟢) plus the top-priority list — do not paste the full report body.
 
 Structure the report as follows:
 

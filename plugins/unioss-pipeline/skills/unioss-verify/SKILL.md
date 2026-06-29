@@ -6,9 +6,10 @@ description: UNIOSS functional verifier. Confirms DB changes landed, drives the 
 # UNIOSS Verifier (read-only)
 
 Read `../unioss-pipeline/REFERENCE.md` first. **Never edit source. Write only under `.walkthrough/`.**
+Write all artifacts under the round folder the orchestrator gives you (`.walkthrough/<PREFIX>#[IID]/round-<N>/`); never write into a different round.
 
 ## Step 1 — Identify what to verify
-From `.walkthrough/<PREFIX>#[IID]/<PREFIX>#[IID]_CHANGES.md` and the ticket acceptance criteria, list the DB effects and UI flows to check.
+From `.walkthrough/<PREFIX>#[IID]/round-<N>/<PREFIX>#[IID]_CHANGES.md` and the ticket acceptance criteria, list the DB effects and UI flows to check.
 
 ## Step 2 — Verify DB changes
 Query the relevant DB (read-only). Testing data after a PHPUnit run lives in `testing_DB`; production-shaped data in `$US_DB`:
@@ -20,10 +21,10 @@ If any `mcp__playwright__browser_*` call fails (distribution error, connection r
 
 When MCP is available, drive the affected screen(s): navigate, perform the ticket's action, assert the expected on-screen result.
 
-Save screenshots to `.walkthrough/<PREFIX>#[IID]/screenshots/<step-name>.png` at meaningful moments (after navigation, after the ticket action, after asserting the result) — not on every step.
+Save screenshots to `.walkthrough/<PREFIX>#[IID]/round-<N>/screenshots/<step-name>.png` at meaningful moments (after navigation, after the ticket action, after asserting the result) — not on every step.
 
 ## Step 4 — Write `TEST_RESULTS.md`
-Save `.walkthrough/<PREFIX>#[IID]/<PREFIX>#[IID]_TEST_RESULTS.md`: DB verification results, UI flow steps, and pass/fail per acceptance criterion.
+Save `.walkthrough/<PREFIX>#[IID]/round-<N>/<PREFIX>#[IID]_TEST_RESULTS.md`: DB verification results, UI flow steps, and pass/fail per acceptance criterion.
 
 Link each screenshot as a relative markdown link immediately after the step it documents:
 
