@@ -2,6 +2,8 @@
 // UNIOSS pipeline environment doctor — cross-platform (node/jq/docker/containers/token/MCP).
 import { execSync } from 'node:child_process';
 import { platform } from 'node:os';
+import { existsSync, readFileSync } from 'node:fs';
+import { join } from 'node:path';
 
 const isWin = platform() === 'win32';
 const has = (cmd) => {
@@ -26,15 +28,35 @@ const installCmd = (pkg) => ({
   choco: `choco install -y ${pkg}`,
 }[pm] || `(install ${pkg} with your package manager)`);
 
+function readContainerNames() {
+  const composePath = join(process.cwd(), 'docker-compose.yml');
+  const defaults = { mysql: 'mysql-unioss3', php: 'php-unioss3' };
+  if (!existsSync(composePath)) {
+    console.log('  (docker-compose.yml not found — checking default container names)');
+    return defaults;
+  }
+  const lines = readFileSync(composePath, 'utf8').split('\n');
+  let mysql = null, php = null;
+  for (const line of lines) {
+    const m = line.match(/^\s+container_name:\s*(\S+)/);
+    if (!m) continue;
+    const name = m[1];
+    if (name.includes('mysql') || name.includes('mariadb')) mysql = name;
+    else if (name.includes('php')) php = name;
+  }
+  return { mysql: mysql ?? defaults.mysql, php: php ?? defaults.php };
+}
+
 const dockerOk = has('docker');
-const names = dockerOk ? out('docker ps --format "{{.Names}}"') : '';
+const runningNames = dockerOk ? out('docker ps --format "{{.Names}}"') : '';
+const { mysql: mysqlName, php: phpName } = readContainerNames();
 
 const checks = [
   { name: 'node', ok: has('node'), fix: installCmd('node'), light: true },
   { name: 'jq', ok: has('jq'), fix: installCmd('jq'), light: true },
   { name: 'docker', ok: dockerOk, fix: 'Install Docker: https://docs.docker.com/get-docker/' },
-  { name: 'container mysql-unioss3', ok: /(^|\n)mysql-unioss3(\r?\n|$)/.test(names), fix: 'Start the unioss stack: docker compose up -d (from the unioss3 project root)' },
-  { name: 'container php-unioss3', ok: /(^|\n)php-unioss3(\r?\n|$)/.test(names), fix: 'Start the unioss stack: docker compose up -d (from the unioss3 project root)' },
+  { name: `container ${mysqlName}`, ok: new RegExp(`(^|\\n)${mysqlName}(\\r?\\n|$)`).test(runningNames), fix: `Container \`${mysqlName}\` is not running. Start the stack: docker compose up -d (from the unioss3 project root)` },
+  { name: `container ${phpName}`, ok: new RegExp(`(^|\\n)${phpName}(\\r?\\n|$)`).test(runningNames), fix: `Container \`${phpName}\` is not running. Start the stack: docker compose up -d (from the unioss3 project root)` },
   { name: 'GITLAB_TOKEN', ok: !!process.env.GITLAB_TOKEN, fix: isWin ? 'setx GITLAB_TOKEN <your-token>' : 'export GITLAB_TOKEN=<your-token>  (add to your shell profile)' },
 ];
 
