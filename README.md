@@ -88,6 +88,22 @@ node "${CLAUDE_PLUGIN_ROOT}/scripts/config.mjs" check
 
 `testing_DB` is a fixed name in the UNIOSS codebase and is intentionally not configurable.
 
+## Re-running a ticket (rounds)
+
+Re-running `/unioss-pipeline` on a ticket that already has outputs opens a new **round**.
+The full investigate → plan → implement → review → verify process runs again, but each round
+only does the work requested for it, and every prior round is frozen — nothing is overwritten.
+
+```
+.walkthrough/AP#1834/
+  round-1/   first run's investigation, plan, changes, review, test results
+  round-2/   a later requirement — round-1 untouched
+```
+
+Round 2+ starts from a `ROUND_BRIEF.md` describing just that round's change (from the updated
+ticket and/or your instruction). All rounds share the ticket's one feature branch; later rounds
+add commits on top.
+
 ## Requirements
 
 | Dependency                | Required | Notes                         |
