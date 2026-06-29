@@ -114,6 +114,11 @@ Secrets handling:
 - **Skills `unioss-investigate` / `unioss-verify` / `unioss-implement`** — replace inline
   `docker exec … -pProotW` and literal container names with config-resolved commands via the
   `get` CLI.
+- **`README.md`** — add a **Configuration** section: the `.walkthrough/config/unioss.config.json`
+  file (local, gitignored), the full default schema, how to override only what diverges, the
+  `config.mjs` commands (`init` / `print` / `check`), and that secrets stay in env
+  (`GITLAB_TOKEN` required; `DB_PASSWORD` optional, with the local-DB default). Scoped to
+  configuration only — install/update/versioning docs remain a separate thread.
 
 ### Doctor UX
 
@@ -148,3 +153,5 @@ effect is removing the literal DB password from `REFERENCE.md`.
    `GITLAB_TOKEN` or an invalid value.
 5. `guard-migrations` no longer authorizes a migration edit from a different ticket's plan.
 6. The resolver test suite passes.
+7. `README.md` documents the config file, the default schema, overriding, the `config.mjs`
+   commands, and env-based secrets.
