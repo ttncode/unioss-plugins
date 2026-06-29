@@ -17,8 +17,8 @@ From the summary, extract column names and UI label strings. Grep the matching r
 
 ## Step 3 — Production DB facts
 
-Query production for the affected tables/columns (read-only):
-`docker exec -i mysql-unioss3 mysql -u root -pProotW -e "USE _unioss; DESCRIBE <table>;"`
+Resolve config, then describe the affected tables (read-only):
+`eval "$(node "${CLAUDE_PLUGIN_ROOT}/scripts/config.mjs" env)" && docker exec -i "$US_MYSQL" mysql -u"$US_DB_USER" -p"$US_DB_PASS" -e "USE $US_DB; DESCRIBE <table>;"`
 
 ## Step 4 — Write `INVESTIGATION.md`
 

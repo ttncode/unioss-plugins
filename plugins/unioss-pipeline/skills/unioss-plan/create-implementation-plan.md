@@ -66,7 +66,7 @@ story_points: 3
 
 **Affected Cronjobs** _(if any)_
 
-- `docker exec -it php-unioss3 sh -lc "php ... <command>"`
+- `docker exec -it "$US_PHP" sh -lc "php ... <command>"`  (resolve `$US_PHP` via `eval "$(node "${CLAUDE_PLUGIN_ROOT}/scripts/config.mjs" env)"`)
 
 ## 3. Implementation Steps
 
