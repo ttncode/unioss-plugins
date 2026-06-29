@@ -6,6 +6,7 @@ description: Read-only UNIOSS investigator. Fetches a GitLab ticket plus all rel
 # UNIOSS Investigator (read-only)
 
 Read `../unioss-pipeline/REFERENCE.md` first. **Never edit source. Write only under `.walkthrough/`.**
+Write all artifacts under the round folder the orchestrator gives you (`.walkthrough/<PREFIX>#[IID]/round-<N>/`); never write into a different round.
 
 ## Step 1 — Fetch ticket + related issues
 
@@ -17,12 +18,12 @@ From the summary, extract column names and UI label strings. Grep the matching r
 
 ## Step 3 — Production DB facts
 
-Query production for the affected tables/columns (read-only):
-`docker exec -i mysql-unioss3 mysql -u root -pProotW -e "USE _unioss; DESCRIBE <table>;"`
+Resolve config, then describe the affected tables (read-only):
+`eval "$(node "${CLAUDE_PLUGIN_ROOT}/scripts/config.mjs" env)" && docker exec -i "$US_MYSQL" mysql -u"$US_DB_USER" -p"$US_DB_PASS" -e "USE $US_DB; DESCRIBE <table>;"`
 
 ## Step 4 — Write `INVESTIGATION.md`
 
-Save `.walkthrough/<PREFIX>#[IID]/<PREFIX>#[IID]_INVESTIGATION.md` (English; keep technical terms in Japanese):
+Save `.walkthrough/<PREFIX>#[IID]/round-<N>/<PREFIX>#[IID]_INVESTIGATION.md` (English; keep technical terms in Japanese):
 1. **Requirements** (REQ/CON from the ticket, translated)
 2. **Related-issue dependency map** (each linked issue → effect on this ticket)
 3. **Code map** (`file:line` table from Step 2)
@@ -32,7 +33,7 @@ Save `.walkthrough/<PREFIX>#[IID]/<PREFIX>#[IID]_INVESTIGATION.md` (English; kee
 
 ## Step 5 — Write `REPORT.md` (Vietnamese)
 
-Save `.walkthrough/<PREFIX>#[IID]/<PREFIX>#[IID]_REPORT.md`. Vietnamese only — column names and Japanese screen names stay as-is. No tables. No implementation detail. Fill this template verbatim:
+Save `.walkthrough/<PREFIX>#[IID]/round-<N>/<PREFIX>#[IID]_REPORT.md`. Vietnamese only — column names and Japanese screen names stay as-is. No tables. No implementation detail. Fill this template verbatim:
 
 ```markdown
 # <PREFIX>#[IID] Report

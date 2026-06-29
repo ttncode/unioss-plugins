@@ -1,7 +1,10 @@
 {
   "hooks": {
     "PreToolUse": [
-      { "matcher": "Edit|Write", "hooks": [ { "type": "command", "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/guard-migrations.mjs\"" } ] }
+      { "matcher": "Edit|Write", "hooks": [
+        { "type": "command", "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/guard-migrations.mjs\"" },
+        { "type": "command", "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/guard-rounds.mjs\"" }
+      ] }
     ],
     "PostToolUse": [
       { "matcher": "Edit|Write", "hooks": [ { "type": "command", "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/php-lint.mjs\"" } ] }

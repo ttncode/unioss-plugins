@@ -8,7 +8,16 @@ description: UNIOSS A→Z ticket pipeline orchestrator. Given a GitLab ticket UR
 Read `REFERENCE.md` (this dir) first — it holds the branch, protected-branch, submodule, and commit-message rules you must follow. You run in the MAIN thread. Dispatch read-only stages as subagents; run the coder yourself; own the gates.
 
 ## State & resume
-State file: `.walkthrough/.pipeline/<PREFIX>#[IID]/pipeline-state.json` — `{ stage, gate_decisions, plan_version, review_counts, test_status }`. On start, if state exists for this ticket, offer to resume from the last completed stage. Update it after every stage.
+
+State file: `.walkthrough/.pipeline/<PREFIX>#[IID]/pipeline-state.json` —
+`{ current_round, rounds: { "<n>": { stage, gate_decisions, plan_version, review_counts, test_status } } }`.
+
+On start, determine the round:
+- No state, or no `round-*` dirs → this is **round 1**. Set `current_round = 1`.
+- Latest round is **incomplete** (its `stage` is not `finalized`) → resume that round; do not open a new one.
+- Latest round is **sealed** (`stage = finalized`) **and** there is new requested work (ticket changed since the round, or the user gives an instruction) → open **round N+1**: set `current_round = N+1`.
+
+Update the current round's entry after every stage.
 
 ## Step 0 — Show the plan and get the go-ahead
 
@@ -18,21 +27,21 @@ Parse the URL first (REFERENCE regex) → IID + origin repo → prefix `AP`/`FE`
 ┌─────────────┬──────────────────────┬──────────────────────────────────────────────────────────────┐
 │    Step     │         Who          │                            You do                            │
 ├─────────────┼──────────────────────┼──────────────────────────────────────────────────────────────┤
-│ Investigate │ subagent (opus)      │ writes .walkthrough/<PREFIX>#[IID]/<PREFIX>#[IID]_INVESTIGATION.md + _REPORT.md    │
+│ Investigate │ subagent (opus)      │ writes .walkthrough/<PREFIX>#[IID]/round-<current_round>/<PREFIX>#[IID]_INVESTIGATION.md + _REPORT.md    │
 ├─────────────┼──────────────────────┼──────────────────────────────────────────────────────────────┤
 │ 🛑 GATE 0   │ main thread          │ only if unclear — brainstorms open questions with you        │
 ├─────────────┼──────────────────────┼──────────────────────────────────────────────────────────────┤
-│ Plan        │ subagent (opus)      │ writes .walkthrough/<PREFIX>#[IID]/<PREFIX>#[IID]_IMPLEMENTATION_V1.md             │
+│ Plan        │ subagent (opus)      │ writes .walkthrough/<PREFIX>#[IID]/round-<current_round>/<PREFIX>#[IID]_IMPLEMENTATION_V1.md             │
 ├─────────────┼──────────────────────┼──────────────────────────────────────────────────────────────┤
 │ 🛑 GATE 1   │ you                  │ approve the plan or request edits (→ V2/V3)                  │
 ├─────────────┼──────────────────────┼──────────────────────────────────────────────────────────────┤
-│ Code        │ main thread (sonnet) │ applies plan + fast PHPUnit → .walkthrough/<PREFIX>#[IID]/<PREFIX>#[IID]_CHANGES.md│
+│ Code        │ main thread (sonnet) │ applies plan + fast PHPUnit → .walkthrough/<PREFIX>#[IID]/round-<current_round>/<PREFIX>#[IID]_CHANGES.md│
 ├─────────────┼──────────────────────┼──────────────────────────────────────────────────────────────┤
-│ Review      │ subagent (opus)      │ writes .walkthrough/<PREFIX>#[IID]/<PREFIX>#[IID]_REVIEW.md (severity-indexed)     │
+│ Review      │ subagent (opus)      │ writes .walkthrough/<PREFIX>#[IID]/round-<current_round>/<PREFIX>#[IID]_REVIEW.md (severity-indexed)     │
 ├─────────────┼──────────────────────┼──────────────────────────────────────────────────────────────┤
 │ 🛑 GATE 2   │ you                  │ fix (loop) or accept (→ full PHPUnit → UT_#[IID]_…)          │
 ├─────────────┼──────────────────────┼──────────────────────────────────────────────────────────────┤
-│ Verify      │ subagent (sonnet)    │ writes .walkthrough/<PREFIX>#[IID]/<PREFIX>#[IID]_TEST_RESULTS.md (DB + UI)        │
+│ Verify      │ subagent (sonnet)    │ writes .walkthrough/<PREFIX>#[IID]/round-<current_round>/<PREFIX>#[IID]_TEST_RESULTS.md (DB + UI)        │
 ├─────────────┼──────────────────────┼──────────────────────────────────────────────────────────────┤
 │ Finalize    │ main thread          │ branch feature/v3/#[IID] + commit (no push/MR)               │
 └─────────────┴──────────────────────┴──────────────────────────────────────────────────────────────┘
@@ -40,9 +49,17 @@ Parse the URL first (REFERENCE regex) → IID + origin repo → prefix `AP`/`FE`
 
 Wait for the user to say to proceed. Do not run any stage until they confirm.
 
+**Rounds.** All artifacts for this run go under `.walkthrough/<PREFIX>#[IID]/round-<current_round>/`.
+If this is a re-run (a sealed round already exists), first write
+`round-<current_round>/ROUND_BRIEF.md` capturing exactly what this round must do — from the
+ticket delta since the last round and/or the user's instruction — and state in Step 0 that
+all prior rounds stay frozen. Every stage this round is scoped to the brief and treats prior
+rounds as an immutable, already-delivered baseline. Never write outside the current round
+(the sealed-round guard enforces this).
+
 ## Flow
 
-1. **Parse** the URL → IID + origin repo → prefix `AP`/`FE`. Create `.walkthrough/.pipeline/<PREFIX>#[IID]/`.
+1. **Parse** the URL → IID + origin repo → prefix `AP`/`FE`. Determine `current_round` (see State & resume). Create `.walkthrough/.pipeline/<PREFIX>#[IID]/` and `.walkthrough/<PREFIX>#[IID]/round-<current_round>/`. In every stage below, write artifacts under `.walkthrough/<PREFIX>#[IID]/round-<current_round>/` and pass that round path to each subagent in its prompt.
 
 2. **Investigator** — dispatch the `unioss-investigator` subagent with the URL. It writes INVESTIGATION.md + REPORT.md and returns a clarity verdict + open-question count.
 
@@ -58,7 +75,7 @@ Wait for the user to say to proceed. Do not run any stage until they confirm.
 
 8. **GATE 2 — Review fix/accept.** Present findings by severity.
    - **fix** → invoke `unioss-implement` to apply fixes + re-run filtered tests → ask "re-review or proceed?"; if re-review, go to step 7.
-   - **accept** → (AdminPage) invoke `unioss-implement` full mode: uncomment the dump-import line, run the full suite → `.walkthrough/<PREFIX>#[IID]/UT_#[IID]_[YYYYMMDD]_V1.txt`.
+   - **accept** → (AdminPage) invoke `unioss-implement` full mode: uncomment the dump-import line, run the full suite → `.walkthrough/<PREFIX>#[IID]/round-<current_round>/UT_#[IID]_[YYYYMMDD]_V1.txt`.
 
 9. **Tester** — dispatch `unioss-tester` with the CHANGES.md path + acceptance criteria. It writes TEST_RESULTS.md and returns pass/fail. (Both repos.) If the tester reports any UI criteria as SKIPPED (no browser MCP), note that explicitly — do NOT treat SKIPPED as a pass.
 

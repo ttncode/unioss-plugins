@@ -4,6 +4,33 @@ name: unioss-pipeline reference
 
 # UNIOSS Pipeline — Shared Reference
 
+## Configuration (resolved at runtime)
+
+All per-machine values come from `node "${CLAUDE_PLUGIN_ROOT}/scripts/config.mjs"`
+(resolution: env → `.walkthrough/config/unioss.config.json` → built-in default).
+Do not hardcode these in commands — resolve them.
+
+| Key | Default | Used for |
+| --- | --- | --- |
+| `gitlab.host` | `gitlab.unioss.jp` | API + image URLs |
+| `repos.adminPage.id` / `.path` | `32` / `AdminPage/` | project id, repo path |
+| `repos.frontEnd.id` / `.path` | `31` / `FrontEnd/` | project id, repo path |
+| `docker.mysql` / `docker.php` | `mysql-unioss3` / `php-unioss3` | container names |
+| `db.name` / `db.user` / `db.password` | `_unioss` / `root` / `ProotW` | DB access |
+| `git.baseBranch` | `v3-master` | base for feature branches |
+| `git.protected` | `master, v3-master, develop, v3-develop, v3-develop-tps` | never-commit list |
+| `artifactRoot` | `.walkthrough` | output dir |
+
+Secrets: `GITLAB_TOKEN` is env-only (required). `db.password` resolves env `DB_PASSWORD`
+→ file → default. `testing_DB` is a fixed codebase constant — not configurable.
+
+To run a DB query in a skill, resolve config into shell vars first:
+
+```bash
+eval "$(node "${CLAUDE_PLUGIN_ROOT}/scripts/config.mjs" env)"
+docker exec -i "$US_MYSQL" mysql -u"$US_DB_USER" -p"$US_DB_PASS" -e "USE $US_DB; SHOW TABLES;"
+```
+
 ## Repos & Prefixes
 
 | Repo        | Path (under project root) | GitLab Project ID | Ticket prefix |
@@ -15,32 +42,38 @@ Both are CodeIgniter 3 / PHP 8.1. The only divergence: FrontEnd skips PHPUnit un
 
 ## Artifact Layout (project root `.walkthrough/`)
 
-Visible (the human reads these), under `.walkthrough/<PREFIX>#[IID]/`:
+Each run is a **round**. Visible artifacts live under
+`.walkthrough/<PREFIX>#[IID]/round-<N>/` (the human reads these):
+- `ROUND_BRIEF.md` (round 2+: what this round must do)
 - `<PREFIX>#[IID]_INVESTIGATION.md`, `<PREFIX>#[IID]_REPORT.md` (vi)
 - `<PREFIX>#[IID]_IMPLEMENTATION_V{n}.md`
 - `<PREFIX>#[IID]_CHANGES.md`, `<PREFIX>#[IID]_REVIEW.md`, `<PREFIX>#[IID]_TEST_RESULTS.md`
 - `UT_#[IID]_[YYYYMMDD]_V1.txt` (full PHPUnit run, AdminPage only)
 - `screenshots/` (tester UI screenshots)
 
-Hidden (tracking only) in `.walkthrough/.pipeline/<PREFIX>#[IID]/`:
-- `RAW_TICKET_DATA.json`, `TICKET_SUMMARY.md`, `pipeline-state.json`
+`round-1` is the initial run; each re-run opens the next round and **never modifies a prior
+round**. Hidden tracking lives in `.walkthrough/.pipeline/<PREFIX>#[IID]/`
+(`RAW_TICKET_DATA.json`, `TICKET_SUMMARY.md`, `pipeline-state.json` with `current_round`).
 
 `<PREFIX>` is `AP` or `FE`, decided from the ticket URL.
 
 ## GitLab (read-only)
 
-- Host: `https://gitlab.unioss.jp`. Token from `~/.zshrc.local` (`export GITLAB_TOKEN=...`) or `process.env.GITLAB_TOKEN`.
+- Host: `gitlab.host` from config (default `gitlab.unioss.jp`). Token from `process.env.GITLAB_TOKEN`.
 - URL regex: `/https:\/\/([^/]+)\/([^/]+)\/([^/]+)(?:\/-\/|\/)(work_items|issues)\/(\d+)/` → groups: host, namespace, repo, type, IID.
 - Endpoints (GET, header `PRIVATE-TOKEN`): `/api/v4/projects/:id/issues/:iid`, `.../issues/:iid/notes?per_page=100`, `.../issues/:iid/links`.
 - ⛔ Never POST/PUT/DELETE. Never print the token.
 
 ## Database (non-interactive: `-i`, not `-it`)
 
+Resolve config first, then query (read-only):
+
 ```bash
+eval "$(node "${CLAUDE_PLUGIN_ROOT}/scripts/config.mjs" env)"
 # Production data
-docker exec -i mysql-unioss3 mysql -u root -pProotW -e "USE _unioss; SHOW TABLES;"
-# Testing data (imported during PHPUnit runs)
-docker exec -i mysql-unioss3 mysql -u root -pProotW -e "USE testing_DB; SHOW TABLES;"
+docker exec -i "$US_MYSQL" mysql -u"$US_DB_USER" -p"$US_DB_PASS" -e "USE $US_DB; SHOW TABLES;"
+# Testing data (fixed name, imported during PHPUnit runs)
+docker exec -i "$US_MYSQL" mysql -u"$US_DB_USER" -p"$US_DB_PASS" -e "USE testing_DB; SHOW TABLES;"
 ```
 
 ## MCP (tester)

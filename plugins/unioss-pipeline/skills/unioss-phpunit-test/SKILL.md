@@ -134,7 +134,8 @@ The pipeline imports a SQL dump into the DB on every full run — slow and unnec
    `exec('mysql -u unioss -ptestPassWord < ' . $db_dump_dir, $output, $retval);`
 3. Run only the target test(s):
    ```bash
-   docker exec -i php-unioss3 sh -lc "cd /var/www/html/AdminPage && ./vendor/phpunit/phpunit/phpunit -c application/tests/phpunit.xml --filter '<test_classname>' --testdox"
+   eval "$(node "${CLAUDE_PLUGIN_ROOT}/scripts/config.mjs" env)"
+   docker exec -i "$US_PHP" sh -lc "cd /var/www/html/AdminPage && ./vendor/phpunit/phpunit/phpunit -c application/tests/phpunit.xml --filter '<test_classname>' --testdox"
    # one method:  --filter '<test_classname>::<test_method>'
    # several:     --filter '<test_classname>::<m1>|<m2>'
    ```
@@ -144,7 +145,8 @@ The pipeline imports a SQL dump into the DB on every full run — slow and unnec
    `exec('mysql -u unioss -ptestPassWord < ' . $db_dump_dir, $output, $retval);`
 2. Run the whole suite and save the report:
    ```bash
-   docker exec -it php-unioss3 sh -lc "cd /var/www/html/AdminPage && ./vendor/phpunit/phpunit/phpunit -c application/tests/phpunit.xml --testdox" > .walkthrough/<PREFIX>#[IID]/UT_#[IID]_[YYYYMMDD]_V1.txt
+   eval "$(node "${CLAUDE_PLUGIN_ROOT}/scripts/config.mjs" env)"
+   docker exec -it "$US_PHP" sh -lc "cd /var/www/html/AdminPage && ./vendor/phpunit/phpunit/phpunit -c application/tests/phpunit.xml --testdox" > .walkthrough/<PREFIX>#[IID]/UT_#[IID]_[YYYYMMDD]_V1.txt
    ```
    > `-it` needs a TTY; drop `-t` (use `-i`) when running non-interactively.
 

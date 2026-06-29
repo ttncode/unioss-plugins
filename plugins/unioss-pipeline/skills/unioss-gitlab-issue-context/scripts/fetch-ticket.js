@@ -77,7 +77,8 @@ summary += `| Updated | ${issue.updated_at} |\n\n`;
 summary += `## Description\n\n${description}\n\n`;
 
 // Attachments
-const imgRegex = /!\[([^\]]*)\]\((https:\/\/gitlab\.unioss\.jp\/-\/project\/[^)]+)\)/g;
+const hostEsc = host.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+const imgRegex = new RegExp(`!\\[([^\\]]*)\\]\\((${hostEsc}/-/project/[^)]+)\\)`, 'g');
 const images = [];
 let m;
 while ((m = imgRegex.exec(description)) !== null) images.push(m);
