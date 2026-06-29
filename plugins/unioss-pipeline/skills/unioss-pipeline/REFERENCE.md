@@ -42,15 +42,18 @@ Both are CodeIgniter 3 / PHP 8.1. The only divergence: FrontEnd skips PHPUnit un
 
 ## Artifact Layout (project root `.walkthrough/`)
 
-Visible (the human reads these), under `.walkthrough/<PREFIX>#[IID]/`:
+Each run is a **round**. Visible artifacts live under
+`.walkthrough/<PREFIX>#[IID]/round-<N>/` (the human reads these):
+- `ROUND_BRIEF.md` (round 2+: what this round must do)
 - `<PREFIX>#[IID]_INVESTIGATION.md`, `<PREFIX>#[IID]_REPORT.md` (vi)
 - `<PREFIX>#[IID]_IMPLEMENTATION_V{n}.md`
 - `<PREFIX>#[IID]_CHANGES.md`, `<PREFIX>#[IID]_REVIEW.md`, `<PREFIX>#[IID]_TEST_RESULTS.md`
 - `UT_#[IID]_[YYYYMMDD]_V1.txt` (full PHPUnit run, AdminPage only)
 - `screenshots/` (tester UI screenshots)
 
-Hidden (tracking only) in `.walkthrough/.pipeline/<PREFIX>#[IID]/`:
-- `RAW_TICKET_DATA.json`, `TICKET_SUMMARY.md`, `pipeline-state.json`
+`round-1` is the initial run; each re-run opens the next round and **never modifies a prior
+round**. Hidden tracking lives in `.walkthrough/.pipeline/<PREFIX>#[IID]/`
+(`RAW_TICKET_DATA.json`, `TICKET_SUMMARY.md`, `pipeline-state.json` with `current_round`).
 
 `<PREFIX>` is `AP` or `FE`, decided from the ticket URL.
 
