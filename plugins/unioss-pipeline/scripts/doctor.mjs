@@ -2,8 +2,7 @@
 // UNIOSS pipeline environment doctor — cross-platform (node/jq/docker/containers/token/MCP).
 import { execSync } from 'node:child_process';
 import { platform } from 'node:os';
-import { existsSync, readFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { resolveConfig, runCheck } from './config.mjs';
 
 const isWin = platform() === 'win32';
 const has = (cmd) => {
@@ -28,28 +27,10 @@ const installCmd = (pkg) => ({
   choco: `choco install -y ${pkg}`,
 }[pm] || `(install ${pkg} with your package manager)`);
 
-function readContainerNames() {
-  const composePath = join(process.cwd(), 'docker-compose.yml');
-  const defaults = { mysql: 'mysql-unioss3', php: 'php-unioss3' };
-  if (!existsSync(composePath)) {
-    console.log('  (docker-compose.yml not found — checking default container names)');
-    return defaults;
-  }
-  const lines = readFileSync(composePath, 'utf8').split('\n');
-  let mysql = null, php = null;
-  for (const line of lines) {
-    const m = line.match(/^\s+container_name:\s*(\S+)/);
-    if (!m) continue;
-    const name = m[1];
-    if (name.includes('mysql') || name.includes('mariadb')) mysql = name;
-    else if (name.includes('php')) php = name;
-  }
-  return { mysql: mysql ?? defaults.mysql, php: php ?? defaults.php };
-}
-
 const dockerOk = has('docker');
 const runningNames = dockerOk ? out('docker ps --format "{{.Names}}"') : '';
-const { mysql: mysqlName, php: phpName } = readContainerNames();
+const cfg = resolveConfig();
+const { mysql: mysqlName, php: phpName } = cfg.docker;
 
 const checks = [
   { name: 'node', ok: has('node'), fix: installCmd('node'), light: true },
@@ -71,4 +52,11 @@ if (lightMissing.length && pm) {
   console.log(`\nLight deps install command:\n  ${lightMissing.map(installCmd).join('  &&  ')}`);
 }
 console.log(`\nPlaywright MCP ships with this plugin (npx @playwright/mcp@latest) — no manual install needed.\n`);
+
+const check = runCheck();
+console.log('Resolved configuration (env > file > default):\n');
+console.log(check.report);
+console.log('\nTo override locally, run:  node scripts/config.mjs init  (creates .walkthrough/config/unioss.config.json)\n');
+if (!check.ok) allOk = false;
+
 process.exit(allOk ? 0 : 1);
