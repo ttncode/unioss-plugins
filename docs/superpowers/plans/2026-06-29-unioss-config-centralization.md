@@ -1,12 +1,19 @@
-# UNIOSS Pipeline — Centralized Configuration Implementation Plan
+# UNIOSS Pipeline — Configuration + Rounds Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Replace scattered hardcoded config (container names, GitLab host, project IDs, repo paths, branches, DB credentials) across the unioss-pipeline plugin with one resolver that layers `env → local file → built-in default`.
+**Goal:** Two related improvements to the unioss-pipeline plugin: **Part A (Tasks 1-9)** replaces scattered hardcoded config with one resolver (`env → local file → built-in default`). **Part B (Tasks 10-15)** makes pipeline re-runs non-destructive via *rounds* — each re-run does only its requested delta and freezes all prior rounds' artifacts.
 
-**Architecture:** A single ESM module `scripts/config.mjs` owns the defaults and the resolution logic. JavaScript consumers (`doctor.mjs`, the two hooks) import `resolveConfig()`. Markdown skills call its CLI (`node config.mjs env|get|print|init|check`) via Bash. The local override file lives at the UNIOSS *workspace* root (`.walkthrough/config/unioss.config.json`), gitignored, resolved relative to `process.cwd()`.
+**Architecture:** Part A — a single ESM module `scripts/config.mjs` owns defaults + resolution; JS consumers import `resolveConfig()`, markdown skills call its CLI. Part B — a `scripts/rounds.mjs` helper owns round-path math; the orchestrator writes per-round artifacts under `.walkthrough/<ticket>/round-N/` and tracks `current_round` in pipeline-state; two hooks keep migrations scoped to the active round and block writes to sealed rounds.
 
 **Tech Stack:** Node.js ESM (`.mjs`), `node:test`, `node:fs`/`node:path`/`node:url`/`node:os` only — no external dependencies. Plugin lives at `plugins/unioss-pipeline/`.
+
+## Parts & order
+
+- **Part A — Configuration (Tasks 1-9):** self-contained; ships on its own; bumps to `1.1.0`.
+- **Part B — Rounds (Tasks 10-15):** builds on Part A (imports `resolveConfig` for `artifactRoot`; extends the guard-migrations work from Task 4). Execute **after** Part A. Bumps to `1.2.0`.
+
+Part B intentionally **supersedes Task 4's flat-folder plan lookup**: Task 11 rewrites the guard to look inside `round-N/`. Where the two touch the same file, Part B is the final state.
 
 ## Global Constraints
 
@@ -922,7 +929,7 @@ git commit -m "chore(unioss-pipeline): bump version to 1.1.0 (centralized config
 
 ---
 
-## Self-Review
+## Self-Review — Part A (Configuration)
 
 **Spec coverage:**
 - Single resolver `config.mjs` with `env→file→default`, JS API + CLI → Tasks 1, 2. ✅
@@ -942,3 +949,608 @@ git commit -m "chore(unioss-pipeline): bump version to 1.1.0 (centralized config
 **Type consistency:** `resolveConfig(cwd)`, `configPath(cwd)`, `deepMerge`, `flatten`, `valueSources`, `getValue`, `buildEnv`, `formatPrint`, `initFile`, `runCheck`, `activeTicketDir(root)` — names used identically across Tasks 1-8. The `US_*` shell var names in `buildEnv` (Task 2) match those consumed in REFERENCE/skills (Task 7).
 
 **Note on `unioss-implement` (Task 7):** it has no literal `-pProotW`/container today (it delegates DB to other skills), so Step changes there are conditional — the grep in Task 7 Step 5 confirms whether any edit is needed. If clean, no edit; the task still passes.
+
+---
+
+# Part B — Pipeline Rounds (non-destructive re-runs)
+
+> Execute after Part A. Part B assumes `scripts/config.mjs` (`resolveConfig`) exists.
+
+**Part B goal:** Re-running `/unioss-pipeline` on a ticket that already has outputs opens a new *round*. The full A→Z process runs each round, but each round does only its requested delta; every prior round's artifacts are frozen and never overwritten.
+
+## Part B — Concepts (read before Task 10)
+
+- **Round** = one full pipeline pass for a specific requested change. Round 1 = initial.
+- **Layout:** artifacts live under `<artifactRoot>/<PREFIX>#[IID]/round-N/` (was the flat `<PREFIX>#[IID]/`). `round-1` is never modified once sealed.
+- **Sealed round** = its verify + finalize completed. Re-running with new work when the latest round is sealed → open round N+1. If the latest round is incomplete → resume it.
+- **Round brief** = `round-N/ROUND_BRIEF.md`, capturing what round N must do (ticket delta since last round and/or the user's instruction at Step 0). Every stage in the round reads it + prior rounds as immutable baseline.
+- **`current_round`** lives in `.walkthrough/.pipeline/<PREFIX>#[IID]/pipeline-state.json`.
+- **Branch:** rounds share the ticket's one feature branch; round N adds commits on top. No new branch per round.
+
+## Part B — Global Constraints
+
+- `round-N` directory names are exactly `round-` + a positive integer, no padding (`round-1`, `round-2`, … `round-10`).
+- Stages write **only** under the current `round-N/`; never modify `round-<N`. Task 14 enforces this.
+- The flat-folder layout from earlier versions is legacy; helpers fall back to it only when no `round-*` dir exists (back-compat), but new runs always create `round-N/`.
+
+---
+
+### Task 10: `scripts/rounds.mjs` round-path helpers + tests
+
+**Files:**
+- Create: `plugins/unioss-pipeline/scripts/rounds.mjs`
+- Test: `plugins/unioss-pipeline/scripts/rounds.test.mjs`
+
+**Interfaces:**
+- Consumes: nothing.
+- Produces:
+  - `listRounds(ticketDir): number[]` — ascending round numbers present.
+  - `latestRoundNum(ticketDir): number` — highest round, or `0` if none.
+  - `roundDir(ticketDir, n): string` — `<ticketDir>/round-N`.
+  - `planFilesForRound(ticketDir, n): string[]` — IMPLEMENTATION plans in that round.
+
+- [ ] **Step 1: Write the failing test**
+
+Create `plugins/unioss-pipeline/scripts/rounds.test.mjs`:
+
+```js
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+import { mkdtempSync, mkdirSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { listRounds, latestRoundNum, roundDir, planFilesForRound } from './rounds.mjs';
+
+function ticketWith(rounds) {
+  const dir = mkdtempSync(join(tmpdir(), 'rounds-'));
+  for (const [n, files] of Object.entries(rounds)) {
+    const rd = join(dir, `round-${n}`);
+    mkdirSync(rd, { recursive: true });
+    for (const f of files) writeFileSync(join(rd, f), 'x');
+  }
+  return dir;
+}
+
+test('listRounds returns ascending numbers and ignores non-round dirs', () => {
+  const dir = ticketWith({ 2: [], 1: [] });
+  mkdirSync(join(dir, 'screenshots'));
+  assert.deepEqual(listRounds(dir), [1, 2]);
+});
+
+test('latestRoundNum is 0 when none exist', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'rounds-'));
+  assert.equal(latestRoundNum(dir), 0);
+});
+
+test('latestRoundNum picks the highest, not lexical', () => {
+  const dir = ticketWith({ 2: [], 10: [], 1: [] });
+  assert.equal(latestRoundNum(dir), 10);
+});
+
+test('roundDir builds the expected path', () => {
+  assert.ok(roundDir('/t', 3).endsWith(join('/t', 'round-3')));
+});
+
+test('planFilesForRound returns only IMPLEMENTATION md files of that round', () => {
+  const dir = ticketWith({ 1: ['AP#1_IMPLEMENTATION_V1.md', 'AP#1_REVIEW.md'] });
+  const plans = planFilesForRound(dir, 1);
+  assert.equal(plans.length, 1);
+  assert.match(plans[0], /IMPLEMENTATION_V1\.md$/);
+});
+```
+
+- [ ] **Step 2: Run test to verify it fails**
+
+Run: `node --test plugins/unioss-pipeline/scripts/rounds.test.mjs`
+Expected: FAIL — `Cannot find module './rounds.mjs'`.
+
+- [ ] **Step 3: Write minimal implementation**
+
+Create `plugins/unioss-pipeline/scripts/rounds.mjs`:
+
+```js
+// Round-path math for the UNIOSS pipeline. A round is `<ticketDir>/round-N`.
+import { existsSync, readdirSync } from 'node:fs';
+import { join } from 'node:path';
+
+const ROUND_RE = /^round-(\d+)$/;
+
+export function listRounds(ticketDir) {
+  if (!existsSync(ticketDir)) return [];
+  return readdirSync(ticketDir, { withFileTypes: true })
+    .filter((e) => e.isDirectory() && ROUND_RE.test(e.name))
+    .map((e) => Number(e.name.match(ROUND_RE)[1]))
+    .sort((a, b) => a - b);
+}
+
+export function latestRoundNum(ticketDir) {
+  const rounds = listRounds(ticketDir);
+  return rounds.length ? rounds[rounds.length - 1] : 0;
+}
+
+export function roundDir(ticketDir, n) {
+  return join(ticketDir, `round-${n}`);
+}
+
+export function planFilesForRound(ticketDir, n) {
+  try {
+    return readdirSync(roundDir(ticketDir, n))
+      .filter((name) => /IMPLEMENTATION/.test(name) && name.endsWith('.md'))
+      .map((name) => join(roundDir(ticketDir, n), name));
+  } catch {
+    return [];
+  }
+}
+```
+
+- [ ] **Step 4: Run test to verify it passes**
+
+Run: `node --test plugins/unioss-pipeline/scripts/rounds.test.mjs`
+Expected: PASS — 5 tests pass.
+
+- [ ] **Step 5: Commit**
+
+```bash
+git add plugins/unioss-pipeline/scripts/rounds.mjs plugins/unioss-pipeline/scripts/rounds.test.mjs
+git commit -m "feat(unioss-pipeline): add round-path helpers (rounds.mjs)"
+```
+
+---
+
+### Task 11: Make `guard-migrations` round-aware (supersedes Task 4 lookup)
+
+**Files:**
+- Modify: `plugins/unioss-pipeline/hooks/guard-migrations.mjs`
+- Modify: `plugins/unioss-pipeline/hooks/guard-migrations.test.mjs`
+
+**Interfaces:**
+- Consumes: `latestRoundNum`, `planFilesForRound` from `../scripts/rounds.mjs`; `activeTicketDir` (from Task 4) stays.
+- Behavior: a migration edit is authorized only by an IMPLEMENTATION plan in the active ticket's **latest round**. If the ticket has no `round-*` dirs (legacy), fall back to the flat lookup from Task 4.
+
+- [ ] **Step 1: Add a failing test for round-scoped authorization**
+
+Append to `plugins/unioss-pipeline/hooks/guard-migrations.test.mjs`:
+
+```js
+import { authorizingPlanFiles } from './guard-migrations.mjs';
+
+test('authorizingPlanFiles uses only the latest round of the active ticket', () => {
+  const root = mkdtempSync(join(tmpdir(), 'guard-'));
+  // active ticket AP#9 with two rounds; the migration is only in round-2's plan
+  mkdirSync(join(root, 'AP#9', 'round-1'), { recursive: true });
+  writeFileSync(join(root, 'AP#9', 'round-1', 'AP#9_IMPLEMENTATION_V1.md'), 'no match here');
+  mkdirSync(join(root, 'AP#9', 'round-2'), { recursive: true });
+  writeFileSync(join(root, 'AP#9', 'round-2', 'AP#9_IMPLEMENTATION_V1.md'), 'touches 099_add_col.php');
+  const pdir = join(root, '.pipeline', 'AP#9');
+  mkdirSync(pdir, { recursive: true });
+  writeFileSync(join(pdir, 'pipeline-state.json'), '{}');
+
+  const files = authorizingPlanFiles(root);
+  assert.equal(files.length, 1);
+  assert.match(files[0], /round-2/);
+});
+```
+
+- [ ] **Step 2: Run test to verify it fails**
+
+Run: `node --test plugins/unioss-pipeline/hooks/guard-migrations.test.mjs`
+Expected: FAIL — `authorizingPlanFiles is not exported`.
+
+- [ ] **Step 3: Refactor the hook to export `authorizingPlanFiles` and use rounds**
+
+In `plugins/unioss-pipeline/hooks/guard-migrations.mjs`, add the import beside the others:
+
+```js
+import { latestRoundNum, planFilesForRound } from '../scripts/rounds.mjs';
+```
+
+Add this exported function (next to `activeTicketDir`):
+
+```js
+export function authorizingPlanFiles(root) {
+  const active = activeTicketDir(root);
+  if (!active) return allTicketPlanFiles(root);
+  const latest = latestRoundNum(active);
+  return latest ? planFilesForRound(active, latest) : planFilesIn(active);
+}
+```
+
+In the stdin handler, replace the block that computes `planFiles`:
+
+```js
+  const root = resolveConfig().artifactRoot;
+  const active = activeTicketDir(root);
+  const planFiles = active ? planFilesIn(active) : allTicketPlanFiles(root);
+```
+
+with:
+
+```js
+  const root = resolveConfig().artifactRoot;
+  const planFiles = authorizingPlanFiles(root);
+```
+
+And update the block message to describe rounds:
+
+```js
+  if (!referenced) {
+    const active = activeTicketDir(root);
+    const where = active
+      ? `the active ticket's latest round plan (under ${active})`
+      : `any implementation plan under ${root}/`;
+    process.stderr.write(`Blocked: ${base} is not referenced by ${where}. Add it to the plan first.\n`);
+    process.exit(2);
+  }
+```
+
+- [ ] **Step 4: Run the full guard test file**
+
+Run: `node --test plugins/unioss-pipeline/hooks/guard-migrations.test.mjs`
+Expected: PASS — the Task 4 tests (`activeTicketDir`) and the new `authorizingPlanFiles` test all pass.
+
+- [ ] **Step 5: Commit**
+
+```bash
+git add plugins/unioss-pipeline/hooks/guard-migrations.mjs plugins/unioss-pipeline/hooks/guard-migrations.test.mjs
+git commit -m "feat(unioss-pipeline): scope migration guard to the active ticket's latest round"
+```
+
+---
+
+### Task 12: Sealed-round write guard (`guard-rounds.mjs`) + hook registration
+
+**Files:**
+- Create: `plugins/unioss-pipeline/hooks/guard-rounds.mjs`
+- Test: `plugins/unioss-pipeline/hooks/guard-rounds.test.mjs`
+- Modify: `plugins/unioss-pipeline/hooks/hooks.json`
+
+**Interfaces:**
+- Consumes: `resolveConfig` from `../scripts/config.mjs`.
+- Produces: `sealedRoundViolation(filePath, root): number | null` — the round number being illegally written, or `null` if the write is allowed. A write is illegal when the path is under `round-K` and `K < current_round` for that ticket.
+
+- [ ] **Step 1: Write the failing test**
+
+Create `plugins/unioss-pipeline/hooks/guard-rounds.test.mjs`:
+
+```js
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+import { mkdtempSync, mkdirSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { sealedRoundViolation } from './guard-rounds.mjs';
+
+function root(currentRound) {
+  const dir = mkdtempSync(join(tmpdir(), 'gr-'));
+  const pdir = join(dir, '.pipeline', 'AP#7');
+  mkdirSync(pdir, { recursive: true });
+  writeFileSync(join(pdir, 'pipeline-state.json'), JSON.stringify({ current_round: currentRound }));
+  return dir;
+}
+
+test('writing a prior (sealed) round is a violation', () => {
+  const dir = root(2);
+  const file = join(dir, 'AP#7', 'round-1', 'AP#7_REVIEW.md');
+  assert.equal(sealedRoundViolation(file, dir), 1);
+});
+
+test('writing the current round is allowed', () => {
+  const dir = root(2);
+  const file = join(dir, 'AP#7', 'round-2', 'AP#7_REVIEW.md');
+  assert.equal(sealedRoundViolation(file, dir), null);
+});
+
+test('paths outside any round are ignored', () => {
+  const dir = root(2);
+  assert.equal(sealedRoundViolation(join(dir, 'AP#7', 'screenshots', 'x.png'), dir), null);
+});
+
+test('no state file -> nothing sealed, allowed', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'gr-'));
+  assert.equal(sealedRoundViolation(join(dir, 'AP#7', 'round-1', 'x.md'), dir), null);
+});
+```
+
+- [ ] **Step 2: Run test to verify it fails**
+
+Run: `node --test plugins/unioss-pipeline/hooks/guard-rounds.test.mjs`
+Expected: FAIL — `Cannot find module './guard-rounds.mjs'`.
+
+- [ ] **Step 3: Write minimal implementation**
+
+Create `plugins/unioss-pipeline/hooks/guard-rounds.mjs`:
+
+```js
+#!/usr/bin/env node
+// PreToolUse(Edit|Write): block writes into a sealed (prior) round's folder.
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { resolveConfig } from '../scripts/config.mjs';
+
+function currentRoundFor(root, ticket) {
+  try {
+    const state = JSON.parse(readFileSync(join(root, '.pipeline', ticket, 'pipeline-state.json'), 'utf8'));
+    return Number(state.current_round) || 0;
+  } catch {
+    return 0;
+  }
+}
+
+export function sealedRoundViolation(filePath, root) {
+  const f = filePath.replace(/\\/g, '/');
+  const m = f.match(/\/([^/]+)\/round-(\d+)\//);
+  if (!m) return null;
+  const ticket = m[1];
+  const round = Number(m[2]);
+  const current = currentRoundFor(root, ticket);
+  return current && round < current ? round : null;
+}
+
+const isMain = process.argv[1] && process.argv[1].endsWith('guard-rounds.mjs');
+if (isMain) {
+  let raw = '';
+  process.stdin.on('data', (c) => (raw += c));
+  process.stdin.on('end', () => {
+    let file = '';
+    try { file = (JSON.parse(raw).tool_input || {}).file_path || ''; } catch { process.exit(0); }
+    const root = resolveConfig().artifactRoot;
+    const violated = sealedRoundViolation(file, root);
+    if (violated !== null) {
+      process.stderr.write(`Blocked: round-${violated} is sealed. Write into the current round instead.\n`);
+      process.exit(2);
+    }
+    process.exit(0);
+  });
+}
+```
+
+- [ ] **Step 4: Run test to verify it passes**
+
+Run: `node --test plugins/unioss-pipeline/hooks/guard-rounds.test.mjs`
+Expected: PASS — 4 tests pass.
+
+- [ ] **Step 5: Register the hook**
+
+In `plugins/unioss-pipeline/hooks/hooks.json`, add `guard-rounds.mjs` to the existing `PreToolUse` `Edit|Write` matcher so the array reads:
+
+```json
+{
+  "hooks": {
+    "PreToolUse": [
+      { "matcher": "Edit|Write", "hooks": [
+        { "type": "command", "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/guard-migrations.mjs\"" },
+        { "type": "command", "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/guard-rounds.mjs\"" }
+      ] }
+    ],
+    "PostToolUse": [
+      { "matcher": "Edit|Write", "hooks": [ { "type": "command", "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/php-lint.mjs\"" } ] }
+    ]
+  }
+}
+```
+
+- [ ] **Step 6: Smoke-test the hook end to end**
+
+Run: `echo '{"tool_input":{"file_path":"/x/AP#7/round-1/y.md"}}' | node plugins/unioss-pipeline/hooks/guard-rounds.mjs; echo "exit=$?"`
+Expected: `exit=0` (no pipeline-state in cwd, so nothing is sealed — allowed).
+
+- [ ] **Step 7: Commit**
+
+```bash
+git add plugins/unioss-pipeline/hooks/guard-rounds.mjs plugins/unioss-pipeline/hooks/guard-rounds.test.mjs plugins/unioss-pipeline/hooks/hooks.json
+git commit -m "feat(unioss-pipeline): block writes to sealed prior rounds"
+```
+
+---
+
+### Task 13: Orchestrator round logic (`unioss-pipeline/SKILL.md` + REFERENCE.md)
+
+**Files:**
+- Modify: `plugins/unioss-pipeline/skills/unioss-pipeline/SKILL.md`
+- Modify: `plugins/unioss-pipeline/skills/unioss-pipeline/REFERENCE.md`
+
+**Interfaces:** documentation/orchestration only. Defines the `pipeline-state.json` shape consumed by Tasks 11-12 (`current_round`).
+
+- [ ] **Step 1: Update the State & resume section of SKILL.md**
+
+In `plugins/unioss-pipeline/skills/unioss-pipeline/SKILL.md`, replace the `## State & resume` paragraph with:
+
+```markdown
+## State & resume
+
+State file: `.walkthrough/.pipeline/<PREFIX>#[IID]/pipeline-state.json` —
+`{ current_round, rounds: { "<n>": { stage, gate_decisions, plan_version, review_counts, test_status } } }`.
+
+On start, determine the round:
+- No state, or no `round-*` dirs → this is **round 1**. Set `current_round = 1`.
+- Latest round is **incomplete** (its `stage` is not `finalized`) → resume that round; do not open a new one.
+- Latest round is **sealed** (`stage = finalized`) **and** there is new requested work (ticket changed since the round, or the user gives an instruction) → open **round N+1**: set `current_round = N+1`.
+
+Update the current round's entry after every stage.
+```
+
+- [ ] **Step 2: Add a round-brief + freeze rule to Step 0 of SKILL.md**
+
+In the same file, at the end of the `## Step 0` section (after "Wait for the user to say to proceed."), append:
+
+```markdown
+**Rounds.** All artifacts for this run go under `.walkthrough/<PREFIX>#[IID]/round-<current_round>/`.
+If this is a re-run (a sealed round already exists), first write
+`round-<current_round>/ROUND_BRIEF.md` capturing exactly what this round must do — from the
+ticket delta since the last round and/or the user's instruction — and state in Step 0 that
+all prior rounds stay frozen. Every stage this round is scoped to the brief and treats prior
+rounds as an immutable, already-delivered baseline. Never write outside the current round
+(the sealed-round guard enforces this).
+```
+
+- [ ] **Step 3: Point the Flow's artifact paths at the current round in SKILL.md**
+
+In the `## Flow` section, change step 1 and the stage descriptions so every artifact path is
+written as `.walkthrough/<PREFIX>#[IID]/round-<current_round>/…`. Concretely, in step 1 replace:
+
+```markdown
+1. **Parse** the URL → IID + origin repo → prefix `AP`/`FE`. Create `.walkthrough/.pipeline/<PREFIX>#[IID]/`.
+```
+
+with:
+
+```markdown
+1. **Parse** the URL → IID + origin repo → prefix `AP`/`FE`. Determine `current_round` (see State & resume). Create `.walkthrough/.pipeline/<PREFIX>#[IID]/` and `.walkthrough/<PREFIX>#[IID]/round-<current_round>/`.
+```
+
+For steps 2-10, where the text names an artifact under `.walkthrough/<PREFIX>#[IID]/`, insert
+`round-<current_round>/` after the ticket folder (e.g. INVESTIGATION.md, IMPLEMENTATION_V{n}.md,
+CHANGES.md, REVIEW.md, TEST_RESULTS.md, UT_*.txt, screenshots/). Pass the resolved round path to
+each subagent in its prompt so the subagents write to the right place.
+
+- [ ] **Step 4: Update the Artifact Layout section of REFERENCE.md**
+
+In `plugins/unioss-pipeline/skills/unioss-pipeline/REFERENCE.md`, replace the `## Artifact Layout`
+section body with the round-based layout:
+
+```markdown
+## Artifact Layout (project root `.walkthrough/`)
+
+Each run is a **round**. Visible artifacts live under
+`.walkthrough/<PREFIX>#[IID]/round-<N>/` (the human reads these):
+- `ROUND_BRIEF.md` (round 2+: what this round must do)
+- `<PREFIX>#[IID]_INVESTIGATION.md`, `<PREFIX>#[IID]_REPORT.md` (vi)
+- `<PREFIX>#[IID]_IMPLEMENTATION_V{n}.md`
+- `<PREFIX>#[IID]_CHANGES.md`, `<PREFIX>#[IID]_REVIEW.md`, `<PREFIX>#[IID]_TEST_RESULTS.md`
+- `UT_#[IID]_[YYYYMMDD]_V1.txt` (full PHPUnit run, AdminPage only)
+- `screenshots/` (tester UI screenshots)
+
+`round-1` is the initial run; each re-run opens the next round and **never modifies a prior
+round**. Hidden tracking lives in `.walkthrough/.pipeline/<PREFIX>#[IID]/`
+(`RAW_TICKET_DATA.json`, `TICKET_SUMMARY.md`, `pipeline-state.json` with `current_round`).
+
+`<PREFIX>` is `AP` or `FE`, decided from the ticket URL.
+```
+
+- [ ] **Step 5: Verify the docs are internally consistent**
+
+Run: `grep -n "round-<current_round>\|round-<N>\|current_round\|ROUND_BRIEF" plugins/unioss-pipeline/skills/unioss-pipeline/SKILL.md plugins/unioss-pipeline/skills/unioss-pipeline/REFERENCE.md`
+Expected: matches in both files; the flow, state section, and layout all reference rounds.
+
+- [ ] **Step 6: Commit**
+
+```bash
+git add plugins/unioss-pipeline/skills/unioss-pipeline/SKILL.md plugins/unioss-pipeline/skills/unioss-pipeline/REFERENCE.md
+git commit -m "feat(unioss-pipeline): orchestrator round logic + round-based artifact layout"
+```
+
+---
+
+### Task 14: Stage skills + agents write into the current round
+
+**Files:**
+- Modify: `plugins/unioss-pipeline/skills/unioss-investigate/SKILL.md`
+- Modify: `plugins/unioss-pipeline/skills/unioss-plan/SKILL.md`
+- Modify: `plugins/unioss-pipeline/skills/unioss-implement/SKILL.md`
+- Modify: `plugins/unioss-pipeline/skills/unioss-review/SKILL.md`
+- Modify: `plugins/unioss-pipeline/skills/unioss-verify/SKILL.md`
+- Modify: `plugins/unioss-pipeline/agents/unioss-investigator.md`, `unioss-planner.md`, `unioss-reviewer.md`, `unioss-tester.md`
+
+**Interfaces:** documentation only. Each stage receives a round path from the orchestrator (Task 13) and writes there.
+
+- [ ] **Step 1: Make each stage skill write under the round path**
+
+In each of the five stage `SKILL.md` files, change every output path of the form
+`.walkthrough/<PREFIX>#[IID]/<file>` to `.walkthrough/<PREFIX>#[IID]/round-<N>/<file>`, and add
+this sentence to each skill's intro (right after the "Read … REFERENCE.md first" line):
+
+```markdown
+Write all artifacts under the round folder the orchestrator gives you
+(`.walkthrough/<PREFIX>#[IID]/round-<N>/`); never write into a different round.
+```
+
+Apply to: `unioss-investigate` (INVESTIGATION.md, REPORT.md), `unioss-plan`
+(IMPLEMENTATION_V{n}.md), `unioss-implement` (CHANGES.md, UT_*.txt), `unioss-review`
+(REVIEW.md), `unioss-verify` (TEST_RESULTS.md, screenshots/).
+
+- [ ] **Step 2: Tell the four subagents they receive a round path**
+
+In each agent file (`unioss-investigator.md`, `unioss-planner.md`, `unioss-reviewer.md`,
+`unioss-tester.md`), add to the inputs line:
+
+```markdown
+The orchestrator passes the round path (`.walkthrough/<PREFIX>#[IID]/round-<N>/`) in your prompt — write your artifacts there.
+```
+
+- [ ] **Step 3: Verify no stage still writes to the flat ticket folder**
+
+Run: `grep -rnE "walkthrough/<PREFIX>#\[IID\]/[A-Za-z]" plugins/unioss-pipeline/skills/unioss-{investigate,plan,implement,review,verify}/SKILL.md`
+Expected: no matches — every visible-artifact path now has `round-<N>/` between the ticket folder and the filename. (Paths under `.pipeline/` are unchanged and won't match this pattern.)
+
+- [ ] **Step 4: Commit**
+
+```bash
+git add plugins/unioss-pipeline/skills plugins/unioss-pipeline/agents
+git commit -m "feat(unioss-pipeline): stages write artifacts into the current round"
+```
+
+---
+
+### Task 15: README rounds section, full suite green, version bump
+
+**Files:**
+- Modify: `README.md`
+- Modify: `plugins/unioss-pipeline/.claude-plugin/plugin.json`
+
+**Interfaces:** none.
+
+- [ ] **Step 1: Document rounds in the README**
+
+In `README.md`, after the `## Configuration` section (added in Task 8), insert:
+
+```markdown
+## Re-running a ticket (rounds)
+
+Re-running `/unioss-pipeline` on a ticket that already has outputs opens a new **round**.
+The full investigate → plan → implement → review → verify process runs again, but each round
+only does the work requested for it, and every prior round is frozen — nothing is overwritten.
+
+```
+.walkthrough/AP#1834/
+  round-1/   first run's investigation, plan, changes, review, test results
+  round-2/   a later requirement — round-1 untouched
+```
+
+Round 2+ starts from a `ROUND_BRIEF.md` describing just that round's change (from the updated
+ticket and/or your instruction). All rounds share the ticket's one feature branch; later rounds
+add commits on top.
+```
+
+- [ ] **Step 2: Run the entire plugin test suite**
+
+Run: `node --test plugins/unioss-pipeline/scripts/*.test.mjs plugins/unioss-pipeline/hooks/*.test.mjs`
+Expected: every test from Tasks 1, 2, 4, 10, 11, 12 PASS; 0 failures.
+
+- [ ] **Step 3: Bump the plugin version**
+
+In `plugins/unioss-pipeline/.claude-plugin/plugin.json`, change `"version": "1.1.0"` to `"version": "1.2.0"`.
+
+- [ ] **Step 4: Commit**
+
+```bash
+git add README.md plugins/unioss-pipeline/.claude-plugin/plugin.json
+git commit -m "docs+chore(unioss-pipeline): document rounds, bump to 1.2.0"
+```
+
+---
+
+## Self-Review — Part B (Rounds)
+
+**Requirement coverage:**
+- Re-runs are non-destructive; prior rounds frozen → round-N layout (Tasks 10, 13, 14) + sealed-round guard (Task 12). ✅
+- Full A→Z process each round, scoped to the round's delta → orchestrator round logic + ROUND_BRIEF (Task 13). ✅
+- "Only perform the tasks requested in round 2, round 1 unchanged" → ROUND_BRIEF scoping + freeze rule (Task 13 Step 2) + write guard (Task 12). ✅
+- Continue for further requirements → `current_round` increments; latest-sealed-→-open-N+1 rule (Task 13 Step 1). ✅
+- Migrations stay correct under rounds → guard searches the active ticket's latest round (Task 11). ✅
+- One feature branch, cumulative commits → stated in Concepts + README (Tasks 13, 15). ✅
+
+**Placeholder scan:** No TBD/TODO; JS steps show full code; doc steps quote exact replacement text; every step has an expected result.
+
+**Type consistency:** `listRounds` / `latestRoundNum` / `roundDir` / `planFilesForRound` (Task 10) are consumed with those exact names in Tasks 11. `sealedRoundViolation(filePath, root)` (Task 12) matches its test. `current_round` is written by the orchestrator (Task 13) and read by `guard-rounds.mjs` (Task 12) and `guard-migrations.mjs`'s active-round lookup (Task 11) — one consistent key.
+
+**Cross-part interaction:** Task 11 deliberately rewrites the `guard-migrations` lookup created in Task 4 — Part B is the final state of that file. Both rely on `resolveConfig().artifactRoot` (Part A, Task 1).
