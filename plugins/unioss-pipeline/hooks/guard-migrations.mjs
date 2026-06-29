@@ -4,6 +4,7 @@
 import { readdirSync, readFileSync, statSync, existsSync } from 'node:fs';
 import { basename, join } from 'node:path';
 import { resolveConfig } from '../scripts/config.mjs';
+import { latestRoundNum, planFilesForRound } from '../scripts/rounds.mjs';
 
 export function activeTicketDir(root) {
   const pipelineDir = join(root, '.pipeline');
@@ -38,6 +39,13 @@ function allTicketPlanFiles(root) {
   return plans;
 }
 
+export function authorizingPlanFiles(root) {
+  const active = activeTicketDir(root);
+  if (!active) return allTicketPlanFiles(root);
+  const latest = latestRoundNum(active);
+  return latest ? planFilesForRound(active, latest) : planFilesIn(active);
+}
+
 // Only attach stdin listeners when run as the hook entrypoint, so importing this
 // module (e.g. from tests) does not keep the process alive waiting on stdin.
 const isMain = process.argv[1] && process.argv[1].endsWith('guard-migrations.mjs');
@@ -51,14 +59,16 @@ if (isMain) {
     if (!f.includes('application/migrations/')) process.exit(0);
     const base = basename(f);
     const root = resolveConfig().artifactRoot;
-    const active = activeTicketDir(root);
-    const planFiles = active ? planFilesIn(active) : allTicketPlanFiles(root);
+    const planFiles = authorizingPlanFiles(root);
     const referenced = planFiles.some((p) => {
       try { return readFileSync(p, 'utf8').includes(base); } catch { return false; }
     });
     if (!referenced) {
-      const scope = active ? `the active ticket plan (${active})` : `any implementation plan under ${root}/`;
-      process.stderr.write(`Blocked: ${base} is not referenced by ${scope}. Add it to the plan first.\n`);
+      const active = activeTicketDir(root);
+      const where = active
+        ? `the active ticket's latest round plan (under ${active})`
+        : `any implementation plan under ${root}/`;
+      process.stderr.write(`Blocked: ${base} is not referenced by ${where}. Add it to the plan first.\n`);
       process.exit(2);
     }
     process.exit(0);
