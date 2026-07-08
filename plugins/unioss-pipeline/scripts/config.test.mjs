@@ -81,3 +81,9 @@ test('module keys are kebab-case with on-disk dir values', () => {
   assert.equal(mods['common-helper'], 'common-helper');
   rmSync(dir, { recursive: true, force: true });
 });
+
+test('config path derives from the passed cwd, not the script location', () => {
+  const p = configPath('/tmp/ws');
+  assert.ok(p.startsWith('/tmp/ws'));
+  assert.ok(!p.includes(join('plugins', 'unioss-pipeline', 'scripts')));
+});

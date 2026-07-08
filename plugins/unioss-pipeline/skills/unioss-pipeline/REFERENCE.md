@@ -44,6 +44,8 @@ Both are CodeIgniter 3 / PHP 8.1. The only divergence: FrontEnd skips PHPUnit un
 
 ## Artifact Layout (project root `.walkthrough/`)
 
+**Invariant:** artifacts always live in `<cwd>/.walkthrough/` — the workspace you opened Claude in — never under the plugin install dir. Open Claude at the project you are working on.
+
 Each run is a **round**. Visible artifacts live under
 `.walkthrough/<PREFIX>#[IID]/round-<N>/` (the human reads these):
 - `ROUND_BRIEF.md` (round 2+: what this round must do)
