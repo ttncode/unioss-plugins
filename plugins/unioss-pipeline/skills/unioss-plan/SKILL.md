@@ -27,3 +27,13 @@ Write `.walkthrough/<PREFIX>#[IID]/round-<N>/<PREFIX>#[IID]_IMPLEMENTATION_V1.md
 
 ## Step 4 — Return
 Return the plan path, total estimate points, and a one-line scope summary. Do not paste the full plan body.
+
+## Standalone use
+
+You can be invoked directly on a free-form task (e.g. `/unioss-implement Optimize this function …`), outside the orchestrated pipeline. When **no orchestrator context** was handed to you — no ticket, no round path:
+
+- Do the requested task on the file(s) named, using this skill's rules and domain knowledge.
+- **Write nothing under `.walkthrough/`** — no round folders, no INVESTIGATION / PLAN / CHANGES / REVIEW / TEST / UT artifacts, no state files — **unless the user explicitly asks** for a written artifact.
+- Skip pipeline gates and round bookkeeping.
+
+When the orchestrator dispatches you with a round path, behave exactly as the pipeline sections above describe.

@@ -61,3 +61,13 @@ List only ECSite user-facing screens in section 3; verify URLs against `_docs/EC
 ## Step 6 — Return summary
 
 Return: prefix+IID, repo, clarity verdict, count of open questions, and absolute links to the two visible files. Do not paste full file bodies.
+
+## Standalone use
+
+You can be invoked directly on a free-form task (e.g. `/unioss-implement Optimize this function …`), outside the orchestrated pipeline. When **no orchestrator context** was handed to you — no ticket, no round path:
+
+- Do the requested task on the file(s) named, using this skill's rules and domain knowledge.
+- **Write nothing under `.walkthrough/`** — no round folders, no INVESTIGATION / PLAN / CHANGES / REVIEW / TEST / UT artifacts, no state files — **unless the user explicitly asks** for a written artifact.
+- Skip pipeline gates and round bookkeeping.
+
+When the orchestrator dispatches you with a round path, behave exactly as the pipeline sections above describe.
