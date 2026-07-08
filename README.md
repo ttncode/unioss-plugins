@@ -88,6 +88,24 @@ node "${CLAUDE_PLUGIN_ROOT}/scripts/config.mjs" check
 
 `testing_DB` is a fixed name in the UNIOSS codebase and is intentionally not configurable.
 
+### Source paths
+
+Agents read module source from host paths resolved by `scripts/config.mjs`:
+`source.root` (defaults to the workspace you open Claude in) plus one subdir per
+module — `admin-page`, `front-end`, `common-helper`, `common-models`. Override
+`source.root` with the `SOURCE_ROOT` env var or in the local
+`.walkthrough/config/unioss.config.json`. Resolved paths are exported as
+`US_SRC_ROOT`, `US_SRC_ADMIN_PAGE`, `US_SRC_FRONT_END`, `US_SRC_COMMON_HELPER`,
+`US_SRC_COMMON_MODELS`.
+
+### Browser for the tester
+
+The tester drives a real browser through the bundled Playwright MCP (branded
+Chrome). If `unioss-doctor` reports Chrome missing, install it in a real
+terminal (the password prompt needs a TTY):
+
+    ! npx playwright install --with-deps chrome
+
 ## Re-running a ticket (rounds)
 
 Re-running `/unioss-pipeline` on a ticket that already has outputs opens a new **round**.
