@@ -64,7 +64,7 @@ Return: prefix+IID, repo, clarity verdict, count of open questions, and absolute
 
 ## Standalone use
 
-You can be invoked directly on a free-form task (e.g. `/unioss-implement Optimize this function …`), outside the orchestrated pipeline. When **no orchestrator context** was handed to you — no ticket, no round path:
+You can be invoked directly on a free-form task (e.g. `/unioss-investigate How does the order-cancel flow work …`), outside the orchestrated pipeline. When **no orchestrator context** was handed to you — no ticket, no round path:
 
 - Do the requested task on the file(s) named, using this skill's rules and domain knowledge.
 - **Write nothing under `.walkthrough/`** — no round folders, no INVESTIGATION / PLAN / CHANGES / REVIEW / TEST / UT artifacts, no state files — **unless the user explicitly asks** for a written artifact.

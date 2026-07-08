@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// UNIOSS pipeline environment doctor — cross-platform (node/jq/docker/containers/token/MCP).
+// UNIOSS pipeline environment doctor — cross-platform (node/jq/docker/containers/token/chrome/MCP).
 import { execSync } from 'node:child_process';
 import { platform } from 'node:os';
 import { existsSync } from 'node:fs';
