@@ -50,6 +50,7 @@ Each run is a **round**. Visible artifacts live under
 `.walkthrough/<PREFIX>#[IID]/round-<N>/` (the human reads these):
 - `ROUND_BRIEF.md` (round 2+: what this round must do)
 - `<PREFIX>#[IID]_INVESTIGATION.md`, `<PREFIX>#[IID]_REPORT.md` (vi)
+- `<PREFIX>#[IID]_SPEC.md` (what/why — scope, requirements, acceptance criteria; `_SPEC_V{n}` on edits)
 - `<PREFIX>#[IID]_IMPLEMENTATION_V{n}.md`
 - `<PREFIX>#[IID]_CHANGES.md`, `<PREFIX>#[IID]_REVIEW.md`, `<PREFIX>#[IID]_TEST_RESULTS.md`
 - `UT_#[IID]_[YYYYMMDD]_V1.txt` (full PHPUnit run, AdminPage only)

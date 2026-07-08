@@ -140,7 +140,7 @@ The pipeline imports a SQL dump into the DB on every full run — slow and unnec
    # several:     --filter '<test_classname>::<m1>|<m2>'
    ```
 
-### Full mode — all tests with a fresh DB (on GATE 2 accept)
+### Full mode — all tests with a fresh DB (on GATE 3 accept)
 1. In `StartedSubscriberImpl.php`, **uncomment** the dump-import line so a fresh DB is imported:
    `exec('mysql -u unioss -ptestPassWord < ' . $db_dump_dir, $output, $retval);`
 2. Run the whole suite and save the report:

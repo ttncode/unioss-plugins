@@ -27,10 +27,10 @@ Write/modify tests for the changed logic, then **fast mode** from `unioss-phpuni
 ## Step 3 — Write `CHANGES.md`
 Save `.walkthrough/<PREFIX>#[IID]/round-<N>/<PREFIX>#[IID]_CHANGES.md`: a per-file diff manifest (path · change type · one-line summary) plus the fast-test result.
 
-## Step 4 — On GATE 2 fix
+## Step 4 — On GATE 3 fix
 Apply the orchestrator-provided fixes and re-run the filtered tests.
 
-## Step 5 — On GATE 2 accept (AdminPage only)
+## Step 5 — On GATE 3 accept (AdminPage only)
 Switch to **full mode**: uncomment the dump-import line (fresh DB), run the full suite, save output to `.walkthrough/<PREFIX>#[IID]/round-<N>/UT_#[IID]_[YYYYMMDD]_V1.txt`.
 
 ## Standalone use
