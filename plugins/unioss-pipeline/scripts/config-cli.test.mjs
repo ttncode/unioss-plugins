@@ -58,3 +58,24 @@ test('runCheck passes with token and clean defaults', () => {
   try { assert.equal(runCheck(ws()).ok, true); }
   finally { delete process.env.GITLAB_TOKEN; }
 });
+
+test('buildEnv emits absolute US_SRC_* paths from root', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'unisrc-'));
+  process.env.SOURCE_ROOT = '/srv/unioss3';
+  try {
+    const out = buildEnv(dir);
+    assert.match(out, /US_SRC_ROOT='\/srv\/unioss3'/);
+    assert.match(out, /US_SRC_ADMIN_PAGE='\/srv\/unioss3\/AdminPage'/);
+    assert.match(out, /US_SRC_COMMON_HELPER='\/srv\/unioss3\/common-helper'/);
+  } finally { delete process.env.SOURCE_ROOT; }
+});
+
+test('runCheck warns (non-fatal) when a source module dir is missing', () => {
+  process.env.GITLAB_TOKEN = 'tok';
+  const dir = mkdtempSync(join(tmpdir(), 'uniwarn-'));
+  try {
+    const r = runCheck(dir); // modules do not exist in this empty tmp dir
+    assert.equal(r.ok, true);            // warning is non-fatal
+    assert.match(r.report, /WARN: source module 'admin-page' not found/);
+  } finally { delete process.env.GITLAB_TOKEN; }
+});

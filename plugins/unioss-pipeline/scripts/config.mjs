@@ -17,6 +17,15 @@ export const DEFAULTS = {
     baseBranch: 'v3-master',
     protected: ['master', 'v3-master', 'develop', 'v3-develop', 'v3-develop-tps'],
   },
+  source: {
+    root: null,
+    modules: {
+      'admin-page': 'AdminPage',
+      'front-end': 'FrontEnd',
+      'common-helper': 'common-helper',
+      'common-models': 'common-models',
+    },
+  },
   artifactRoot: '.walkthrough',
 };
 
@@ -50,6 +59,7 @@ export function resolveConfig(cwd = process.cwd()) {
   // deepMerge onto a fresh {} guarantees DEFAULTS is never mutated.
   const merged = deepMerge(deepMerge({}, DEFAULTS), readFileConfig(cwd));
   if (process.env.DB_PASSWORD) merged.db.password = process.env.DB_PASSWORD;
+  merged.source.root = process.env.SOURCE_ROOT || merged.source.root || cwd;
   return merged;
 }
 
@@ -73,6 +83,7 @@ export function valueSources(cwd = process.cwd()) {
   return Object.entries(resolved).map(([key, value]) => {
     let source = 'default';
     if (key === 'db.password' && process.env.DB_PASSWORD) source = 'env';
+    else if (key === 'source.root' && process.env.SOURCE_ROOT) source = 'env';
     else if (key in fileFlat) source = 'file';
     return { key, value, source };
   });
@@ -88,6 +99,10 @@ const sq = (s) => `'${String(s).replace(/'/g, `'\\''`)}'`;
 
 export function buildEnv(cwd = process.cwd()) {
   const c = resolveConfig(cwd);
+  const srcRoot = c.source.root;
+  const srcLines = Object.entries(c.source.modules).map(
+    ([key, dir]) => `US_SRC_${key.toUpperCase().replace(/-/g, '_')}=${sq(join(srcRoot, dir))}`,
+  );
   return [
     `US_MYSQL=${sq(c.docker.mysql)}`,
     `US_PHP=${sq(c.docker.php)}`,
@@ -99,6 +114,8 @@ export function buildEnv(cwd = process.cwd()) {
     `US_FE_PATH=${sq(c.repos.frontEnd.path)}`,
     `US_BASE_BRANCH=${sq(c.git.baseBranch)}`,
     `US_ARTIFACT_ROOT=${sq(c.artifactRoot)}`,
+    `US_SRC_ROOT=${sq(srcRoot)}`,
+    ...srcLines,
   ].join('\n');
 }
 
@@ -125,6 +142,7 @@ export function initFile(cwd = process.cwd()) {
 export function runCheck(cwd = process.cwd()) {
   const c = resolveConfig(cwd);
   const errors = [];
+  const warnings = [];
   const isStr = (v) => typeof v === 'string' && v.length > 0;
   if (!isStr(c.gitlab.host)) errors.push('gitlab.host must be a non-empty string');
   for (const r of ['adminPage', 'frontEnd']) {
@@ -137,8 +155,14 @@ export function runCheck(cwd = process.cwd()) {
   if (!isStr(c.git.baseBranch)) errors.push('git.baseBranch must be a non-empty string');
   if (!Array.isArray(c.git.protected) || c.git.protected.length === 0) errors.push('git.protected must be a non-empty array');
   if (!isStr(c.artifactRoot)) errors.push('artifactRoot must be a non-empty string');
+  if (!isStr(c.source.root)) errors.push('source.root must resolve to a non-empty string');
+  for (const [key, dir] of Object.entries(c.source.modules)) {
+    if (!existsSync(join(c.source.root, dir))) warnings.push(`source module '${key}' not found at ${join(c.source.root, dir)}`);
+  }
   if (!process.env.GITLAB_TOKEN) errors.push('GITLAB_TOKEN is not set in the environment');
-  const report = [formatPrint(cwd), '', errors.length ? errors.map((e) => `  ERROR: ${e}`).join('\n') : '  All checks passed.'].join('\n');
+  const status = errors.length ? errors.map((e) => `  ERROR: ${e}`).join('\n') : '  All checks passed.';
+  const warnBlock = warnings.length ? warnings.map((w) => `  WARN: ${w}`).join('\n') : '';
+  const report = [formatPrint(cwd), '', status, warnBlock].filter(Boolean).join('\n');
   return { ok: errors.length === 0, report };
 }
 

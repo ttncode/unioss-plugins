@@ -53,3 +53,37 @@ test('malformed JSON throws with the path', () => {
 test('configPath is under the given cwd', () => {
   assert.ok(configPath('/tmp/ws').endsWith(join('.walkthrough', 'config', 'unioss.config.json')));
 });
+
+test('source.root defaults to the given cwd when unset', () => {
+  const dir = workspace(undefined);
+  assert.equal(resolveConfig(dir).source.root, dir);
+  assert.equal(DEFAULTS.source.root, null); // DEFAULTS never mutated
+  rmSync(dir, { recursive: true, force: true });
+});
+
+test('SOURCE_ROOT env overrides the cwd default', () => {
+  const dir = workspace(undefined);
+  process.env.SOURCE_ROOT = '/srv/unioss3';
+  try { assert.equal(resolveConfig(dir).source.root, '/srv/unioss3'); }
+  finally { delete process.env.SOURCE_ROOT; rmSync(dir, { recursive: true, force: true }); }
+});
+
+test('file source.root overrides the cwd default', () => {
+  const dir = workspace(JSON.stringify({ source: { root: '/from/file' } }));
+  assert.equal(resolveConfig(dir).source.root, '/from/file');
+  rmSync(dir, { recursive: true, force: true });
+});
+
+test('module keys are kebab-case with on-disk dir values', () => {
+  const dir = workspace(undefined);
+  const mods = resolveConfig(dir).source.modules;
+  assert.equal(mods['admin-page'], 'AdminPage');
+  assert.equal(mods['common-helper'], 'common-helper');
+  rmSync(dir, { recursive: true, force: true });
+});
+
+test('config path derives from the passed cwd, not the script location', () => {
+  const p = configPath('/tmp/ws');
+  assert.ok(p.startsWith('/tmp/ws'));
+  assert.ok(!p.includes(join('plugins', 'unioss-pipeline', 'scripts')));
+});

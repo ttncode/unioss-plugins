@@ -20,6 +20,8 @@ Do not hardcode these in commands — resolve them.
 | `git.baseBranch` | `v3-master` | base for feature branches |
 | `git.protected` | `master, v3-master, develop, v3-develop, v3-develop-tps` | never-commit list |
 | `artifactRoot` | `.walkthrough` | output dir |
+| `source.root` | current workspace (cwd) | host root that holds the module checkouts |
+| `source.modules.*` | `admin-page`→`AdminPage`, `front-end`→`FrontEnd`, `common-helper`, `common-models` | on-disk subdir per module |
 
 Secrets: `GITLAB_TOKEN` is env-only (required). `db.password` resolves env `DB_PASSWORD`
 → file → default. `testing_DB` is a fixed codebase constant — not configurable.
@@ -41,6 +43,8 @@ docker exec -i "$US_MYSQL" mysql -u"$US_DB_USER" -p"$US_DB_PASS" -e "USE $US_DB;
 Both are CodeIgniter 3 / PHP 8.1. The only divergence: FrontEnd skips PHPUnit unit tests.
 
 ## Artifact Layout (project root `.walkthrough/`)
+
+**Invariant:** artifacts always live in `<cwd>/.walkthrough/` — the workspace you opened Claude in — never under the plugin install dir. Open Claude at the project you are working on.
 
 Each run is a **round**. Visible artifacts live under
 `.walkthrough/<PREFIX>#[IID]/round-<N>/` (the human reads these):
@@ -75,6 +79,18 @@ docker exec -i "$US_MYSQL" mysql -u"$US_DB_USER" -p"$US_DB_PASS" -e "USE $US_DB;
 # Testing data (fixed name, imported during PHPUnit runs)
 docker exec -i "$US_MYSQL" mysql -u"$US_DB_USER" -p"$US_DB_PASS" -e "USE testing_DB; SHOW TABLES;"
 ```
+
+### Source paths (read the real code)
+
+`config.mjs env` also exports absolute host paths to each module. Resolve them before reading source; never assume cwd is a repo checkout:
+
+```bash
+eval "$(node "${CLAUDE_PLUGIN_ROOT}/scripts/config.mjs" env)"
+# $US_SRC_ROOT, $US_SRC_ADMIN_PAGE, $US_SRC_FRONT_END, $US_SRC_COMMON_HELPER, $US_SRC_COMMON_MODELS
+grep -rn "some_symbol" "$US_SRC_ADMIN_PAGE/application"
+```
+
+`source.root` defaults to the workspace you opened Claude in; override with the `SOURCE_ROOT` env var or `source.root` in the local config.
 
 ## MCP (tester)
 

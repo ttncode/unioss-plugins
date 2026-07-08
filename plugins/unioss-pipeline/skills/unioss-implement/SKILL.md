@@ -32,3 +32,13 @@ Apply the orchestrator-provided fixes and re-run the filtered tests.
 
 ## Step 5 — On GATE 2 accept (AdminPage only)
 Switch to **full mode**: uncomment the dump-import line (fresh DB), run the full suite, save output to `.walkthrough/<PREFIX>#[IID]/round-<N>/UT_#[IID]_[YYYYMMDD]_V1.txt`.
+
+## Standalone use
+
+You can be invoked directly on a free-form task (e.g. `/unioss-implement Optimize this function …`), outside the orchestrated pipeline. When **no orchestrator context** was handed to you — no ticket, no round path:
+
+- Do the requested task on the file(s) named, using this skill's rules and domain knowledge.
+- **Write nothing under `.walkthrough/`** — no round folders, no INVESTIGATION / PLAN / CHANGES / REVIEW / TEST / UT artifacts, no state files — **unless the user explicitly asks** for a written artifact.
+- Skip pipeline gates and round bookkeeping.
+
+When the orchestrator dispatches you with a round path, behave exactly as the pipeline sections above describe.

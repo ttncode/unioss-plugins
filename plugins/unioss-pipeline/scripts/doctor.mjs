@@ -1,7 +1,8 @@
 #!/usr/bin/env node
-// UNIOSS pipeline environment doctor — cross-platform (node/jq/docker/containers/token/MCP).
+// UNIOSS pipeline environment doctor — cross-platform (node/jq/docker/containers/token/chrome/MCP).
 import { execSync } from 'node:child_process';
 import { platform } from 'node:os';
+import { existsSync } from 'node:fs';
 import { resolveConfig, runCheck } from './config.mjs';
 
 const isWin = platform() === 'win32';
@@ -29,6 +30,11 @@ const installCmd = (pkg) => ({
 
 const dockerOk = has('docker');
 const runningNames = dockerOk ? out('docker ps --format "{{.Names}}"') : '';
+const chromeOk = isWin
+  ? (!!out('where chrome') || existsSync('C:/Program Files/Google/Chrome/Application/chrome.exe'))
+  : platform() === 'darwin'
+    ? (has('google-chrome') || existsSync('/Applications/Google Chrome.app'))
+    : (has('google-chrome') || has('google-chrome-stable'));
 const cfg = resolveConfig();
 const { mysql: mysqlName, php: phpName } = cfg.docker;
 
@@ -39,6 +45,7 @@ const checks = [
   { name: `container ${mysqlName}`, ok: new RegExp(`(^|\\n)${mysqlName}(\\r?\\n|$)`).test(runningNames), fix: `Container \`${mysqlName}\` is not running. Start the stack: docker compose up -d (from the unioss3 project root)` },
   { name: `container ${phpName}`, ok: new RegExp(`(^|\\n)${phpName}(\\r?\\n|$)`).test(runningNames), fix: `Container \`${phpName}\` is not running. Start the stack: docker compose up -d (from the unioss3 project root)` },
   { name: 'GITLAB_TOKEN', ok: !!process.env.GITLAB_TOKEN, fix: isWin ? 'setx GITLAB_TOKEN <your-token>' : 'export GITLAB_TOKEN=<your-token>  (add to your shell profile)' },
+  { name: 'Chrome (tester browser)', ok: chromeOk, fix: 'Playwright Chrome not found — the tester cannot verify UI. Run in a real terminal (needs a TTY for sudo):  ! npx playwright install --with-deps chrome' },
 ];
 
 console.log('\nUNIOSS pipeline — environment check\n');
