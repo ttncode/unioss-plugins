@@ -19,6 +19,10 @@ Do not hardcode these in commands — resolve them.
 | `db.name` / `db.user` / `db.password` | `_unioss` / `root` / `ProotW` | DB access |
 | `git.baseBranch` | `v3-master` | base for feature branches |
 | `git.protected` | `master, v3-master, develop, v3-develop, v3-develop-tps` | never-commit list |
+| `ship.assignee` | `nghia.truong` | MR assignee (both modes) |
+| `ship.label` | `UNIOSS 3` | MR label if it exists on the project |
+| `ship.staging.targetBranch` / `.reviewer` | `v3-develop-tps` / `dat.pham` | internal-staging MR target + reviewer |
+| `ship.customer.targetBranch` / `.reviewer` | `v3-develop` / `r.yosimura` | customer-staging MR target + reviewer |
 | `artifactRoot` | `.walkthrough` | output dir |
 | `source.root` | current workspace (cwd) | host root that holds the module checkouts |
 | `source.modules.*` | `admin-page`→`AdminPage`, `front-end`→`FrontEnd`, `common-helper`, `common-models` | on-disk subdir per module |

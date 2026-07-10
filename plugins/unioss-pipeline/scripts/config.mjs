@@ -17,6 +17,12 @@ export const DEFAULTS = {
     baseBranch: 'v3-master',
     protected: ['master', 'v3-master', 'develop', 'v3-develop', 'v3-develop-tps'],
   },
+  ship: {
+    assignee: 'nghia.truong',
+    label: 'UNIOSS 3',
+    staging: { targetBranch: 'v3-develop-tps', reviewer: 'dat.pham', deleteSourceBranch: false, squash: false },
+    customer: { targetBranch: 'v3-develop', reviewer: 'r.yosimura', deleteSourceBranch: true, squash: false },
+  },
   source: {
     root: null,
     modules: {
