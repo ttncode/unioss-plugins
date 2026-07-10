@@ -17,6 +17,8 @@ Query the relevant DB (read-only). Testing data after a PHPUnit run lives in `te
 
 ## Step 3 — Verify UI flow
 
+Need login/URLs fast? See `tester-access.md` (this skill dir) for the local DB target, control-data SQL, AdminPage login, and the ECSite top URL.
+
 If any `mcp__playwright__browser_*` call fails (distribution error, connection refused, or MCP not configured), **skip all UI verification test cases**. Mark each as `SKIPPED (MCP unavailable — verify manually)` in `TEST_RESULTS.md` and list the exact UI flows the user must verify manually. DB verification (Step 2) always runs regardless.
 
 When MCP is available, drive the affected screen(s): navigate, perform the ticket's action, assert the expected on-screen result.
