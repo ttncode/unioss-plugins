@@ -28,7 +28,7 @@ Write `.walkthrough/<PREFIX>#[IID]/round-<N>/<PREFIX>#[IID]_SPEC.md` — the *wh
 - **Open Questions** — must be empty (clarify happened at GATE 0). If you cannot make it empty, say so in your return so the orchestrator reopens GATE 0.
 - **Related** — links to the investigation and any related issues.
 
-If a prior version exists, increment `_SPEC_V2`, `_SPEC_V3`, … (GATE 1 edit loop). **Return:** the spec path + a one-line scope summary; do not paste the body.
+If a prior version exists, increment `_SPEC_V2`, `_SPEC_V3`, … (GATE 1 edit loop). **Return:** the spec path (as a clickable `file://` link — REFERENCE → Clickable links) + a one-line scope summary; do not paste the body.
 
 ## Plan mode
 
@@ -48,7 +48,7 @@ Fill `create-implementation-plan.md` (this skill dir). All sections mandatory; *
 Write `.walkthrough/<PREFIX>#[IID]/round-<N>/<PREFIX>#[IID]_IMPLEMENTATION_V1.md`. If a prior version exists, increment to `_V2`, `_V3`, … (GATE 2 edit loop).
 
 ### Step 4 — Return
-Return the plan path, total estimate points, and a one-line scope summary. Do not paste the full plan body.
+Return the plan path (as a clickable `file://` link — REFERENCE → Clickable links), total estimate points, and a one-line scope summary. Do not paste the full plan body.
 
 ## Standalone use
 

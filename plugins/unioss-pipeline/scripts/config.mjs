@@ -17,6 +17,12 @@ export const DEFAULTS = {
     baseBranch: 'v3-master',
     protected: ['master', 'v3-master', 'develop', 'v3-develop', 'v3-develop-tps'],
   },
+  ship: {
+    assignee: 'nghia.truong',
+    label: 'UNIOSS 3',
+    staging: { targetBranch: 'v3-develop-tps', reviewer: 'dat.pham', deleteSourceBranch: false, squash: false },
+    customer: { targetBranch: 'v3-develop', reviewer: 'r.yosimura', deleteSourceBranch: true, squash: false },
+  },
   source: {
     root: null,
     modules: {
@@ -42,7 +48,7 @@ export function deepMerge(base, override) {
 }
 
 export function configPath(cwd = process.cwd()) {
-  return join(cwd, '.walkthrough', 'config', 'unioss.config.json');
+  return join(cwd, '.walkthrough', '.config', 'unioss.config.json');
 }
 
 function readFileConfig(cwd) {
@@ -163,7 +169,7 @@ export function runCheck(cwd = process.cwd()) {
   const status = errors.length ? errors.map((e) => `  ERROR: ${e}`).join('\n') : '  All checks passed.';
   const warnBlock = warnings.length ? warnings.map((w) => `  WARN: ${w}`).join('\n') : '';
   const report = [formatPrint(cwd), '', status, warnBlock].filter(Boolean).join('\n');
-  return { ok: errors.length === 0, report };
+  return { ok: errors.length === 0, report, errors, warnings };
 }
 
 // ── CLI ──────────────────────────────────────────────────────────────────────

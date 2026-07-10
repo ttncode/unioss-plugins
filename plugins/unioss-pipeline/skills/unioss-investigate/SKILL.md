@@ -60,7 +60,7 @@ List only ECSite user-facing screens in section 3; verify URLs against `_docs/EC
 
 ## Step 6 — Return summary
 
-Return: prefix+IID, repo, clarity verdict, count of open questions, and absolute links to the two visible files. Do not paste full file bodies.
+Return: prefix+IID, repo, clarity verdict, count of open questions, and clickable `file://` links (REFERENCE → Clickable links; use `scripts/link.mjs`) to the two visible files. Do not paste full file bodies.
 
 ## Standalone use
 

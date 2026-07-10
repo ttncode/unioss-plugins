@@ -7,7 +7,7 @@ name: unioss-pipeline reference
 ## Configuration (resolved at runtime)
 
 All per-machine values come from `node "${CLAUDE_PLUGIN_ROOT}/scripts/config.mjs"`
-(resolution: env → `.walkthrough/config/unioss.config.json` → built-in default).
+(resolution: env → `.walkthrough/.config/unioss.config.json` → built-in default).
 Do not hardcode these in commands — resolve them.
 
 | Key | Default | Used for |
@@ -19,6 +19,10 @@ Do not hardcode these in commands — resolve them.
 | `db.name` / `db.user` / `db.password` | `_unioss` / `root` / `ProotW` | DB access |
 | `git.baseBranch` | `v3-master` | base for feature branches |
 | `git.protected` | `master, v3-master, develop, v3-develop, v3-develop-tps` | never-commit list |
+| `ship.assignee` | `nghia.truong` | MR assignee (both modes) |
+| `ship.label` | `UNIOSS 3` | MR label if it exists on the project |
+| `ship.staging.targetBranch` / `.reviewer` | `v3-develop-tps` / `dat.pham` | internal-staging MR target + reviewer |
+| `ship.customer.targetBranch` / `.reviewer` | `v3-develop` / `r.yosimura` | customer-staging MR target + reviewer |
 | `artifactRoot` | `.walkthrough` | output dir |
 | `source.root` | current workspace (cwd) | host root that holds the module checkouts |
 | `source.modules.*` | `admin-page`→`AdminPage`, `front-end`→`FrontEnd`, `common-helper`, `common-models` | on-disk subdir per module |
@@ -61,6 +65,23 @@ round**. Hidden tracking lives in `.walkthrough/.pipeline/<PREFIX>#[IID]/`
 (`RAW_TICKET_DATA.json`, `TICKET_SUMMARY.md`, `pipeline-state.json` with `current_round`).
 
 `<PREFIX>` is `AP` or `FE`, decided from the ticket URL.
+
+## Clickable links
+
+Whenever a stage or the orchestrator surfaces an artifact path to the human (gate
+presentations, Return summaries, the final report), emit it as a clickable
+`file://` link — never a bare path. A bare `#` in a ticket dir (`AP#1583`) is
+mangled by the terminal linkifier, so it must be percent-encoded.
+
+Canonical form — absolute path, `#` → `%23`, spaces → `%20`, wrapped as markdown:
+
+    [AP#1583_REVIEW.md](file:///abs/workspace/.walkthrough/AP%231583/round-1/AP%231583_REVIEW.md)
+
+Generate it deterministically:
+
+```bash
+node "${CLAUDE_PLUGIN_ROOT}/scripts/link.mjs" ".walkthrough/AP#1583/round-1/AP#1583_REVIEW.md"
+```
 
 ## GitLab (read-only)
 

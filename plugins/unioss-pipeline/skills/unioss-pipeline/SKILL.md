@@ -7,6 +7,16 @@ description: UNIOSS A→Z ticket pipeline orchestrator. Given a GitLab ticket UR
 
 Read `REFERENCE.md` (this dir) first — it holds the branch, protected-branch, submodule, and commit-message rules you must follow. You run in the MAIN thread. Dispatch read-only stages as subagents; run the coder yourself; own the gates.
 
+## Entry modes
+
+Three ways in. All share the same gates, rounds, and stages; they differ only in what starts the run and which early steps are skipped.
+
+- **ticket mode** — `/unioss-pipeline <url>` (default). New GitLab ticket. Full flow from Investigate. `<PREFIX>` is `AP`/`FE` from the URL.
+- **feedback mode** — `/unioss-feedback <url>`. The ticket already has ≥1 sealed round. Open round N+1 (never restart). Re-fetch the ticket (`unioss-gitlab-issue-context`), read only the **new comments since the last round**, write `round-<N+1>/ROUND_BRIEF.md` from that comment delta, invoke `unioss-brainstorming` on the feedback, then continue from the **spec** stage (Flow step 4) onward — Parse/round-setup (Flow step 1) runs first to open round N+1, and the investigator (step 2) + GATE 0 (step 3) are skipped because the ticket was already investigated in round 1. Prior rounds stay frozen (sealed-round guard).
+- **task mode** — `/unioss-task <description>`. No GitLab ticket. Parse (Flow step 1) still runs: derive the artifact identity `TASK#<short-slug>` from the request (slug = kebab-case of a few keywords) and create the `round-1/` dir + `.walkthrough/.pipeline/TASK#<slug>/`. Write `round-1/ROUND_BRIEF.md` from the user request. Then run the normal Flow **from the investigator (step 2)** — but **skip its GitLab fetch and DB-from-ticket steps**; the investigator maps codebase impact from the request text + code only. Continue GATE 0 → Spec → GATE 1 → Plan → GATE 2 → … as usual. No GitLab links in artifacts.
+
+In every mode, once the brief/scope is clear, proceed through Spec → GATE 1 → Plan → GATE 2 → Code → Review → GATE 3 → Verify → Finalize exactly as the Flow section describes.
+
 ## State & resume
 
 State file: `.walkthrough/.pipeline/<PREFIX>#[IID]/pipeline-state.json` —
@@ -24,32 +34,27 @@ Update the current round's entry after every stage. On resume within a round: if
 Parse the URL first (REFERENCE regex) → IID + origin repo → prefix `AP`/`FE`. Then print this table (substitute `<PREFIX>`, `[IID]`, and the origin repo into the branch row per REFERENCE branch naming) and **stop — ask the user to confirm before proceeding**:
 
 ```
-┌─────────────┬──────────────────────┬──────────────────────────────────────────────────────────────┐
-│    Step     │         Who          │                            You do                            │
-├─────────────┼──────────────────────┼──────────────────────────────────────────────────────────────┤
-│ Investigate │ subagent (opus)      │ writes .walkthrough/<PREFIX>#[IID]/round-<current_round>/<PREFIX>#[IID]_INVESTIGATION.md + _REPORT.md    │
-├─────────────┼──────────────────────┼──────────────────────────────────────────────────────────────┤
-│ 🛑 GATE 0   │ main thread          │ only if unclear — brainstorms open questions with you        │
-├─────────────┼──────────────────────┼──────────────────────────────────────────────────────────────┤
-│ Spec        │ subagent (opus)      │ writes .walkthrough/<PREFIX>#[IID]/round-<current_round>/<PREFIX>#[IID]_SPEC.md (what/why — no code)     │
-├─────────────┼──────────────────────┼──────────────────────────────────────────────────────────────┤
-│ 🛑 GATE 1   │ you                  │ approve the spec or request edits (→ V2/V3)                  │
-├─────────────┼──────────────────────┼──────────────────────────────────────────────────────────────┤
-│ Plan        │ subagent (opus)      │ writes .walkthrough/<PREFIX>#[IID]/round-<current_round>/<PREFIX>#[IID]_IMPLEMENTATION_V1.md             │
-├─────────────┼──────────────────────┼──────────────────────────────────────────────────────────────┤
-│ 🛑 GATE 2   │ you                  │ approve the plan or request edits (→ V2/V3)                  │
-├─────────────┼──────────────────────┼──────────────────────────────────────────────────────────────┤
-│ Code        │ main thread (sonnet) │ applies plan + fast PHPUnit → .walkthrough/<PREFIX>#[IID]/round-<current_round>/<PREFIX>#[IID]_CHANGES.md│
-├─────────────┼──────────────────────┼──────────────────────────────────────────────────────────────┤
-│ Review      │ subagent (opus)      │ writes .walkthrough/<PREFIX>#[IID]/round-<current_round>/<PREFIX>#[IID]_REVIEW.md (severity-indexed)     │
-├─────────────┼──────────────────────┼──────────────────────────────────────────────────────────────┤
-│ 🛑 GATE 3   │ you                  │ fix (loop) or accept (→ full PHPUnit → UT_#[IID]_…)          │
-├─────────────┼──────────────────────┼──────────────────────────────────────────────────────────────┤
-│ Verify      │ subagent (sonnet)    │ writes .walkthrough/<PREFIX>#[IID]/round-<current_round>/<PREFIX>#[IID]_TEST_RESULTS.md (DB + UI)        │
-├─────────────┼──────────────────────┼──────────────────────────────────────────────────────────────┤
-│ Finalize    │ main thread          │ branch feature/v3/#[IID] + commit (no push/MR)               │
-└─────────────┴──────────────────────┴──────────────────────────────────────────────────────────────┘
+╭─ UNIOSS Pipeline · <PREFIX>#[IID] · round-<current_round> ─────────────╮
+│                                                                        │
+│   #    Stage         Runs as            Output                         │
+│  ─────────────────────────────────────────────────────────────────     │
+│   1    Investigate   subagent · opus    INVESTIGATION + REPORT         │
+│   ⛔   GATE 0        you                clarify (only if unclear)       │
+│   2    Spec          subagent · opus    SPEC.md                        │
+│   ⛔   GATE 1        you                approve spec / edit             │
+│   3    Plan          subagent · opus    IMPLEMENTATION_V1              │
+│   ⛔   GATE 2        you                approve plan / edit             │
+│   4    Code          main · sonnet      CHANGES.md + fast tests        │
+│   5    Review        subagent · opus    REVIEW.md                      │
+│   ⛔   GATE 3        you                fix / accept                    │
+│   6    Verify        subagent · sonnet  TEST_RESULTS.md (DB+UI)        │
+│   7    Finalize      main               branch + commit (no push/MR)   │
+│                                                                        │
+│   Gates stop for approval. Nothing runs until you confirm.             │
+╰────────────────────────────────────────────────────────────────────────╯
 ```
+
+Substitute the real `<PREFIX>#[IID]` and `<current_round>` into the title bar, then re-pad the title bar's `─` fill and the right border of every row so the box stays flush after substitution; keep the Finalize wording (branch + commit, no push/MR) per REFERENCE.
 
 Wait for the user to say to proceed. Do not run any stage until they confirm.
 
@@ -87,10 +92,11 @@ rounds as an immutable, already-delivered baseline. Never write outside the curr
 
 11. **Tester** — dispatch `unioss-tester` with the CHANGES.md path + acceptance criteria. It writes TEST_RESULTS.md and returns pass/fail. (Both repos.) If the tester reports any UI criteria as SKIPPED (no browser MCP), note that explicitly — do NOT treat SKIPPED as a pass.
 
-12. **Finalize** — for every repo the coder touched, commit on its feature branch using the REFERENCE commit format `#[IID] - [Message]`. Per REFERENCE: AdminPage/FrontEnd app branches are committed locally only (no push, no MR); common-models/common-helper submodule branches are pushed and the consuming apps' pointers updated. Never touch a protected branch. Present a final summary: branch names per repo, spec, plan, changes, review status, test status, links. If UI verification was SKIPPED, surface "UI verification: SKIPPED — no browser MCP configured" prominently. STOP.
+12. **Finalize** — for every repo the coder touched, commit on its feature branch using the REFERENCE commit format `#[IID] - [Message]`. Per REFERENCE: AdminPage/FrontEnd app branches are committed locally only (no push, no MR); common-models/common-helper submodule branches are pushed and the consuming apps' pointers updated. Never touch a protected branch. Present a final summary: branch names per repo, spec, plan, changes, review status, test status, and clickable `file://` links to every artifact (REFERENCE → Clickable links — run `scripts/link.mjs` per path; never print a bare `.walkthrough/<PREFIX>#[IID]/…` path). If UI verification was SKIPPED, surface "UI verification: SKIPPED — no browser MCP configured" prominently. STOP.
 
 ## Rules
 - Never edit source except via the `unioss-implement` coder step.
 - Honor the gates — never run past Step 0, GATE 1, GATE 2, or GATE 3 without an explicit user decision.
 - **Protected branches** (`master`, `v3-master`, `develop`, `v3-develop`, `v3-develop-tps`) are read-only — never commit, push, or modify them. All work happens on `feature/v3/...` branches cut from `v3-master`. Verify the current branch before any commit/push.
 - Keep main context lean: rely on subagents' returned summaries; read full artifacts only when needed for a gate.
+- When surfacing any artifact path to the human, emit a clickable `file://` link (REFERENCE → Clickable links), never a bare path — a bare `#` breaks the terminal link.

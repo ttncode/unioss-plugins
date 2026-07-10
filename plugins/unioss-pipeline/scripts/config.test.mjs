@@ -8,8 +8,8 @@ import { DEFAULTS, configPath, deepMerge, resolveConfig } from './config.mjs';
 function workspace(fileContents) {
   const dir = mkdtempSync(join(tmpdir(), 'uniconf-'));
   if (fileContents !== undefined) {
-    mkdirSync(join(dir, '.walkthrough', 'config'), { recursive: true });
-    writeFileSync(join(dir, '.walkthrough', 'config', 'unioss.config.json'), fileContents);
+    mkdirSync(join(dir, '.walkthrough', '.config'), { recursive: true });
+    writeFileSync(join(dir, '.walkthrough', '.config', 'unioss.config.json'), fileContents);
   }
   return dir;
 }
@@ -51,7 +51,7 @@ test('malformed JSON throws with the path', () => {
 });
 
 test('configPath is under the given cwd', () => {
-  assert.ok(configPath('/tmp/ws').endsWith(join('.walkthrough', 'config', 'unioss.config.json')));
+  assert.ok(configPath('/tmp/ws').endsWith(join('.walkthrough', '.config', 'unioss.config.json')));
 });
 
 test('source.root defaults to the given cwd when unset', () => {
@@ -86,4 +86,26 @@ test('config path derives from the passed cwd, not the script location', () => {
   const p = configPath('/tmp/ws');
   assert.ok(p.startsWith('/tmp/ws'));
   assert.ok(!p.includes(join('plugins', 'unioss-pipeline', 'scripts')));
+});
+
+test('ship defaults expose per-mode target branch, reviewer, merge options', () => {
+  const dir = workspace(undefined);
+  const { ship } = resolveConfig(dir);
+  assert.equal(ship.assignee, 'nghia.truong');
+  assert.equal(ship.label, 'UNIOSS 3');
+  assert.equal(ship.staging.targetBranch, 'v3-develop-tps');
+  assert.equal(ship.staging.reviewer, 'dat.pham');
+  assert.equal(ship.staging.deleteSourceBranch, false);
+  assert.equal(ship.customer.targetBranch, 'v3-develop');
+  assert.equal(ship.customer.reviewer, 'r.yosimura');
+  assert.equal(ship.customer.deleteSourceBranch, true);
+  rmSync(dir, { recursive: true, force: true });
+});
+
+test('ship reviewer is overridable from file', () => {
+  const dir = workspace(JSON.stringify({ ship: { customer: { reviewer: 'someone.else' } } }));
+  const { ship } = resolveConfig(dir);
+  assert.equal(ship.customer.reviewer, 'someone.else');        // overridden
+  assert.equal(ship.customer.targetBranch, 'v3-develop');      // default preserved (deep merge)
+  rmSync(dir, { recursive: true, force: true });
 });

@@ -45,7 +45,7 @@ reset per file.
 
 ### Step 6 — Output the Report
 
-Write the report to `.walkthrough/<PREFIX>#[IID]/round-<N>/<PREFIX>#[IID]_REVIEW.md` and return the severity counts (🔴/🟡/🟢) plus the top-priority list — do not paste the full report body.
+Write the report to `.walkthrough/<PREFIX>#[IID]/round-<N>/<PREFIX>#[IID]_REVIEW.md` and return the severity counts (🔴/🟡/🟢), the top-priority list, and a clickable `file://` link to `REVIEW.md` (REFERENCE → Clickable links; `scripts/link.mjs`) — do not paste the full report body.
 
 Structure the report as follows:
 
