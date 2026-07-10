@@ -9,7 +9,12 @@ Read `../unioss-pipeline/REFERENCE.md` first. **Never edit source. Write only un
 Write all artifacts under the round folder the orchestrator gives you (`.walkthrough/<PREFIX>#[IID]/round-<N>/`); never write into a different round.
 
 ## Step 1 — Identify what to verify
-From `.walkthrough/<PREFIX>#[IID]/round-<N>/<PREFIX>#[IID]_CHANGES.md` and the ticket acceptance criteria, list the DB effects and UI flows to check.
+From `.walkthrough/<PREFIX>#[IID]/round-<N>/<PREFIX>#[IID]_CHANGES.md` and the ticket acceptance criteria, build an explicit verification checklist — one row per acceptance criterion:
+
+| Criterion | Screen (URL) | Action to perform | Expected on-screen result |
+|-----------|--------------|-------------------|---------------------------|
+
+List the DB effects to check separately. Every criterion must map to a concrete screen + action before you drive anything.
 
 ## Step 2 — Verify DB changes
 Query the relevant DB (read-only). Testing data after a PHPUnit run lives in `testing_DB`; production-shaped data in `$US_DB`:
@@ -23,10 +28,10 @@ If any `mcp__playwright__browser_*` call fails (distribution error, connection r
 
 When MCP is available, drive the affected screen(s): navigate, perform the ticket's action, assert the expected on-screen result.
 
-Save screenshots to `.walkthrough/<PREFIX>#[IID]/round-<N>/screenshots/<step-name>.png` at meaningful moments (after navigation, after the ticket action, after asserting the result) — not on every step.
+Capture a screenshot at **each** of these moments per UI flow (mandatory, not optional): (1) after navigation to the screen, (2) after performing the ticket action, (3) after asserting the expected result. Save to `.walkthrough/<PREFIX>#[IID]/round-<N>/screenshots/<step-name>.png`.
 
 ## Step 4 — Write `TEST_RESULTS.md`
-Save `.walkthrough/<PREFIX>#[IID]/round-<N>/<PREFIX>#[IID]_TEST_RESULTS.md`: DB verification results, UI flow steps, and pass/fail per acceptance criterion.
+Save `.walkthrough/<PREFIX>#[IID]/round-<N>/<PREFIX>#[IID]_TEST_RESULTS.md`. It must contain: (a) the DB verification results, and (b) a per-criterion pass/fail table (Criterion · Screen · Action · Expected · Result · Screenshot link) — every criterion from Step 1 gets a row. `SKIPPED (MCP unavailable)` is never counted as a pass.
 
 Link each screenshot as a relative markdown link immediately after the step it documents:
 
