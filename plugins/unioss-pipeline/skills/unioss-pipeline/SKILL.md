@@ -24,32 +24,27 @@ Update the current round's entry after every stage. On resume within a round: if
 Parse the URL first (REFERENCE regex) → IID + origin repo → prefix `AP`/`FE`. Then print this table (substitute `<PREFIX>`, `[IID]`, and the origin repo into the branch row per REFERENCE branch naming) and **stop — ask the user to confirm before proceeding**:
 
 ```
-┌─────────────┬──────────────────────┬──────────────────────────────────────────────────────────────┐
-│    Step     │         Who          │                            You do                            │
-├─────────────┼──────────────────────┼──────────────────────────────────────────────────────────────┤
-│ Investigate │ subagent (opus)      │ writes .walkthrough/<PREFIX>#[IID]/round-<current_round>/<PREFIX>#[IID]_INVESTIGATION.md + _REPORT.md    │
-├─────────────┼──────────────────────┼──────────────────────────────────────────────────────────────┤
-│ 🛑 GATE 0   │ main thread          │ only if unclear — brainstorms open questions with you        │
-├─────────────┼──────────────────────┼──────────────────────────────────────────────────────────────┤
-│ Spec        │ subagent (opus)      │ writes .walkthrough/<PREFIX>#[IID]/round-<current_round>/<PREFIX>#[IID]_SPEC.md (what/why — no code)     │
-├─────────────┼──────────────────────┼──────────────────────────────────────────────────────────────┤
-│ 🛑 GATE 1   │ you                  │ approve the spec or request edits (→ V2/V3)                  │
-├─────────────┼──────────────────────┼──────────────────────────────────────────────────────────────┤
-│ Plan        │ subagent (opus)      │ writes .walkthrough/<PREFIX>#[IID]/round-<current_round>/<PREFIX>#[IID]_IMPLEMENTATION_V1.md             │
-├─────────────┼──────────────────────┼──────────────────────────────────────────────────────────────┤
-│ 🛑 GATE 2   │ you                  │ approve the plan or request edits (→ V2/V3)                  │
-├─────────────┼──────────────────────┼──────────────────────────────────────────────────────────────┤
-│ Code        │ main thread (sonnet) │ applies plan + fast PHPUnit → .walkthrough/<PREFIX>#[IID]/round-<current_round>/<PREFIX>#[IID]_CHANGES.md│
-├─────────────┼──────────────────────┼──────────────────────────────────────────────────────────────┤
-│ Review      │ subagent (opus)      │ writes .walkthrough/<PREFIX>#[IID]/round-<current_round>/<PREFIX>#[IID]_REVIEW.md (severity-indexed)     │
-├─────────────┼──────────────────────┼──────────────────────────────────────────────────────────────┤
-│ 🛑 GATE 3   │ you                  │ fix (loop) or accept (→ full PHPUnit → UT_#[IID]_…)          │
-├─────────────┼──────────────────────┼──────────────────────────────────────────────────────────────┤
-│ Verify      │ subagent (sonnet)    │ writes .walkthrough/<PREFIX>#[IID]/round-<current_round>/<PREFIX>#[IID]_TEST_RESULTS.md (DB + UI)        │
-├─────────────┼──────────────────────┼──────────────────────────────────────────────────────────────┤
-│ Finalize    │ main thread          │ branch feature/v3/#[IID] + commit (no push/MR)               │
-└─────────────┴──────────────────────┴──────────────────────────────────────────────────────────────┘
+╭─ UNIOSS Pipeline · <PREFIX>#[IID] · round-<current_round> ─────────────╮
+│                                                                        │
+│   #    Stage         Runs as            Output                         │
+│  ─────────────────────────────────────────────────────────────────     │
+│   1    Investigate   subagent · opus    INVESTIGATION + REPORT         │
+│   ⛔   GATE 0        you                clarify (only if unclear)       │
+│   2    Spec          subagent · opus    SPEC.md                        │
+│   ⛔   GATE 1        you                approve spec / edit             │
+│   3    Plan          subagent · opus    IMPLEMENTATION_V1              │
+│   ⛔   GATE 2        you                approve plan / edit             │
+│   4    Code          main · sonnet      CHANGES.md + fast tests        │
+│   5    Review        subagent · opus    REVIEW.md                      │
+│   ⛔   GATE 3        you                fix / accept                    │
+│   6    Verify        subagent · sonnet  TEST_RESULTS.md (DB+UI)        │
+│   7    Finalize      main               branch + commit (no push/MR)   │
+│                                                                        │
+│   Gates stop for approval. Nothing runs until you confirm.             │
+╰────────────────────────────────────────────────────────────────────────╯
 ```
+
+Substitute the real `<PREFIX>#[IID]` and `<current_round>` into the title bar, then re-pad the title bar's `─` fill and the right border of every row so the box stays flush after substitution; keep the Finalize wording (branch + commit, no push/MR) per REFERENCE.
 
 Wait for the user to say to proceed. Do not run any stage until they confirm.
 
