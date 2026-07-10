@@ -29,3 +29,20 @@ test('title appears in the top border', () => {
   const out = box('Env Check', [], 40);
   assert.match(out.split('\n')[0], /╭─ Env Check ─+╮/);
 });
+
+test('a line longer than width wraps onto multiple aligned body lines', () => {
+  const out = box('T', ['short', 'a '.repeat(80).trim()], 40);
+  const lines = out.split('\n');
+  const widths = new Set(lines.map(displayWidth));
+  assert.ok(lines.length > 4); // top + short + wrapped lines + bottom
+  assert.equal(widths.size, 1);
+  assert.equal([...widths][0], 43); // width + 3
+});
+
+test('a single token longer than width is hard-split and still aligned', () => {
+  const out = box('T', ['x'.repeat(100)], 40);
+  const lines = out.split('\n');
+  const widths = new Set(lines.map(displayWidth));
+  assert.equal(widths.size, 1);
+  assert.equal([...widths][0], 43); // width + 3
+});
