@@ -33,7 +33,7 @@ Link each screenshot as a relative markdown link immediately after the step it d
 ```
 
 ## Step 5 — Return
-Return overall pass/fail and the count of failed criteria. Do not paste the full report.
+Return overall pass/fail, the count of failed criteria, and a clickable `file://` link to `TEST_RESULTS.md` (REFERENCE → Clickable links). Do not paste the full report.
 
 ## Standalone use
 

@@ -87,10 +87,11 @@ rounds as an immutable, already-delivered baseline. Never write outside the curr
 
 11. **Tester** — dispatch `unioss-tester` with the CHANGES.md path + acceptance criteria. It writes TEST_RESULTS.md and returns pass/fail. (Both repos.) If the tester reports any UI criteria as SKIPPED (no browser MCP), note that explicitly — do NOT treat SKIPPED as a pass.
 
-12. **Finalize** — for every repo the coder touched, commit on its feature branch using the REFERENCE commit format `#[IID] - [Message]`. Per REFERENCE: AdminPage/FrontEnd app branches are committed locally only (no push, no MR); common-models/common-helper submodule branches are pushed and the consuming apps' pointers updated. Never touch a protected branch. Present a final summary: branch names per repo, spec, plan, changes, review status, test status, links. If UI verification was SKIPPED, surface "UI verification: SKIPPED — no browser MCP configured" prominently. STOP.
+12. **Finalize** — for every repo the coder touched, commit on its feature branch using the REFERENCE commit format `#[IID] - [Message]`. Per REFERENCE: AdminPage/FrontEnd app branches are committed locally only (no push, no MR); common-models/common-helper submodule branches are pushed and the consuming apps' pointers updated. Never touch a protected branch. Present a final summary: branch names per repo, spec, plan, changes, review status, test status, and clickable `file://` links to every artifact (REFERENCE → Clickable links — run `scripts/link.mjs` per path; never print a bare `.walkthrough/<PREFIX>#[IID]/…` path). If UI verification was SKIPPED, surface "UI verification: SKIPPED — no browser MCP configured" prominently. STOP.
 
 ## Rules
 - Never edit source except via the `unioss-implement` coder step.
 - Honor the gates — never run past Step 0, GATE 1, GATE 2, or GATE 3 without an explicit user decision.
 - **Protected branches** (`master`, `v3-master`, `develop`, `v3-develop`, `v3-develop-tps`) are read-only — never commit, push, or modify them. All work happens on `feature/v3/...` branches cut from `v3-master`. Verify the current branch before any commit/push.
 - Keep main context lean: rely on subagents' returned summaries; read full artifacts only when needed for a gate.
+- When surfacing any artifact path to the human, emit a clickable `file://` link (REFERENCE → Clickable links), never a bare path — a bare `#` breaks the terminal link.

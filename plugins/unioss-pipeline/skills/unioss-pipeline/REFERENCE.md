@@ -62,6 +62,23 @@ round**. Hidden tracking lives in `.walkthrough/.pipeline/<PREFIX>#[IID]/`
 
 `<PREFIX>` is `AP` or `FE`, decided from the ticket URL.
 
+## Clickable links
+
+Whenever a stage or the orchestrator surfaces an artifact path to the human (gate
+presentations, Return summaries, the final report), emit it as a clickable
+`file://` link — never a bare path. A bare `#` in a ticket dir (`AP#1583`) is
+mangled by the terminal linkifier, so it must be percent-encoded.
+
+Canonical form — absolute path, `#` → `%23`, spaces → `%20`, wrapped as markdown:
+
+    [AP#1583_REVIEW.md](file:///abs/workspace/.walkthrough/AP%231583/round-1/AP%231583_REVIEW.md)
+
+Generate it deterministically:
+
+```bash
+node "${CLAUDE_PLUGIN_ROOT}/scripts/link.mjs" ".walkthrough/AP#1583/round-1/AP#1583_REVIEW.md"
+```
+
 ## GitLab (read-only)
 
 - Host: `gitlab.host` from config (default `gitlab.unioss.jp`). Token from `process.env.GITLAB_TOKEN`.
