@@ -7,6 +7,16 @@ description: UNIOSS A→Z ticket pipeline orchestrator. Given a GitLab ticket UR
 
 Read `REFERENCE.md` (this dir) first — it holds the branch, protected-branch, submodule, and commit-message rules you must follow. You run in the MAIN thread. Dispatch read-only stages as subagents; run the coder yourself; own the gates.
 
+## Entry modes
+
+Three ways in. All share the same gates, rounds, and stages; they differ only in what starts the run and which early steps are skipped.
+
+- **ticket mode** — `/unioss-pipeline <url>` (default). New GitLab ticket. Full flow from Investigate. `<PREFIX>` is `AP`/`FE` from the URL.
+- **feedback mode** — `/unioss-feedback <url>`. The ticket already has ≥1 sealed round. Open round N+1 (never restart). Re-fetch the ticket (`unioss-gitlab-issue-context`), read only the **new comments since the last round**, write `round-<N+1>/ROUND_BRIEF.md` from that comment delta, invoke `unioss-brainstorming` on the feedback, then continue at the **spec** stage (step 4) onward. Prior rounds stay frozen (sealed-round guard).
+- **task mode** — `/unioss-task <description>`. No GitLab ticket. Derive `<PREFIX>#[IID]` identity as `TASK#<short-slug>` from the request (slug = kebab-case of a few keywords). **Skip** the GitLab fetch and DB-from-ticket steps; the investigator works from the request text + codebase only. Write `round-1/ROUND_BRIEF.md` from the user request, invoke `unioss-brainstorming`, then run the full flow from the spec stage. No GitLab links in artifacts.
+
+In every mode, once the brief/scope is clear, proceed through Spec → GATE 1 → Plan → GATE 2 → Code → Review → GATE 3 → Verify → Finalize exactly as the Flow section describes.
+
 ## State & resume
 
 State file: `.walkthrough/.pipeline/<PREFIX>#[IID]/pipeline-state.json` —
