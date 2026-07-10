@@ -8,8 +8,8 @@ import { DEFAULTS, configPath, deepMerge, resolveConfig } from './config.mjs';
 function workspace(fileContents) {
   const dir = mkdtempSync(join(tmpdir(), 'uniconf-'));
   if (fileContents !== undefined) {
-    mkdirSync(join(dir, '.walkthrough', 'config'), { recursive: true });
-    writeFileSync(join(dir, '.walkthrough', 'config', 'unioss.config.json'), fileContents);
+    mkdirSync(join(dir, '.walkthrough', '.config'), { recursive: true });
+    writeFileSync(join(dir, '.walkthrough', '.config', 'unioss.config.json'), fileContents);
   }
   return dir;
 }
@@ -51,7 +51,7 @@ test('malformed JSON throws with the path', () => {
 });
 
 test('configPath is under the given cwd', () => {
-  assert.ok(configPath('/tmp/ws').endsWith(join('.walkthrough', 'config', 'unioss.config.json')));
+  assert.ok(configPath('/tmp/ws').endsWith(join('.walkthrough', '.config', 'unioss.config.json')));
 });
 
 test('source.root defaults to the given cwd when unset', () => {

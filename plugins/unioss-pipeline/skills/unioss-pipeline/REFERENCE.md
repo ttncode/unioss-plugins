@@ -7,7 +7,7 @@ name: unioss-pipeline reference
 ## Configuration (resolved at runtime)
 
 All per-machine values come from `node "${CLAUDE_PLUGIN_ROOT}/scripts/config.mjs"`
-(resolution: env → `.walkthrough/config/unioss.config.json` → built-in default).
+(resolution: env → `.walkthrough/.config/unioss.config.json` → built-in default).
 Do not hardcode these in commands — resolve them.
 
 | Key | Default | Used for |

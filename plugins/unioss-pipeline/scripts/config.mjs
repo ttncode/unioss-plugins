@@ -42,7 +42,7 @@ export function deepMerge(base, override) {
 }
 
 export function configPath(cwd = process.cwd()) {
-  return join(cwd, '.walkthrough', 'config', 'unioss.config.json');
+  return join(cwd, '.walkthrough', '.config', 'unioss.config.json');
 }
 
 function readFileConfig(cwd) {

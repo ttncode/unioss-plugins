@@ -63,7 +63,7 @@ console.log(`\nPlaywright MCP ships with this plugin (npx @playwright/mcp@latest
 const check = runCheck();
 console.log('Resolved configuration (env > file > default):\n');
 console.log(check.report);
-console.log('\nTo override locally, run:  node scripts/config.mjs init  (creates .walkthrough/config/unioss.config.json)\n');
+console.log('\nTo override locally, run:  node scripts/config.mjs init  (creates .walkthrough/.config/unioss.config.json)\n');
 if (!check.ok) allOk = false;
 
 process.exit(allOk ? 0 : 1);
