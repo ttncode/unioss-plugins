@@ -169,7 +169,7 @@ export function runCheck(cwd = process.cwd()) {
   const status = errors.length ? errors.map((e) => `  ERROR: ${e}`).join('\n') : '  All checks passed.';
   const warnBlock = warnings.length ? warnings.map((w) => `  WARN: ${w}`).join('\n') : '';
   const report = [formatPrint(cwd), '', status, warnBlock].filter(Boolean).join('\n');
-  return { ok: errors.length === 0, report };
+  return { ok: errors.length === 0, report, errors, warnings };
 }
 
 // ── CLI ──────────────────────────────────────────────────────────────────────

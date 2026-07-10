@@ -80,6 +80,8 @@ lines.push(`  ${'GITLAB_TOKEN'.padEnd(22)} ${(process.env.GITLAB_TOKEN ? '******
 
 const check = runCheck();
 if (!check.ok) allOk = false;
+for (const err of check.errors) lines.push('', `  ✗ config: ${err}`);
+for (const warn of check.warnings) lines.push(`  ! ${warn}`);
 const status = allOk
   ? 'All checks passed — pipeline ready.'
   : 'Issues found — resolve the ✗ items above, then re-run.';
