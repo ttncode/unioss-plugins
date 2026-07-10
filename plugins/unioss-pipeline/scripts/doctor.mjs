@@ -3,7 +3,8 @@
 import { execSync } from 'node:child_process';
 import { platform } from 'node:os';
 import { existsSync } from 'node:fs';
-import { resolveConfig, runCheck } from './config.mjs';
+import { resolveConfig, runCheck, valueSources } from './config.mjs';
+import { box } from './box.mjs';
 
 const isWin = platform() === 'win32';
 const has = (cmd) => {
@@ -48,22 +49,42 @@ const checks = [
   { name: 'Chrome (tester browser)', ok: chromeOk, fix: 'Playwright Chrome not found — the tester cannot verify UI. Run in a real terminal (needs a TTY for sudo):  ! npx playwright install --with-deps chrome' },
 ];
 
-console.log('\nUNIOSS pipeline — environment check\n');
+const WIDTH = 69;
+const SECRET_KEYS = new Set(['db.password']);
+const lines = [];
+
 let allOk = true;
 const lightMissing = [];
+
+lines.push('Dependencies', '');
 for (const c of checks) {
-  console.log(`  [${c.ok ? 'OK' : 'XX'}] ${c.name}` + (c.ok ? '' : `\n        -> ${c.fix}`));
-  if (!c.ok) { allOk = false; if (c.light) lightMissing.push(c.name); }
+  lines.push(`  ${c.ok ? '✓' : '✗'}  ${c.name}`);
+  if (!c.ok) {
+    allOk = false;
+    if (c.light) lightMissing.push(c.name);
+    lines.push(`       └ ${c.fix}`);
+  }
 }
+
 if (lightMissing.length && pm) {
-  console.log(`\nLight deps install command:\n  ${lightMissing.map(installCmd).join('  &&  ')}`);
+  lines.push('', `  Light deps:  ${lightMissing.map(installCmd).join('  &&  ')}`);
 }
-console.log(`\nPlaywright MCP ships with this plugin (npx @playwright/mcp@latest) — no manual install needed.\n`);
+lines.push('', '  Playwright MCP ships with this plugin (npx @playwright/mcp@latest).');
+
+lines.push('', 'Configuration          value                 source');
+for (const { key, value, source } of valueSources()) {
+  const shown = SECRET_KEYS.has(key) ? '******' : (Array.isArray(value) ? value.join(',') : String(value));
+  lines.push(`  ${key.padEnd(22)} ${shown.slice(0, 20).padEnd(21)} ${source}`);
+}
+lines.push(`  ${'GITLAB_TOKEN'.padEnd(22)} ${(process.env.GITLAB_TOKEN ? '******' : 'MISSING').padEnd(21)} env`);
 
 const check = runCheck();
-console.log('Resolved configuration (env > file > default):\n');
-console.log(check.report);
-console.log('\nTo override locally, run:  node scripts/config.mjs init  (creates .walkthrough/.config/unioss.config.json)\n');
 if (!check.ok) allOk = false;
+const status = allOk
+  ? 'All checks passed — pipeline ready.'
+  : 'Issues found — resolve the ✗ items above, then re-run.';
+lines.push('', `Status   ${status}`);
+lines.push('', 'Override locally:  node scripts/config.mjs init', '  (.walkthrough/.config/unioss.config.json)');
 
+console.log('\n' + box('UNIOSS Pipeline · Environment Check', lines, WIDTH) + '\n');
 process.exit(allOk ? 0 : 1);
