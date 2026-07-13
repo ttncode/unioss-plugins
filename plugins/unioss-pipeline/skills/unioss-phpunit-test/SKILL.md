@@ -125,30 +125,30 @@ Examples:
 The pipeline imports a SQL dump into the DB on every full run — slow and unnecessary while iterating. Use **fast mode** while writing tests, **full mode** only when a review is accepted.
 
 ### Fast mode — only new/modified tests
-1. In `AdminPage`, restore the saved PHPUnit config:
+1. Apply the device-independent test config (no git stash needed), skipping the slow dump import:
    ```bash
-   cd AdminPage && git stash list           # find the entry named 'PHPUnit config'
-   git stash apply stash@{N}                 # N = that entry
+   node "${CLAUDE_PLUGIN_ROOT}/scripts/phpunit-config.mjs" apply --skip-import
    ```
-2. In `AdminPage/application/tests/StartedSubscriberImpl.php`, **comment out** the dump-import line to skip the slow import:
-   `exec('mysql -u unioss -ptestPassWord < ' . $db_dump_dir, $output, $retval);`
-3. Run only the target test(s):
+2. Run only the target test(s):
    ```bash
    eval "$(node "${CLAUDE_PLUGIN_ROOT}/scripts/config.mjs" env)"
    docker exec -i "$US_PHP" sh -lc "cd /var/www/html/AdminPage && ./vendor/phpunit/phpunit/phpunit -c application/tests/phpunit.xml --filter '<test_classname>' --testdox"
    # one method:  --filter '<test_classname>::<test_method>'
    # several:     --filter '<test_classname>::<m1>|<m2>'
    ```
+3. When done iterating, restore the repo: `node "${CLAUDE_PLUGIN_ROOT}/scripts/phpunit-config.mjs" restore`.
 
 ### Full mode — all tests with a fresh DB (on GATE 3 accept)
-1. In `StartedSubscriberImpl.php`, **uncomment** the dump-import line so a fresh DB is imported:
-   `exec('mysql -u unioss -ptestPassWord < ' . $db_dump_dir, $output, $retval);`
+1. Apply the test config with the dump import enabled (fresh DB):
+   ```bash
+   node "${CLAUDE_PLUGIN_ROOT}/scripts/phpunit-config.mjs" apply --import
+   ```
 2. Run the whole suite and save the report:
    ```bash
    eval "$(node "${CLAUDE_PLUGIN_ROOT}/scripts/config.mjs" env)"
-   docker exec -it "$US_PHP" sh -lc "cd /var/www/html/AdminPage && ./vendor/phpunit/phpunit/phpunit -c application/tests/phpunit.xml --testdox" > .walkthrough/<PREFIX>#[IID]/UT_#[IID]_[YYYYMMDD]_V1.txt
+   docker exec -i "$US_PHP" sh -lc "cd /var/www/html/AdminPage && ./vendor/phpunit/phpunit/phpunit -c application/tests/phpunit.xml --testdox" > .walkthrough/<PREFIX>#[IID]/UT_#[IID]_[YYYYMMDD]_V1.txt
    ```
-   > `-it` needs a TTY; drop `-t` (use `-i`) when running non-interactively.
+3. Restore the repo when finished: `node "${CLAUDE_PLUGIN_ROOT}/scripts/phpunit-config.mjs" restore`.
 
 ## Fast Failure Triage
 

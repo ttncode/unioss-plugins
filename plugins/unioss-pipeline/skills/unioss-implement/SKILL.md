@@ -22,7 +22,7 @@ git fetch origin && git checkout v3-master && git pull && git checkout -b <branc
 Apply the exact per-file changes from `.walkthrough/<PREFIX>#[IID]/round-<N>/<PREFIX>#[IID]_IMPLEMENTATION_V{n}.md`. When the plan calls for migrations, use `unioss-generate-migration` / `unioss-bump-migration`. Use `codeignitor3-simplifier` to keep CI3 code clean.
 
 ## Step 2 — PHPUnit fast verify (AdminPage only)
-Write/modify tests for the changed logic, then **fast mode** from `unioss-phpunit-test` `## Run Commands`: apply the `PHPUnit config` stash, comment out the dump-import line in `StartedSubscriberImpl.php`, run only the new/modified tests until green. (FrontEnd: skip — no unit tests.)
+Write/modify tests for the changed logic, then **fast mode** from `unioss-phpunit-test` `## Run Commands`: run `phpunit-config.mjs apply --skip-import`, run only the new/modified tests until green, then `phpunit-config.mjs restore`. (FrontEnd: skip — no unit tests.)
 
 ## Step 3 — Write `CHANGES.md`
 Save `.walkthrough/<PREFIX>#[IID]/round-<N>/<PREFIX>#[IID]_CHANGES.md`: a per-file diff manifest (path · change type · one-line summary) plus the fast-test result.
@@ -31,7 +31,7 @@ Save `.walkthrough/<PREFIX>#[IID]/round-<N>/<PREFIX>#[IID]_CHANGES.md`: a per-fi
 Apply the orchestrator-provided fixes and re-run the filtered tests.
 
 ## Step 5 — On GATE 3 accept (AdminPage only)
-Switch to **full mode**: uncomment the dump-import line (fresh DB), run the full suite, save output to `.walkthrough/<PREFIX>#[IID]/round-<N>/UT_#[IID]_[YYYYMMDD]_V1.txt`.
+Switch to **full mode**: `phpunit-config.mjs apply --import` (fresh DB), run the full suite, save output to `.walkthrough/<PREFIX>#[IID]/round-<N>/UT_#[IID]_[YYYYMMDD]_V1.txt`, then `phpunit-config.mjs restore`.
 
 ## Standalone use
 
