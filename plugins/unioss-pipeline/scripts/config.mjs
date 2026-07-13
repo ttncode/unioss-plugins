@@ -32,6 +32,10 @@ export const DEFAULTS = {
       'common-models': 'common-models',
     },
   },
+  tester: {
+    mailhog: 'http://localhost:8225',
+    ecsiteLogin: 'http://localhost:2380/storetax/login',
+  },
   artifactRoot: '.walkthrough',
 };
 
@@ -121,6 +125,8 @@ export function buildEnv(cwd = process.cwd()) {
     `US_BASE_BRANCH=${sq(c.git.baseBranch)}`,
     `US_ARTIFACT_ROOT=${sq(c.artifactRoot)}`,
     `US_SRC_ROOT=${sq(srcRoot)}`,
+    `US_TESTER_MAILHOG=${sq(c.tester.mailhog)}`,
+    `US_TESTER_ECSITE_LOGIN=${sq(c.tester.ecsiteLogin)}`,
     ...srcLines,
   ].join('\n');
 }
@@ -161,6 +167,7 @@ export function runCheck(cwd = process.cwd()) {
   if (!isStr(c.git.baseBranch)) errors.push('git.baseBranch must be a non-empty string');
   if (!Array.isArray(c.git.protected) || c.git.protected.length === 0) errors.push('git.protected must be a non-empty array');
   if (!isStr(c.artifactRoot)) errors.push('artifactRoot must be a non-empty string');
+  if (!isStr(c.tester.mailhog) || !isStr(c.tester.ecsiteLogin)) errors.push('tester.mailhog/ecsiteLogin must be non-empty strings');
   if (!isStr(c.source.root)) errors.push('source.root must resolve to a non-empty string');
   for (const [key, dir] of Object.entries(c.source.modules)) {
     if (!existsSync(join(c.source.root, dir))) warnings.push(`source module '${key}' not found at ${join(c.source.root, dir)}`);
