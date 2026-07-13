@@ -88,7 +88,7 @@ rounds as an immutable, already-delivered baseline. Never write outside the curr
 
 10. **GATE 3 — Review fix/accept.** Present findings by severity.
    - **fix** → invoke `unioss-implement` to apply fixes + re-run filtered tests → ask "re-review or proceed?"; if re-review, go to step 9.
-   - **accept** → (AdminPage) invoke `unioss-implement` full mode: uncomment the dump-import line, run the full suite → `.walkthrough/<PREFIX>#[IID]/round-<current_round>/UT_#[IID]_[YYYYMMDD]_V1.txt`.
+   - **accept** → (AdminPage) invoke `unioss-implement` full mode: run the full suite with a fresh DB (`phpunit-config apply --import`) → `.walkthrough/<PREFIX>#[IID]/round-<current_round>/UT_#[IID]_[YYYYMMDD]_V1.txt`.
 
 11. **Tester** — dispatch `unioss-tester` with the CHANGES.md path + acceptance criteria. It writes TEST_RESULTS.md and returns pass/fail. (Both repos.) If the tester reports any UI criteria as SKIPPED (no browser MCP), note that explicitly — do NOT treat SKIPPED as a pass.
 

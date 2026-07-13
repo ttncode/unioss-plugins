@@ -23,7 +23,7 @@ MR creation is a **human click**: this skill generates a pre-filled "new MR" URL
 
 ## Mode: customer
 1. **Sync with base.** On each touched repo's feature branch: `git fetch origin && git merge origin/v3-master`. On a merge conflict → **stop**, tell the user to resolve it manually, do not continue.
-2. **Re-run tests.** AdminPage: invoke `unioss-implement` full mode (uncomment dump-import, full PHPUnit) → save `UT_#[IID]_[YYYYMMDD]_V{n}.txt`. FrontEnd: no unit tests. If tests fail → find the root cause, propose a fix plan, **ask the user to approve** it, apply via `unioss-implement`, re-run; loop until green.
+2. **Re-run tests.** AdminPage: invoke `unioss-implement` full mode (full PHPUnit with a fresh DB) → save `UT_#[IID]_[YYYYMMDD]_V{n}.txt`. FrontEnd: no unit tests. If tests fail → find the root cause, propose a fix plan, **ask the user to approve** it, apply via `unioss-implement`, re-run; loop until green.
 3. **Push** each feature branch: `git push -u origin <branch>`.
 4. For each touched repo, print the MR link + settings targeting `v3-develop`:
    ```bash
