@@ -1,6 +1,7 @@
 #!/usr/bin/env node
-// Build a pre-filled GitLab "new merge request" URL + the settings the URL can't
-// carry (assignee/reviewer/labels/merge options). No API writes — the human clicks.
+// Build a pre-filled GitLab "new merge request" URL + settings (the print-URL
+// fallback), and — in `create` mode — push-adjacent MR creation via the GitLab
+// API (POST merge_requests only; never merges). Merge stays a human action.
 import { pathToFileURL } from 'node:url';
 import { resolveConfig } from './config.mjs';
 
