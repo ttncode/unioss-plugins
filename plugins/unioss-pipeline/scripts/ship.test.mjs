@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { mrUrl, shipInfo } from './ship.mjs';
+import { mrUrl, shipInfo, mrCreatePayload, repoRef } from './ship.mjs';
 
 test('mrUrl encodes branch (# and /) and sets bracketed params', () => {
   const url = mrUrl({
@@ -37,4 +37,36 @@ test('shipInfo customer uses v3-develop and delete-source ON', () => {
 
 test('shipInfo throws on unknown mode', () => {
   assert.throws(() => shipInfo({ cwd: process.cwd(), mode: 'prod', repoWebPath: 'x/y', sourceBranch: 'b' }), /Unknown ship mode/);
+});
+
+test('mrCreatePayload maps ids, label and options into the POST body', () => {
+  const body = mrCreatePayload({
+    sourceBranch: 'feature/v3/#1584', targetBranch: 'v3-develop-tps', title: '#1584 - Do the thing',
+    assigneeId: 7, reviewerId: 9, label: 'UNIOSS 3', removeSourceBranch: false, squash: false,
+  });
+  assert.deepEqual(body, {
+    source_branch: 'feature/v3/#1584',
+    target_branch: 'v3-develop-tps',
+    title: '#1584 - Do the thing',
+    assignee_ids: [7],
+    reviewer_ids: [9],
+    labels: 'UNIOSS 3',
+    remove_source_branch: false,
+    squash: false,
+  });
+});
+
+test('mrCreatePayload emits empty id arrays when a user is unresolved', () => {
+  const body = mrCreatePayload({ sourceBranch: 'b', targetBranch: 't', title: 'x' });
+  assert.deepEqual(body.assignee_ids, []);
+  assert.deepEqual(body.reviewer_ids, []);
+});
+
+test('repoRef maps repo keys to project id + web path', () => {
+  assert.deepEqual(repoRef(process.cwd(), 'adminPage'), { id: 32, webPath: 'unioss/AdminPage' });
+  assert.deepEqual(repoRef(process.cwd(), 'frontEnd'), { id: 31, webPath: 'unioss/FrontEnd' });
+});
+
+test('repoRef throws on unknown repo key', () => {
+  assert.throws(() => repoRef(process.cwd(), 'nope'), /Unknown repo key/);
 });

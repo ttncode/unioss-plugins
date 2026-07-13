@@ -88,7 +88,7 @@ node "${CLAUDE_PLUGIN_ROOT}/scripts/link.mjs" ".walkthrough/AP#1583/round-1/AP#1
 - Host: `gitlab.host` from config (default `gitlab.unioss.jp`). Token from `process.env.GITLAB_TOKEN`.
 - URL regex: `/https:\/\/([^/]+)\/([^/]+)\/([^/]+)(?:\/-\/|\/)(work_items|issues)\/(\d+)/` → groups: host, namespace, repo, type, IID.
 - Endpoints (GET, header `PRIVATE-TOKEN`): `/api/v4/projects/:id/issues/:iid`, `.../issues/:iid/notes?per_page=100`, `.../issues/:iid/links`.
-- ⛔ Never POST/PUT/DELETE. Never print the token.
+- ⛔ Read-only everywhere EXCEPT `/unioss-ship`: never POST/PUT/DELETE during investigation or any read stage. The **only** permitted GitLab writes are inside `/unioss-ship` — push a feature branch and create a merge request (`POST …/merge_requests`). Never merge. Never print the token. MR creation needs `GITLAB_TOKEN` to carry the `api` scope (read stages need only `read_api`).
 
 ## Database (non-interactive: `-i`, not `-it`)
 
@@ -117,6 +117,8 @@ grep -rn "some_symbol" "$US_SRC_ADMIN_PAGE/application"
 ## MCP (tester)
 
 Browser verification uses the Playwright and/or chrome-devtools MCP servers. The tester drives the affected UI flow and snapshots when useful.
+
+Tester env access (login + email verification) resolves from config: `US_TESTER_ECSITE_LOGIN` (`http://localhost:2380/storetax/login`) and `US_TESTER_MAILHOG` (`http://localhost:8225`). Login credentials are ticket/seed-specific. See `../unioss-verify/tester-access.md`.
 
 ## Branches, Base & Protected Branches
 
@@ -160,9 +162,11 @@ Example: `#1834 - Remove the price form from the product editing screen`.
 1. In the canonical source (`submodules/common-models` or `submodules/common-helper`): `git fetch origin && git checkout v3-master && git pull && git checkout -b feature/v3/[ORIGIN]#[IID]`.
 2. Edit the files there; commit with the `#[IID] - …` message.
 3. **Push** the submodule feature branch to remote (required so the apps can pull it).
-4. In each consuming app that needs the change, cd into the consuming path (`application/models/common` or `application/helpers/common`) and run `git fetch origin && git checkout feature/v3/[ORIGIN]#[IID] && git pull` — this moves the app's submodule pointer to the updated branch.
+4. In each consuming app that needs the change, cd into the consuming path (`application/models/common` or `application/helpers/common`) and run `git fetch origin && git checkout feature/v3/[ORIGIN]#[IID] && git pull` — this moves the app's submodule pointer in the **working tree only**.
 
-Only common-submodule feature branches are pushed; AdminPage/FrontEnd app branches are committed locally only (no push, no MR).
+**Do not commit or push the pointer bump** in AdminPage/FrontEnd — do not `git add` the submodule gitlink, do not commit it, do not push the app repo for the pointer change. The pushed submodule branch alone carries the common-code change; whoever merges wires the pointer.
+
+Only common-submodule feature branches are pushed; AdminPage/FrontEnd app branches are committed locally only (no push, no MR) and their commits **exclude the submodule gitlink**.
 
 **Human helpers (zsh, run from inside an app repo)** — interactive; the agent runs the equivalent plain `git` commands instead, but these document the intended paths/ops:
 - `ussub` — show submodule branch status (`application/models/common`, `application/helpers/common`).

@@ -32,3 +32,21 @@ unioss_control_data.sql   # import into the local DB before logging in
 - Top: `http://localhost:2380/storetax/top/vm:2500005/st:1?QRhome=true&QR=true&products=vmonly`
 
 Verify user-facing screens against `_docs/ECSITE_SCREENS.md`.
+
+## 5. ECSite customer login (email-verification flows)
+
+- Login: `http://localhost:2380/storetax/login`
+- Credentials are **ticket/seed-specific** — e.g. `test-ap1584@example.com` / `password` for ticket 1584. Use the account the ticket/investigation names, not a hardcoded one.
+
+Resolve the stable URLs from config instead of hardcoding:
+
+```bash
+eval "$(node "${CLAUDE_PLUGIN_ROOT}/scripts/config.mjs" env)"
+# $US_TESTER_ECSITE_LOGIN  → http://localhost:2380/storetax/login
+# $US_TESTER_MAILHOG       → http://localhost:8225
+```
+
+## 6. Verify emails via Mailhog
+
+- Inbox: `http://localhost:8225` (open `/#` for the message list).
+- After triggering an email action in the UI, open Mailhog, find the message, and assert subject/recipient/body against the acceptance criteria.

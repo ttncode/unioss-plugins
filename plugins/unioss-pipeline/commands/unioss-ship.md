@@ -5,4 +5,4 @@ argument-hint: <staging|customer>
 
 Ship the current ticket's branches. Target: $ARGUMENTS
 
-Use the `unioss-ship` skill and follow it exactly. `staging` opens MRs into `v3-develop-tps`; `customer` syncs with `v3-master`, re-runs the tests, then opens MRs into `v3-develop`. The skill only prepares and prints the MR links + settings — it never merges and never POSTs to GitLab.
+Use the `unioss-ship` skill and follow it exactly. `staging` opens MRs into `v3-develop-tps`; `customer` syncs with `v3-master`, re-runs the tests, then opens MRs into `v3-develop`. The skill pushes each branch and creates the MRs via the GitLab API (with a pre-filled-URL fallback) — it never merges.

@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { DEFAULTS, configPath, deepMerge, resolveConfig } from './config.mjs';
+import { DEFAULTS, configPath, deepMerge, resolveConfig, buildEnv } from './config.mjs';
 
 function workspace(fileContents) {
   const dir = mkdtempSync(join(tmpdir(), 'uniconf-'));
@@ -108,4 +108,16 @@ test('ship reviewer is overridable from file', () => {
   assert.equal(ship.customer.reviewer, 'someone.else');        // overridden
   assert.equal(ship.customer.targetBranch, 'v3-develop');      // default preserved (deep merge)
   rmSync(dir, { recursive: true, force: true });
+});
+
+test('tester block defaults resolve', () => {
+  const c = resolveConfig('/tmp/ws-tester');
+  assert.equal(c.tester.mailhog, 'http://localhost:8225');
+  assert.equal(c.tester.ecsiteLogin, 'http://localhost:2380/storetax/login');
+});
+
+test('buildEnv exports US_TESTER_* vars', () => {
+  const env = buildEnv('/tmp/ws-tester');
+  assert.match(env, /US_TESTER_MAILHOG='http:\/\/localhost:8225'/);
+  assert.match(env, /US_TESTER_ECSITE_LOGIN='http:\/\/localhost:2380\/storetax\/login'/);
 });
