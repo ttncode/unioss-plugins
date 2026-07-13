@@ -46,3 +46,21 @@ test('a single token longer than width is hard-split and still aligned', () => {
   assert.equal(widths.size, 1);
   assert.equal([...widths][0], 43); // width + 3
 });
+
+test('displayWidth counts emoji and no-entry sign as width 2', () => {
+  assert.equal(displayWidth('🛑'), 2);
+  assert.equal(displayWidth('⛔'), 2);
+  assert.equal(displayWidth('🛑 GATE 1'), 9); // 2 + ' GATE 1' (7)
+});
+
+test('check mark and box glyphs stay width 1', () => {
+  assert.equal(displayWidth('✓'), 1);
+  assert.equal(displayWidth('·─│'), 3);
+});
+
+test('a line with a wide emoji keeps the right border aligned', () => {
+  const out = box('T', ['plain row', '🛑 GATE 1 stop'], 40);
+  const widths = new Set(out.split('\n').map(displayWidth));
+  assert.equal(widths.size, 1);
+  assert.equal([...widths][0], 43); // width + 3
+});

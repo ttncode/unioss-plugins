@@ -1,9 +1,25 @@
 // Fixed-width rounded box renderer for UNIOSS pipeline terminal UIs.
-// All glyphs used by callers (✓ ✗ · ─ │) are display-width 1, so a code-point
-// count is the correct display width.
+// displayWidth counts East-Asian-wide / emoji code points as 2 columns;
+// ✓ ✗ · ─ │ and other glyphs used by callers stay display-width 1.
 const H = '─', V = '│', TL = '╭', TR = '╮', BL = '╰', BR = '╯';
 
-export const displayWidth = (str) => Array.from(str).length;
+function charWidth(cp) {
+  if (
+    (cp >= 0x1100 && cp <= 0x115f) ||   // Hangul Jamo
+    (cp >= 0x2600 && cp <= 0x26ff) ||   // Misc symbols (⛔ U+26D4)
+    (cp >= 0x2e80 && cp <= 0xa4cf) ||   // CJK & radicals … Yi
+    (cp >= 0xac00 && cp <= 0xd7a3) ||   // Hangul syllables
+    (cp >= 0xf900 && cp <= 0xfaff) ||   // CJK compatibility ideographs
+    (cp >= 0xfe30 && cp <= 0xfe4f) ||   // CJK compatibility forms
+    (cp >= 0xff00 && cp <= 0xff60) ||   // Fullwidth forms
+    (cp >= 0xffe0 && cp <= 0xffe6) ||   // Fullwidth signs
+    (cp >= 0x1f000 && cp <= 0x1faff)    // Emoji & pictographs (🛑 U+1F6D1)
+  ) return 2;
+  return 1;
+}
+
+export const displayWidth = (str) =>
+  Array.from(str).reduce((w, ch) => w + charWidth(ch.codePointAt(0)), 0);
 
 function wrapLine(line, width) {
   if (displayWidth(line) <= width) return [line];
