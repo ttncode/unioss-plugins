@@ -634,70 +634,6 @@ git commit -m "feat(unioss-pipeline): ship.mjs create-MR mode (push + POST, neve
 
 ---
 
-### Task 6: GATE 3 auto-continue on clean review (item 3)
-
-**Files:**
-- Modify: `plugins/unioss-pipeline/skills/unioss-pipeline/SKILL.md` (Flow step 10, stage table GATE 3 row, Rules line)
-
-**Interfaces:** Consumes reviewer return counts (🔴/🟡/🟢) from step 9.
-
-- [ ] **Step 1: Update Flow step 10** — replace the current step 10 block:
-
-```markdown
-10. **GATE 3 — Review fix/accept.** Present findings by severity.
-   - **fix** → invoke `unioss-implement` to apply fixes + re-run filtered tests → ask "re-review or proceed?"; if re-review, go to step 9.
-   - **accept** → (AdminPage) invoke `unioss-implement` full mode: uncomment the dump-import line, run the full suite → `.walkthrough/<PREFIX>#[IID]/round-<current_round>/UT_#[IID]_[YYYYMMDD]_V1.txt`.
-```
-
-with:
-
-```markdown
-10. **GATE 3 — Review fix/accept.**
-   - **Clean review (🔴 0 and 🟡 0)** → do NOT stop. Print `GATE 3 auto-passed (clean review: 0 Critical, 0 Violation)` plus any 🟢 notes, then proceed straight to the accept path below.
-   - **Any 🔴 or 🟡** → stop and present findings by severity:
-     - **fix** → invoke `unioss-implement` to apply fixes + re-run filtered tests → ask "re-review or proceed?"; if re-review, go to step 9.
-     - **accept** → proceed to the accept path below.
-   - **Accept path** → (AdminPage) invoke `unioss-implement` full mode: run the full suite with a fresh DB → `.walkthrough/<PREFIX>#[IID]/round-<current_round>/UT_#[IID]_[YYYYMMDD]_V1.txt`.
-```
-
-- [ ] **Step 2: Update the stage-table GATE 3 row** — replace:
-
-```markdown
-│ 🛑 GATE 3   │ you                  │ fix (loop) or accept (→ full PHPUnit → UT_#[IID]_…)          │
-```
-
-with:
-
-```markdown
-│ 🛑 GATE 3   │ you (auto if clean)  │ 🔴0/🟡0 → auto-accept; else fix (loop) or accept            │
-```
-
-- [ ] **Step 3: Update the Rules gate line** — replace:
-
-```markdown
-- Honor the gates — never run past Step 0, GATE 1, GATE 2, or GATE 3 without an explicit user decision.
-```
-
-with:
-
-```markdown
-- Honor the gates — never run past Step 0, GATE 1, or GATE 2 without an explicit user decision. GATE 3 auto-passes ONLY on a clean review (🔴 0 and 🟡 0); any 🔴/🟡 still requires an explicit user decision.
-```
-
-- [ ] **Step 4: Verify the edits landed**
-
-Run: `grep -n "auto-passed\|auto if clean\|GATE 3 auto-passes" plugins/unioss-pipeline/skills/unioss-pipeline/SKILL.md`
-Expected: three matches (one per edit).
-
-- [ ] **Step 5: Commit**
-
-```bash
-git add plugins/unioss-pipeline/skills/unioss-pipeline/SKILL.md
-git commit -m "feat(unioss-pipeline): auto-continue GATE 3 on a clean review (item 3)"
-```
-
----
-
 ### Task 7: Submodule pointer — no bump commit (item 4)
 
 **Files:**
@@ -1201,7 +1137,7 @@ git commit -m "chore(unioss-pipeline): bump to 1.6.0"
 
 ## Self-Review (author checklist — completed)
 
-**Spec coverage:** item 1→T1, item 2→T2, item 3→T6, item 4→T7, item 5→T4+T8, item 6→T3+T11, item 7→T9, item 8→T5+T10, item 9→T12, version→T13. All nine covered.
+**Spec coverage:** item 1→T1, item 2→T2, item 3→**dropped per user (GATE 3 unchanged, Task 6 removed)**, item 4→T7, item 5→T4+T8, item 6→T3+T11, item 7→T9, item 8→T5+T10, item 9→T12, version→T13. Task numbers keep their labels (no Task 6); no task depends on T6.
 
 **Placeholder scan:** no TBD/TODO; every code step shows full code; doc edits show exact before/after strings.
 
