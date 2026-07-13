@@ -88,7 +88,7 @@ node "${CLAUDE_PLUGIN_ROOT}/scripts/link.mjs" ".walkthrough/AP#1583/round-1/AP#1
 - Host: `gitlab.host` from config (default `gitlab.unioss.jp`). Token from `process.env.GITLAB_TOKEN`.
 - URL regex: `/https:\/\/([^/]+)\/([^/]+)\/([^/]+)(?:\/-\/|\/)(work_items|issues)\/(\d+)/` → groups: host, namespace, repo, type, IID.
 - Endpoints (GET, header `PRIVATE-TOKEN`): `/api/v4/projects/:id/issues/:iid`, `.../issues/:iid/notes?per_page=100`, `.../issues/:iid/links`.
-- ⛔ Never POST/PUT/DELETE. Never print the token.
+- ⛔ Read-only everywhere EXCEPT `/unioss-ship`: never POST/PUT/DELETE during investigation or any read stage. The **only** permitted GitLab writes are inside `/unioss-ship` — push a feature branch and create a merge request (`POST …/merge_requests`). Never merge. Never print the token. MR creation needs `GITLAB_TOKEN` to carry the `api` scope (read stages need only `read_api`).
 
 ## Database (non-interactive: `-i`, not `-it`)
 
