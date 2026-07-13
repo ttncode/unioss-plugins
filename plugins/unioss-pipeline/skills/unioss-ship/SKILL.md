@@ -1,13 +1,13 @@
 ---
 name: unioss-ship
-description: UNIOSS shipper. Pushes the finalized feature branch and prepares GitLab merge requests into staging (v3-develop-tps) or customer staging (v3-develop). Prints pre-filled MR URLs + the settings the URL can't carry; never merges, never POSTs. Use as /unioss-ship <staging|customer>.
+description: UNIOSS shipper. Pushes the finalized feature branch and creates GitLab merge requests (via API) into staging (v3-develop-tps) or customer staging (v3-develop), with a pre-filled-URL fallback. Never merges. Use as /unioss-ship <staging|customer>.
 ---
 
 # UNIOSS Shipper (main thread)
 
 Read `../unioss-pipeline/REFERENCE.md` first — follow its Branches, Protected-branch, and Submodule rules exactly. Argument: `staging` or `customer`.
 
-MR creation is a **human click**: this skill generates a pre-filled "new MR" URL per touched repo and prints the assignee/reviewer/label/merge-option settings to apply on the page. It never POSTs to GitLab and never merges.
+This skill pushes each feature branch and **creates the MR via the GitLab API** (`ship.mjs create`), setting assignee/reviewer/label/merge-options from config. If the create fails (token lacks `api` scope, or you decline the write), it falls back to a pre-filled "new MR" URL you click. It **never merges**.
 
 ## Preconditions
 - Determine the touched repos + their feature branches from the latest round's `CHANGES.md` (per REFERENCE branch naming: origin repo `feature/v3/#[IID]`, others `feature/v3/[ORIGIN]#[IID]`).
