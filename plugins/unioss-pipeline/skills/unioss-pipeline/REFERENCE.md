@@ -160,9 +160,11 @@ Example: `#1834 - Remove the price form from the product editing screen`.
 1. In the canonical source (`submodules/common-models` or `submodules/common-helper`): `git fetch origin && git checkout v3-master && git pull && git checkout -b feature/v3/[ORIGIN]#[IID]`.
 2. Edit the files there; commit with the `#[IID] - …` message.
 3. **Push** the submodule feature branch to remote (required so the apps can pull it).
-4. In each consuming app that needs the change, cd into the consuming path (`application/models/common` or `application/helpers/common`) and run `git fetch origin && git checkout feature/v3/[ORIGIN]#[IID] && git pull` — this moves the app's submodule pointer to the updated branch.
+4. In each consuming app that needs the change, cd into the consuming path (`application/models/common` or `application/helpers/common`) and run `git fetch origin && git checkout feature/v3/[ORIGIN]#[IID] && git pull` — this moves the app's submodule pointer in the **working tree only**.
 
-Only common-submodule feature branches are pushed; AdminPage/FrontEnd app branches are committed locally only (no push, no MR).
+**Do not commit or push the pointer bump** in AdminPage/FrontEnd — do not `git add` the submodule gitlink, do not commit it, do not push the app repo for the pointer change. The pushed submodule branch alone carries the common-code change; whoever merges wires the pointer.
+
+Only common-submodule feature branches are pushed; AdminPage/FrontEnd app branches are committed locally only (no push, no MR) and their commits **exclude the submodule gitlink**.
 
 **Human helpers (zsh, run from inside an app repo)** — interactive; the agent runs the equivalent plain `git` commands instead, but these document the intended paths/ops:
 - `ussub` — show submodule branch status (`application/models/common`, `application/helpers/common`).

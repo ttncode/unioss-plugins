@@ -16,7 +16,7 @@ git fetch origin && git checkout v3-master && git pull && git checkout -b <branc
 ```
 **Never** commit to or modify a protected branch (`master`, `v3-master`, `develop`, `v3-develop`, `v3-develop-tps`). Verify the current branch is a `feature/v3/...` branch before committing.
 
-**Common code (`common-models` / `common-helper`)** is edited ONLY in its canonical source (`submodules/common-models` / `submodules/common-helper`) — never inside `application/{models,helpers}/common`. Follow the REFERENCE submodule flow: branch off `v3-master` in the canonical source → edit → commit (`#[IID] - …`) → push the submodule branch → in each consuming app cd to `application/models/common` or `application/helpers/common` and `git fetch && git checkout <branch> && git pull` to move the pointer.
+**Common code (`common-models` / `common-helper`)** is edited ONLY in its canonical source (`submodules/common-models` / `submodules/common-helper`) — never inside `application/{models,helpers}/common`. Follow the REFERENCE submodule flow: branch off `v3-master` in the canonical source → edit → commit (`#[IID] - …`) → push the submodule branch → in each consuming app cd to `application/models/common` or `application/helpers/common` and `git fetch && git checkout <branch> && git pull` to move the pointer **in the working tree only — never `git add`/commit/push the pointer bump in the app repo**.
 
 ## Step 1 — Apply the approved plan
 Apply the exact per-file changes from `.walkthrough/<PREFIX>#[IID]/round-<N>/<PREFIX>#[IID]_IMPLEMENTATION_V{n}.md`. When the plan calls for migrations, use `unioss-generate-migration` / `unioss-bump-migration`. Use `codeignitor3-simplifier` to keep CI3 code clean.
