@@ -21,6 +21,9 @@ git fetch origin && git checkout v3-master && git pull && git checkout -b <branc
 ## Step 1 — Apply the approved plan
 Apply the exact per-file changes from `.walkthrough/<PREFIX>#[IID]/round-<N>/<PREFIX>#[IID]_IMPLEMENTATION_V{n}.md`. When the plan calls for migrations, use `unioss-generate-migration` / `unioss-bump-migration`. Use `codeignitor3-simplifier` to keep CI3 code clean.
 
+## Step 1b — Verify the migration (only if the plan added one)
+If the approved plan added a migration, verify it per `migration-verify.md` (this skill dir): on `development` by default, run up → down → re-up and confirm the version + DB effect at each step. **STOP and ask the user for explicit go-ahead before running `up()` or `down()`** whenever either destroys data that existed before the migration and the other side can't restore it (name the table, environment, and recoverability). Pure create-then-drop migrations proceed without asking.
+
 ## Step 2 — PHPUnit fast verify (AdminPage only)
 Write/modify tests for the changed logic, then **fast mode** from `unioss-phpunit-test` `## Run Commands`: run `phpunit-config.mjs apply --skip-import`, run only the new/modified tests until green, then `phpunit-config.mjs restore`. (FrontEnd: skip — no unit tests.)
 
