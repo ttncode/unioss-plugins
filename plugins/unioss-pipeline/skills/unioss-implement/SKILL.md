@@ -30,6 +30,9 @@ Write/modify tests for the changed logic, then **fast mode** from `unioss-phpuni
 ## Step 3 — Write `CHANGES.md`
 Save `.walkthrough/<PREFIX>#[IID]/round-<N>/<PREFIX>#[IID]_CHANGES.md`: a per-file diff manifest (path · change type · one-line summary) plus the fast-test result.
 
+## Step 3b — API spec (only if a new API endpoint was added)
+If the change adds a new API endpoint, invoke `unioss-api-spec` to write `<PREFIX>#[IID]_API_SPEC.md` into the round dir `.walkthrough/<PREFIX>#[IID]/round-<N>/`.
+
 ## Step 4 — On GATE 3 fix
 Apply the orchestrator-provided fixes and re-run the filtered tests.
 
