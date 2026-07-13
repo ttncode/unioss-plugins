@@ -118,6 +118,8 @@ grep -rn "some_symbol" "$US_SRC_ADMIN_PAGE/application"
 
 Browser verification uses the Playwright and/or chrome-devtools MCP servers. The tester drives the affected UI flow and snapshots when useful.
 
+Tester env access (login + email verification) resolves from config: `US_TESTER_ECSITE_LOGIN` (`http://localhost:2380/storetax/login`) and `US_TESTER_MAILHOG` (`http://localhost:8225`). Login credentials are ticket/seed-specific. See `../unioss-verify/tester-access.md`.
+
 ## Branches, Base & Protected Branches
 
 - **Base branch:** always create feature branches from `v3-master`. Fetch first: `git fetch origin && git checkout v3-master && git pull`.
