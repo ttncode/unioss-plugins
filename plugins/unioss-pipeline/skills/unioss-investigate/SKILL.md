@@ -68,7 +68,7 @@ Save `round-<N>/<PREFIX>#[IID]_REPORT.md`. Vietnamese only — column names and 
 
 ## Step 6 — Return
 
-Return: prefix+IID, repo, clarity verdict, count of open questions, and clickable `file://` links to the two visible files. Do not paste file bodies.
+Return: prefix+IID, repo, clarity verdict, count of open questions, and `link.mjs` links to the two visible files. Do not paste file bodies.
 
 ## Related files
 

@@ -39,4 +39,4 @@ Save `round-<N>/<PREFIX>#[IID]_TEST_RESULTS.md` containing: (a) DB verification 
 
 ## Step 5 — Return
 
-Return overall pass/fail, the count of failed criteria, and a clickable `file://` link to `TEST_RESULTS.md`. Do not paste the full report.
+Return overall pass/fail, the count of failed criteria, and a `link.mjs` link to `TEST_RESULTS.md`. Do not paste the full report.

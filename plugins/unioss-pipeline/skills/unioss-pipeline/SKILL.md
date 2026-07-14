@@ -36,27 +36,10 @@ Update the current round's entry after every stage. On resume within a round: if
 
 ## Step 0 — Show the plan, get the go-ahead
 
-Parse the URL (REFERENCE regex) → IID + origin repo → prefix `AP`/`FE`. Print this table (substitute `<PREFIX>`, `[IID]`, `<current_round>`; re-pad the title `─` fill and every row's right border so the box stays flush) and **stop — ask the user to confirm before any stage runs**:
+Parse the URL (REFERENCE regex) → IID + origin repo → prefix `AP`/`FE`. Render the plan table by running the script (it stays flush on its own — never hand-draw or re-pad it), print the output, then **stop — ask the user to confirm before any stage runs**:
 
-```
-╭─ UNIOSS Pipeline · <PREFIX>#[IID] · round-<current_round> ─────────────╮
-│                                                                        │
-│   #    Stage         Runs as            Output                         │
-│  ─────────────────────────────────────────────────────────────────     │
-│   1    Investigate   subagent · opus    INVESTIGATION + REPORT         │
-│   ⛔   GATE 0        you                clarify (only if unclear)       │
-│   2    Spec          subagent · opus    SPEC.md                        │
-│   ⛔   GATE 1        you                approve spec / edit             │
-│   3    Plan          subagent · opus    IMPLEMENTATION_V1              │
-│   ⛔   GATE 2        you                approve plan / edit             │
-│   4    Code          main · sonnet      CHANGES.md + fast tests        │
-│   5    Review        subagent · opus    REVIEW.md                      │
-│   ⛔   GATE 3        you                fix / accept                    │
-│   6    Verify        subagent · sonnet  TEST_RESULTS.md (DB+UI)        │
-│   7    Finalize      main               branch + commit (no push/MR)   │
-│                                                                        │
-│   Gates stop for approval. Nothing runs until you confirm.             │
-╰────────────────────────────────────────────────────────────────────────╯
+```bash
+node "${CLAUDE_PLUGIN_ROOT}/scripts/plan-table.mjs" <PREFIX> [IID] <current_round>
 ```
 
 - Wait for the user to say to proceed. Run no stage until they confirm.
@@ -77,7 +60,7 @@ Parse the URL (REFERENCE regex) → IID + origin repo → prefix `AP`/`FE`. Prin
     - **fix** → invoke `unioss-implement` to apply fixes + re-run filtered tests → ask "re-review or proceed?"; if re-review, go to step 9.
     - **accept** → (AdminPage) invoke `unioss-implement` full mode: full suite with a fresh DB (`phpunit-config apply --import`) → `round-<current_round>/UT_#[IID]_[YYYYMMDD]_V1.txt`.
 11. **Tester** — dispatch `unioss-tester` with the CHANGES.md path + acceptance criteria. Writes TEST_RESULTS.md; returns pass/fail. If any UI criterion is SKIPPED (no browser MCP), note it explicitly — never treat SKIPPED as a pass.
-12. **Finalize** — for every repo the coder touched, commit on its feature branch using `#[IID] - [Message]`. Per REFERENCE: app branches (AdminPage/FrontEnd) are committed locally only (no push, no MR) and exclude the submodule gitlink; submodule branches are pushed. Never touch a protected branch. Present a final summary: branch per repo, spec, plan, changes, review status, test status, and clickable `file://` links to every artifact. If UI verification was SKIPPED, surface "UI verification: SKIPPED — no browser MCP configured" prominently. STOP.
+12. **Finalize** — for every repo the coder touched, commit on its feature branch using `#[IID] - [Message]`. Per REFERENCE: app branches (AdminPage/FrontEnd) are committed locally only (no push, no MR) and exclude the submodule gitlink; submodule branches are pushed. Never touch a protected branch. Present a final summary: branch per repo, spec, plan, changes, review status, test status, and `link.mjs` links to every artifact. If UI verification was SKIPPED, surface "UI verification: SKIPPED — no browser MCP configured" prominently. STOP.
 
 ## Rules
 
@@ -85,4 +68,4 @@ Parse the URL (REFERENCE regex) → IID + origin repo → prefix `AP`/`FE`. Prin
 - Honor the gates — never run past Step 0, GATE 1, GATE 2, or GATE 3 without an explicit user decision.
 - Protected branches are read-only (REFERENCE → Branches). Verify the current branch before any commit/push.
 - Keep main context lean: rely on subagents' returned summaries; read full artifacts only when a gate needs it.
-- Emit every artifact path as a clickable `file://` link (REFERENCE → Clickable links), never a bare path.
+- Emit every artifact path by running `link.mjs` (REFERENCE → Clickable links) — never hand-write a `file://` URL or a bare path.

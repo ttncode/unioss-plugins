@@ -14,7 +14,7 @@ Every stage skill (investigator, planner, coder, reviewer, tester, ship, api-spe
 - **Read-only by default.** Never edit project source. `Write` only under `.walkthrough/`. The only writers are the coder (`unioss-implement`) and ship (push + MR).
 - **Round path.** The orchestrator passes the round folder `.walkthrough/<PREFIX>#[IID]/round-<N>/` in your prompt. Write all artifacts there — never into a different round.
 - **Resolve config before shell/DB/source access.** Run `eval "$(node "${CLAUDE_PLUGIN_ROOT}/scripts/config.mjs" env)"` first; never hardcode hosts, containers, paths, or the protected-branch list.
-- **Clickable links.** Surface every artifact path to the human as a `file://` link (see Clickable links), never a bare path.
+- **Clickable links.** Surface every artifact path by running `scripts/link.mjs` (see Clickable links) — never hand-write a `file://` URL or emit a bare path.
 - **Return summaries, not bodies.** Return counts, verdicts, and links; never paste full artifact contents back to the orchestrator.
 
 ### Standalone use
@@ -81,16 +81,15 @@ Hidden tracking, under `.walkthrough/.pipeline/<PREFIX>#[IID]/`: `RAW_TICKET_DAT
 
 ## Clickable links
 
-- Surface every artifact path to the human as a `file://` link — never a bare path. A bare `#` in a ticket dir (`AP#1583`) is mangled by the terminal linkifier, so `#`→`%23`, spaces→`%20`.
-- Canonical form (absolute path, wrapped as markdown):
-
-      [AP#1583_REVIEW.md](file:///abs/workspace/.walkthrough/AP%231583/round-1/AP%231583_REVIEW.md)
-
-- Generate it deterministically:
+- **Always run `link.mjs` — never hand-write a `file://` URL or emit a bare path.** The script handles the two things a hand-written link gets wrong: a bare `#` in a ticket dir (`AP#1583`) is mangled by the terminal linkifier (`#`→`%23`, spaces→`%20`), and under WSL a `file:///home/...` path won't open from a Windows-side editor.
 
   ```bash
   node "${CLAUDE_PLUGIN_ROOT}/scripts/link.mjs" ".walkthrough/AP#1583/round-1/AP#1583_REVIEW.md"
   ```
+
+- Output — native emits `file://`; under WSL it emits `file://wsl.localhost/<distro>/...` so a Windows editor resolves it:
+
+      [AP#1583_REVIEW.md](file:///abs/workspace/.walkthrough/AP%231583/round-1/AP%231583_REVIEW.md)
 
 ## GitLab (read-only except ship)
 

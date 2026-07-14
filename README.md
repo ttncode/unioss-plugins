@@ -6,7 +6,7 @@
   </p>
 
 [![version](https://img.shields.io/badge/version-1.6.0-blue)](./plugins/unioss-pipeline/.claude-plugin/plugin.json)
-[![tests](https://img.shields.io/badge/tests-69%20passing-brightgreen)](#)
+[![tests](https://img.shields.io/badge/tests-72%20passing-brightgreen)](#)
 [![PHP](https://img.shields.io/badge/PHP-8.1-777bb4)](#)
 [![CodeIgniter](https://img.shields.io/badge/CodeIgniter-3.x-ee4323)](#)
 [![Claude Code](https://img.shields.io/badge/Claude%20Code-plugin-d97757)](#)
@@ -43,24 +43,24 @@
 ## Pipeline
 
 ```
-╭─ UNIOSS Pipeline · AP#1834 · round-1 ─────────────────────────────────╮
-│                                                                       │
-│   #    Stage         Runs as            Output                        │
-│  ─────────────────────────────────────────────────────────────────    │
-│   1    Investigate   subagent · opus    INVESTIGATION + REPORT        │
-│   ⛔   GATE 0        you                clarify (only if unclear)     │
-│   2    Spec          subagent · opus    SPEC.md                       │
-│   ⛔   GATE 1        you                approve spec / edit           │
-│   3    Plan          subagent · opus    IMPLEMENTATION_V1             │
-│   ⛔   GATE 2        you                approve plan / edit           │
-│   4    Code          main · sonnet      CHANGES.md + fast tests       │
-│   5    Review        subagent · opus    REVIEW.md                     │
-│   ⛔   GATE 3        you                fix / accept                  │
-│   6    Verify        subagent · sonnet  TEST_RESULTS.md (DB+UI)       │
-│   7    Finalize      main               branch + commit (no push/MR)  │
-│                                                                       │
-│   Gates stop for approval. Nothing runs until you confirm.            │
-╰───────────────────────────────────────────────────────────────────────╯
+╭─ UNIOSS Pipeline · AP#1834 · round-1 ────────────────────────────────╮
+│                                                                      │
+│  #   Stage        Runs as            Output                          │
+│  ───────────────────────────────────────────────────────────────     │
+│  1   Investigate  subagent · opus    INVESTIGATION + REPORT          │
+│  ⛔  GATE 0       you                clarify (only if unclear)       │
+│  2   Spec         subagent · opus    SPEC.md                         │
+│  ⛔  GATE 1       you                approve spec / edit             │
+│  3   Plan         subagent · opus    IMPLEMENTATION_V1               │
+│  ⛔  GATE 2       you                approve plan / edit             │
+│  4   Code         main · sonnet      CHANGES.md + fast tests         │
+│  5   Review       subagent · opus    REVIEW.md                       │
+│  ⛔  GATE 3       you                fix / accept                    │
+│  6   Verify       subagent · sonnet  TEST_RESULTS.md (DB+UI)         │
+│  7   Finalize     main               branch + commit (no push/MR)    │
+│                                                                      │
+│  Gates stop for approval. Nothing runs until you confirm.            │
+╰──────────────────────────────────────────────────────────────────────╯
 ```
 
 Artifacts land in `.walkthrough/<PREFIX>#<IID>/round-<N>/` as clickable links.

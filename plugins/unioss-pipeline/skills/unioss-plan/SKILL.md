@@ -25,7 +25,7 @@ The pipeline dispatches this skill in one of two modes; the dispatch prompt stat
   - **Open Questions** — must be empty (clarify happened at GATE 0). If you cannot empty it, say so in your return so the orchestrator reopens GATE 0.
   - **Related** — links to the investigation and any related issues.
 - If a prior version exists, increment `_SPEC_V2`, `_SPEC_V3`, … (GATE 1 edit loop).
-- **Return:** the spec path (clickable `file://` link) + a one-line scope summary. Do not paste the body.
+- **Return:** the spec path (`link.mjs` link) + a one-line scope summary. Do not paste the body.
 
 ## Plan mode
 
@@ -38,4 +38,4 @@ The pipeline dispatches this skill in one of two modes; the dispatch prompt stat
    - **Phased steps:** Phase 1 DB migration · Phase 2 model/controller · Phase 3 views · Phase 4 tests.
    - **Manual testing:** normal + abnormal cases incl. DB verification.
 3. **Save** `round-<N>/<PREFIX>#[IID]_IMPLEMENTATION_V1.md`. If a prior version exists, increment `_V2`, `_V3`, … (GATE 2 edit loop).
-4. **Return** the plan path (clickable `file://` link), total estimate points, and a one-line scope summary. Do not paste the full plan.
+4. **Return** the plan path (`link.mjs` link), total estimate points, and a one-line scope summary. Do not paste the full plan.
