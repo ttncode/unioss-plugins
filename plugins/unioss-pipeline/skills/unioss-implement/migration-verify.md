@@ -6,10 +6,13 @@ name: migration up/down verify (multi-environment)
 
 ## 1. Identify current/target environment
 
-ENVIRONMENT is set in `AdminPage/public/index.php:56`:
-`define('ENVIRONMENT', isset($_SERVER['CI_ENV']) ? $_SERVER['CI_ENV'] : 'virtualbox_direct_domain');`
+ENVIRONMENT is set in `AdminPage/public/index.php`:
+`define('ENVIRONMENT', isset($_SERVER['CI_ENV']) ? $_SERVER['CI_ENV'] : '<default>');`
 
-For any other target (staging box, production box, virtualbox_direct_domain, etc.) `CI_ENV` is injected at that host's webserver/php-fpm level (outside this repo). To confirm the live value on a given host:
+For the local docker checkout, read the resolved value instead of hardcoding it — it comes from the real `index.php` default (and any `CI_ENV` override in `docker-compose.yml` / `z-docker-resources/`):
+`node "${CLAUDE_PLUGIN_ROOT}/scripts/detect-app-env.mjs"`
+
+For any other target (staging box, production box, etc.) `CI_ENV` is injected at that host's webserver/php-fpm level (outside this repo). To confirm the live value on a given host:
 
 - Ask infra/DevOps what `CI_ENV` that vhost sets, or
 - Temporarily add `echo ENVIRONMENT; exit;` right after the `define(...)` line in `AdminPage/public/index.php`, hit any URL on that host, read the value, then immediately revert the line — never commit this debug line.
