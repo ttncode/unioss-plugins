@@ -6,47 +6,104 @@ name: unioss tester quick-access
 
 Local development environment only — these are **not** production secrets. Use to reach the affected screens fast before driving the UI flow.
 
-## 1. Point at the production-clone DB
+## Database Setup (Required)
 
-Confirm both database configs target the local clone:
+Before starting test, verify that **both projects are configured to use the same database**.
 
-- `AdminPage/application/config/development/database.php` → `'database' => 'db_unioss_local',`
-- `FrontEnd/application/config/development/database.php` → `'database' => 'db_unioss_local',`
+Replace `<virtualbox_direct_domain>` with the current environment in `.walkthrough/.config/unioss.config.json` (for example, `virtualbox_direct_domain`, `staging`, or `production`).
 
-## 2. Normalize control data
+Files:
 
-Apply the control-data SQL to set known credentials (e.g. resets passwords to `password`):
+- `AdminPage/application/config/<virtualbox_direct_domain>/database.php` → `'database' => 'db_unioss_local',`
+- `FrontEnd/application/config/<virtualbox_direct_domain>/database.php` → `'database' => 'db_unioss_local',`
 
-```bash
-unioss_control_data.sql   # import into the local DB before logging in
-```
+## Quick Access Pages
 
-## 3. AdminPage login
+### AdminPage
+
+Login:
 
 - URL: `http://localhost:2380/admin/login`
-- Username: `kagi-25`
+- Username: `kagi-25` (store 25, change if need verify other store)
 - Password: `password`
 
-## 4. ECSite (storefront) entry
+Logout:
 
-- Top: `http://localhost:2380/storetax/top/vm:2500005/st:1?QRhome=true&QR=true&products=vmonly`
+- URL: `http://localhost:2380/admin/admins/logout`
 
-Verify user-facing screens against `_docs/ECSITE_SCREENS.md`.
+Edit Account:
 
-## 5. ECSite customer login (email-verification flows)
+- URL: `http://localhost:2380/admin/account/my_account`
 
-- Login: `http://localhost:2380/storetax/login`
-- Credentials are **ticket/seed-specific** — e.g. `test-ap1584@example.com` / `password` for ticket 1584. Use the account the ticket/investigation names, not a hardcoded one.
+Switch Role:
 
-Resolve the stable URLs from config instead of hardcoding:
+- URL: `http://localhost:2380/admin/admins/role/<role_id>`
 
-```bash
-eval "$(node "${CLAUDE_PLUGIN_ROOT}/scripts/config.mjs" env)"
-# $US_TESTER_ECSITE_LOGIN  → http://localhost:2380/storetax/login
-# $US_TESTER_MAILHOG       → http://localhost:8225
-```
+Store Information Settings:
 
-## 6. Verify emails via Mailhog
+- URL: `http://localhost:2380/admin/basis2/store/`
 
-- Inbox: `http://localhost:8225` (open `/#` for the message list).
-- After triggering an email action in the UI, open Mailhog, find the message, and assert subject/recipient/body against the acceptance criteria.
+Order Status Management:
+
+- URL: `http://localhost:2380/admin/order_status` (status new)
+- URL: `http://localhost:2380/admin/order_status/paid` (status paid)
+- URL: `http://localhost:2380/admin/order_status/ship_requested` (status ship_requested)
+- URL: `http://localhost:2380/admin/order_status/shipped` (status shipped)
+- URL: `http://localhost:2380/admin/order_status/donated` (status donated)
+- URL: `http://localhost:2380/admin/order_status/cancel` (status cancel)
+- URL: `http://localhost:2380/admin/order_status/admincancel` (status admincancel)
+
+Order Search:
+
+- URL: `http://localhost:2380/admin/order_search`
+
+Order Delivery Status:
+
+- URL: `http://localhost:2380/admin/order_delivery_status`
+
+Deal List:
+
+- URL: `http://localhost:2380/admin/deals`
+
+Subledger Invoice:
+
+- URL: `http://localhost:2380/admin/subledger_invoice`
+
+Invoice:
+
+- URL: `http://localhost:2380/admin/invoice/receiving` (receiving invoice)
+- URL: `http://localhost:2380/admin/invoice/paying` (paying invoice)
+
+### ECSite
+
+Register Account:
+
+- URL: `http://localhost:2380/storetax/regist/index`
+
+Login:
+
+- URL: `http://localhost:2380/storetax/login`
+- Username: `test-ap1584@example.com` (this is an available customer, create new or change to another customer if needed)
+- Password: `password`
+
+Logout:
+
+- URL: `http://localhost:2380/storetax/logout`
+
+Top:
+
+- URL: `http://localhost:2380/storetax/top/vm:2500005/st:1?QRhome=true&QR=true&products=vmonly` (default vm=2500005 and st=1, change to another if needed)
+
+Cart List:
+
+- URL: `http://localhost:2380/storetax/cart/vm:2500005/st:1`
+
+## Mailhog
+
+Verify the sent emails.
+
+- URL: `http://localhost:8225`.
+
+## Related Files
+
+- `./unioss-control-data.sql` — Change the database credentials for testing

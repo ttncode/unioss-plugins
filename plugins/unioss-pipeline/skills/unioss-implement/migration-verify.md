@@ -7,10 +7,10 @@ name: migration up/down verify (multi-environment)
 ## 1. Identify current/target environment
 
 ENVIRONMENT is set in `AdminPage/public/index.php:56`:
-`define('ENVIRONMENT', isset($_SERVER['CI_ENV']) ? $_SERVER['CI_ENV'] : 'development');`
-No `CI_ENV` is set anywhere in this repo's docker-compose.yml / nginx config, so local docker (localhost:2380) is always `development`.
+`define('ENVIRONMENT', isset($_SERVER['CI_ENV']) ? $_SERVER['CI_ENV'] : 'virtualbox_direct_domain');`
 
 For any other target (staging box, production box, virtualbox_direct_domain, etc.) `CI_ENV` is injected at that host's webserver/php-fpm level (outside this repo). To confirm the live value on a given host:
+
 - Ask infra/DevOps what `CI_ENV` that vhost sets, or
 - Temporarily add `echo ENVIRONMENT; exit;` right after the `define(...)` line in `AdminPage/public/index.php`, hit any URL on that host, read the value, then immediately revert the line — never commit this debug line.
 
@@ -29,14 +29,15 @@ Only these environments have a `migrations/{ENV}/` directory (CI errors if missi
 ## 3. Before touching staging/production/virtualbox: check what up() AND down() destroy
 
 Read both methods together and ask:
+
 1. Does `up()` delete/modify pre-existing data (rows/columns/tables that existed before this migration)?
 2. Does `down()` actually restore it, or is it a no-op / partial restore?
 
-| up() touches pre-existing data? | down() restores it? | Verdict |
-| --- | --- | --- |
-| No (only creates new table/column) | drops only what up() created | Safe — nothing pre-existing at risk |
-| Yes (DELETE/UPDATE/DROP on existing data) | Yes, fully | Confirm before running (risk if down() is buggy) |
-| Yes (DELETE/UPDATE/DROP on existing data) | No / no-op | Irreversible — confirm before running up() itself, not just down |
+| up() touches pre-existing data?           | down() restores it?          | Verdict                                                          |
+| ----------------------------------------- | ---------------------------- | ---------------------------------------------------------------- |
+| No (only creates new table/column)        | drops only what up() created | Safe — nothing pre-existing at risk                              |
+| Yes (DELETE/UPDATE/DROP on existing data) | Yes, fully                   | Confirm before running (risk if down() is buggy)                 |
+| Yes (DELETE/UPDATE/DROP on existing data) | No / no-op                   | Irreversible — confirm before running up() itself, not just down |
 
 Example, irreversible case (`20260608090246_delete_duplicated_asct_records_a1798_241.php`):
 `public function up() { /* DELETE FROM ascts ... duplicate rows, real data */ }`

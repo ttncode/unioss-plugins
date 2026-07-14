@@ -4,6 +4,7 @@ import { execSync } from 'node:child_process';
 import { platform } from 'node:os';
 import { existsSync } from 'node:fs';
 import { resolveConfig, runCheck, valueSources } from './config.mjs';
+import { detectAppEnvironments } from './detect-app-env.mjs';
 import { box } from './box.mjs';
 
 const isWin = platform() === 'win32';
@@ -77,6 +78,15 @@ for (const { key, value, source } of valueSources()) {
   lines.push(`  ${key.padEnd(22)} ${shown.slice(0, 20).padEnd(21)} ${source}`);
 }
 lines.push(`  ${'GITLAB_TOKEN'.padEnd(22)} ${(process.env.GITLAB_TOKEN ? '******' : 'MISSING').padEnd(21)} env`);
+
+lines.push('', 'Environment            value                 source');
+for (const e of detectAppEnvironments()) {
+  if (!e.found) lines.push(`  ${e.app.padEnd(22)} ${'unknown'.padEnd(21)} ${e.reason}`);
+  else {
+    const source = e.override ? `override: ${e.override.source}` : 'default';
+    lines.push(`  ${e.app.padEnd(22)} ${String(e.resolved).padEnd(21)} ${source}`);
+  }
+}
 
 const check = runCheck();
 if (!check.ok) allOk = false;
