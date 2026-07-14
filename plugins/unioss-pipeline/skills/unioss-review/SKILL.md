@@ -3,13 +3,11 @@ name: unioss-review
 description: UNIOSS reviewer. Diff-scoped review of the coder's changes against clean-code + CI3 standards + plan adherence + security; outputs a severity-indexed report. Use as the reviewer stage of unioss-pipeline.
 ---
 
-You are an expert PHP/CodeIgniter code simplification specialist focused on enhancing code clarity, consistency, and maintainability while preserving exact functionality. Your expertise lies in applying CodeIgniter best practices and standards to simplify and improve code without altering its behavior. You prioritize readable, explicit code over overly compact solutions. This is a balance that you have mastered as a result of your years as an expert PHP developer.
-
-You will analyze recently modified code and Ensure that the edited or newly added code complies with the standard rules.
-
 # UNIOSS Code Review Skill
 
-Write all artifacts under the round folder the orchestrator gives you (`.walkthrough/<PREFIX>#[IID]/round-<N>/`); never write into a different round.
+You are an expert PHP/CodeIgniter reviewer. You **report only — never edit files** (see Output Format Rules). Analyze the coder's diff and flag every place the new/changed code breaks the UNIOSS standards below.
+
+Follow `../unioss-pipeline/REFERENCE.md` → Shared stage rules (read-only, round path, clickable links, standalone use).
 
 ---
 
@@ -27,7 +25,7 @@ git diff            # working-tree changes from the coder stage
 
 Judge `+` lines for the quality of new/changed code. Do **not** ignore `-` lines — each removal is a change with consequences. Whenever the diff deletes a referenceable symbol (a constant, function/method, class, DB column, route, config key, parameter, or a guard/branch), grep the repo for surviving references — e.g. `grep -rn "REMOVED_NAME" AdminPage FrontEnd` — and flag any remaining usage as 🔴 Critical (the change breaks callers). Likewise, when a signature, return shape, or column is changed (not just added), check the call sites. Unchanged context outside the diff is otherwise out of scope.
 
-### Step 4 — Classify Each Issue
+### Step 3 — Classify Each Issue
 
 Assign every finding to one of three severity levels:
 
@@ -37,14 +35,14 @@ Assign every finding to one of three severity levels:
 | 🟡   | **Violation**    | Breaks a rule; degrades maintainability or safety                             |
 | 🟢   | **Good / Style** | Noteworthy improvement or minor style note                                    |
 
-### Step 5 — Assign Sequential Indices
+### Step 4 — Assign Sequential Indices
 
 Every finding gets a unique global index: `[#1]`, `[#2]`, `[#3]`, etc.
 
 Group by file, but the index is continuous across the entire report — never
 reset per file.
 
-### Step 6 — Output the Report
+### Step 5 — Output the Report
 
 Write the report to `.walkthrough/<PREFIX>#[IID]/round-<N>/<PREFIX>#[IID]_REVIEW.md` and return the severity counts (🔴/🟡/🟢), the top-priority list, and a clickable `file://` link to `REVIEW.md` (REFERENCE → Clickable links; `scripts/link.mjs`) — do not paste the full report body.
 
@@ -256,7 +254,7 @@ a finding.
 
 ### JAVASCRIPT
 
-- [ ] Written as a named module object (see JS Module template in CLAUDE.md)
+- [ ] Written as a named module object (named JS module pattern per `${CLAUDE_PLUGIN_ROOT}/rules/clean-code-javascript.md`)
 - [ ] `constants: {}` block present with named constants — no magic numbers inline
 - [ ] `elements: {}` block caches all jQuery selectors at definition time
 - [ ] Private methods prefixed with `_` (`_bindToggle`, `_openCard`)
@@ -406,10 +404,4 @@ Good because X.
 
 ## Standalone use
 
-You can be invoked directly on a free-form task (e.g. `/unioss-review Review this controller …`), outside the orchestrated pipeline. When **no orchestrator context** was handed to you — no ticket, no round path:
-
-- Do the requested task on the file(s) named, using this skill's rules and domain knowledge.
-- **Write nothing under `.walkthrough/`** — no round folders, no INVESTIGATION / PLAN / CHANGES / REVIEW / TEST / UT artifacts, no state files — **unless the user explicitly asks** for a written artifact.
-- Skip pipeline gates and round bookkeeping.
-
-When the orchestrator dispatches you with a round path, behave exactly as the pipeline sections above describe.
+See REFERENCE → Shared stage rules → Standalone use (e.g. `/unioss-review Review this controller …`): do the task on the named file(s), write nothing under `.walkthrough/` unless asked, skip gates.

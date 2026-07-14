@@ -4,11 +4,32 @@ name: unioss-pipeline reference
 
 # UNIOSS Pipeline — Shared Reference
 
+Single source of truth for every stage. When a skill says "follow REFERENCE → Shared stage rules", apply the block below.
+
+## Shared stage rules
+
+Every stage skill (investigator, planner, coder, reviewer, tester, ship, api-spec, gitlab-context) follows these:
+
+- **Read this file first.** Its Branch, Protected-branch, Submodule, and Commit rules are binding.
+- **Read-only by default.** Never edit project source. `Write` only under `.walkthrough/`. The only writers are the coder (`unioss-implement`) and ship (push + MR).
+- **Round path.** The orchestrator passes the round folder `.walkthrough/<PREFIX>#[IID]/round-<N>/` in your prompt. Write all artifacts there — never into a different round.
+- **Resolve config before shell/DB/source access.** Run `eval "$(node "${CLAUDE_PLUGIN_ROOT}/scripts/config.mjs" env)"` first; never hardcode hosts, containers, paths, or the protected-branch list.
+- **Clickable links.** Surface every artifact path to the human as a `file://` link (see Clickable links), never a bare path.
+- **Return summaries, not bodies.** Return counts, verdicts, and links; never paste full artifact contents back to the orchestrator.
+
+### Standalone use
+
+Any stage skill can be invoked directly (e.g. `/unioss-review Review this controller …`) with no orchestrator context — no ticket, no round path. When that happens:
+
+- Do the task on the named file(s) using this skill's rules and domain knowledge.
+- Write nothing under `.walkthrough/` (no round folders, no artifacts, no state) unless the user explicitly asks for a written file.
+- Skip pipeline gates and round bookkeeping.
+
+When the orchestrator dispatches you with a round path, behave exactly as the pipeline sections describe.
+
 ## Configuration (resolved at runtime)
 
-All per-machine values come from `node "${CLAUDE_PLUGIN_ROOT}/scripts/config.mjs"`
-(resolution: env → `.walkthrough/.config/unioss.config.json` → built-in default).
-Do not hardcode these in commands — resolve them.
+All per-machine values come from `node "${CLAUDE_PLUGIN_ROOT}/scripts/config.mjs"` (resolution: env → `.walkthrough/.config/unioss.config.json` → built-in default). Do not hardcode these — resolve them.
 
 | Key                                        | Default                                                                            | Used for                                  |
 | ------------------------------------------ | ---------------------------------------------------------------------------------- | ----------------------------------------- |
@@ -27,85 +48,72 @@ Do not hardcode these in commands — resolve them.
 | `source.root`                              | current workspace (cwd)                                                            | host root that holds the module checkouts |
 | `source.modules.*`                         | `admin-page`→`AdminPage`, `front-end`→`FrontEnd`, `common-helper`, `common-models` | on-disk subdir per module                 |
 
-Secrets: `GITLAB_TOKEN` is env-only (required). `db.password` resolves env `DB_PASSWORD`
-→ file → default. `testing_DB` is a fixed codebase constant — not configurable.
+- **Secrets:** `GITLAB_TOKEN` is env-only (required). `db.password` resolves env `DB_PASSWORD` → file → default.
+- `testing_DB` is a fixed codebase constant — not configurable.
+- **Scaffold / inspect:** `config.mjs init` → `.walkthrough/.config/unioss.config.json`; `config.mjs print`; `config.mjs check` (run by `/unioss-doctor`).
 
-To run a DB query in a skill, resolve config into shell vars first:
-
-```bash
-eval "$(node "${CLAUDE_PLUGIN_ROOT}/scripts/config.mjs" env)"
-docker exec -i "$US_MYSQL" mysql -u"$US_DB_USER" -p"$US_DB_PASS" -e "USE $US_DB; SHOW TABLES;"
-```
-
-## Repos & Prefixes
+## Repos & prefixes
 
 | Repo      | Path (under project root) | GitLab Project ID | Ticket prefix |
 | --------- | ------------------------- | ----------------- | ------------- |
 | AdminPage | `AdminPage/`              | 32                | `AP#[IID]`    |
 | FrontEnd  | `FrontEnd/`               | 31                | `FE#[IID]`    |
 
-Both are CodeIgniter 3 / PHP 8.1. The only divergence: FrontEnd skips PHPUnit unit tests.
+Both are CodeIgniter 3 / PHP 8.1. Only divergence: FrontEnd skips PHPUnit unit tests. `<PREFIX>` (`AP`/`FE`) is decided from the ticket URL.
 
-## Artifact Layout (project root `.walkthrough/`)
+## Artifact layout (project root `.walkthrough/`)
 
-**Invariant:** artifacts always live in `<cwd>/.walkthrough/` — the workspace you opened Claude in — never under the plugin install dir. Open Claude at the project you are working on.
+- **Invariant:** artifacts always live in `<cwd>/.walkthrough/` — the workspace you opened Claude in — never under the plugin install dir.
+- Each run is a **round**. `round-1` is the initial run; each re-run opens the next round and never modifies a prior one.
 
-Each run is a **round**. Visible artifacts live under
-`.walkthrough/<PREFIX>#[IID]/round-<N>/` (the human reads these):
+Visible artifacts (the human reads these), under `.walkthrough/<PREFIX>#[IID]/round-<N>/`:
 
 - `ROUND_BRIEF.md` (round 2+: what this round must do)
 - `<PREFIX>#[IID]_INVESTIGATION.md`, `<PREFIX>#[IID]_REPORT.md` (vi)
-- `<PREFIX>#[IID]_SPEC.md` (what/why — scope, requirements, acceptance criteria; `_SPEC_V{n}` on edits)
+- `<PREFIX>#[IID]_SPEC.md` (what/why; `_SPEC_V{n}` on edits)
 - `<PREFIX>#[IID]_IMPLEMENTATION_V{n}.md`
-- `<PREFIX>#[IID]_CHANGES.md`, `<PREFIX>#[IID]_REVIEW.md`, `<PREFIX>#[IID]_TEST_RESULTS.md`
-- `UT_#[IID]_[YYYYMMDD]_V1.txt` (full PHPUnit run, AdminPage only)
+- `<PREFIX>#[IID]_CHANGES.md`, `_REVIEW.md`, `_TEST_RESULTS.md`
+- `<PREFIX>#[IID]_API_SPEC.md` (only when a new endpoint is added)
+- `UT_#[IID]_[YYYYMMDD]_V{n}.txt` (full PHPUnit run, AdminPage only)
 - `screenshots/` (tester UI screenshots)
 
-`round-1` is the initial run; each re-run opens the next round and **never modifies a prior
-round**. Hidden tracking lives in `.walkthrough/.pipeline/<PREFIX>#[IID]/`
-(`RAW_TICKET_DATA.json`, `TICKET_SUMMARY.md`, `pipeline-state.json` with `current_round`).
-
-`<PREFIX>` is `AP` or `FE`, decided from the ticket URL.
+Hidden tracking, under `.walkthrough/.pipeline/<PREFIX>#[IID]/`: `RAW_TICKET_DATA.json`, `TICKET_SUMMARY.md`, `pipeline-state.json` (holds `current_round`).
 
 ## Clickable links
 
-Whenever a stage or the orchestrator surfaces an artifact path to the human (gate
-presentations, Return summaries, the final report), emit it as a clickable
-`file://` link — never a bare path. A bare `#` in a ticket dir (`AP#1583`) is
-mangled by the terminal linkifier, so it must be percent-encoded.
+- Surface every artifact path to the human as a `file://` link — never a bare path. A bare `#` in a ticket dir (`AP#1583`) is mangled by the terminal linkifier, so `#`→`%23`, spaces→`%20`.
+- Canonical form (absolute path, wrapped as markdown):
 
-Canonical form — absolute path, `#` → `%23`, spaces → `%20`, wrapped as markdown:
+      [AP#1583_REVIEW.md](file:///abs/workspace/.walkthrough/AP%231583/round-1/AP%231583_REVIEW.md)
 
-    [AP#1583_REVIEW.md](file:///abs/workspace/.walkthrough/AP%231583/round-1/AP%231583_REVIEW.md)
+- Generate it deterministically:
 
-Generate it deterministically:
+  ```bash
+  node "${CLAUDE_PLUGIN_ROOT}/scripts/link.mjs" ".walkthrough/AP#1583/round-1/AP#1583_REVIEW.md"
+  ```
 
-```bash
-node "${CLAUDE_PLUGIN_ROOT}/scripts/link.mjs" ".walkthrough/AP#1583/round-1/AP#1583_REVIEW.md"
-```
-
-## GitLab (read-only)
+## GitLab (read-only except ship)
 
 - Host: `gitlab.host` from config (default `gitlab.unioss.jp`). Token from `process.env.GITLAB_TOKEN`.
 - URL regex: `/https:\/\/([^/]+)\/([^/]+)\/([^/]+)(?:\/-\/|\/)(work_items|issues)\/(\d+)/` → groups: host, namespace, repo, type, IID.
 - Endpoints (GET, header `PRIVATE-TOKEN`): `/api/v4/projects/:id/issues/:iid`, `.../issues/:iid/notes?per_page=100`, `.../issues/:iid/links`.
-- ⛔ Read-only everywhere EXCEPT `/unioss-ship`: never POST/PUT/DELETE during investigation or any read stage. The **only** permitted GitLab writes are inside `/unioss-ship` — push a feature branch and create a merge request (`POST …/merge_requests`). Never merge. Never print the token. MR creation needs `GITLAB_TOKEN` to carry the `api` scope (read stages need only `read_api`).
+- ⛔ The **only** permitted GitLab writes are inside `/unioss-ship` (push a feature branch + `POST …/merge_requests`). Never POST/PUT/DELETE during any read stage. Never merge. Never print the token. MR creation needs the `api` scope; read stages need only `read_api`.
 
-## Database (non-interactive: `-i`, not `-it`)
+## Database (read-only; non-interactive `-i`, not `-it`)
 
-Resolve config first, then query (read-only):
+Resolve config first, then query:
 
 ```bash
 eval "$(node "${CLAUDE_PLUGIN_ROOT}/scripts/config.mjs" env)"
-# Production data
+# Production-shaped data
 docker exec -i "$US_MYSQL" mysql -u"$US_DB_USER" -p"$US_DB_PASS" -e "USE $US_DB; SHOW TABLES;"
 # Testing data (fixed name, imported during PHPUnit runs)
 docker exec -i "$US_MYSQL" mysql -u"$US_DB_USER" -p"$US_DB_PASS" -e "USE testing_DB; SHOW TABLES;"
 ```
 
-### Source paths (read the real code)
+## Source paths (read the real code)
 
-`config.mjs env` also exports absolute host paths to each module. Resolve them before reading source; never assume cwd is a repo checkout:
+`config.mjs env` exports absolute host paths to each module. Resolve them before reading source — never assume cwd is a repo checkout:
 
 ```bash
 eval "$(node "${CLAUDE_PLUGIN_ROOT}/scripts/config.mjs" env)"
@@ -113,21 +121,20 @@ eval "$(node "${CLAUDE_PLUGIN_ROOT}/scripts/config.mjs" env)"
 grep -rn "some_symbol" "$US_SRC_ADMIN_PAGE/application"
 ```
 
-`source.root` defaults to the workspace you opened Claude in; override with the `SOURCE_ROOT` env var or `source.root` in the local config.
+`source.root` defaults to the workspace you opened Claude in; override with the `SOURCE_ROOT` env var or `source.root` in local config.
 
 ## MCP (tester)
 
-Browser verification uses the Playwright and/or chrome-devtools MCP servers. The tester drives the affected UI flow and snapshots when useful.
+- Browser verification uses the Playwright and/or chrome-devtools MCP servers. The tester drives the affected UI flow and snapshots when useful.
+- Tester env access resolves from config: `US_TESTER_ECSITE_LOGIN` (`http://localhost:2380/storetax/login`), `US_TESTER_MAILHOG` (`http://localhost:8225`). Login credentials are ticket/seed-specific. See `../unioss-verify/tester-access.md`.
 
-Tester env access (login + email verification) resolves from config: `US_TESTER_ECSITE_LOGIN` (`http://localhost:2380/storetax/login`) and `US_TESTER_MAILHOG` (`http://localhost:8225`). Login credentials are ticket/seed-specific. See `../unioss-verify/tester-access.md`.
+## Branches, base & protected
 
-## Branches, Base & Protected Branches
-
-- **Base branch:** always create feature branches from `v3-master`. Fetch first: `git fetch origin && git checkout v3-master && git pull`.
-- **⛔ Protected — NEVER commit, push, force-push, rebase, or otherwise modify these branches (local or remote):** `master`, `v3-master`, `develop`, `v3-develop`, `v3-develop-tps`. Before any `git commit`/`git push`, verify the current branch is NOT one of these — abort if it is.
-- **Branch naming.** The _origin repo_ is the repo the ticket URL belongs to (`AdminPage` or `FrontEnd`).
+- **Base branch:** always cut feature branches from `v3-master`. Fetch first: `git fetch origin && git checkout v3-master && git pull`.
+- **⛔ Protected — NEVER commit, push, force-push, rebase, or modify (local or remote):** `master`, `v3-master`, `develop`, `v3-develop`, `v3-develop-tps`. Before any commit/push, verify the current branch is NOT one of these — abort if it is.
+- **Naming.** The _origin repo_ is the repo the ticket URL belongs to (`AdminPage` or `FrontEnd`).
   - Origin repo: `feature/v3/#[IID]`
-  - Every OTHER repo that is changed: `feature/v3/[ORIGIN_REPO]#[IID]`
+  - Every OTHER repo changed: `feature/v3/[ORIGIN_REPO]#[IID]`
 
   Example — `…/AdminPage/-/work_items/1834` (origin = AdminPage):
 
@@ -147,36 +154,34 @@ Tester env access (login + email verification) resolves from config: `US_TESTER_
   | common-models | `feature/v3/FrontEnd#391` |
   | common-helper | `feature/v3/FrontEnd#391` |
 
-## Commit Message
+## Commit message
 
-Format: `#[IID] - [Message]` — single imperative subject line, English.
-Example: `#1834 - Remove the price form from the product editing screen`.
+- Format: `#[IID] - [Message]` — single imperative subject line, English.
+- Example: `#1834 - Remove the price form from the product editing screen`.
 
 ## Submodules (common-models / common-helper)
 
-| Submodule     | Canonical source (EDIT HERE) | Consumed in apps (do NOT edit here)                                           |
-| ------------- | ---------------------------- | ----------------------------------------------------------------------------- |
+| Submodule     | Canonical source (EDIT HERE) | Consumed in apps (do NOT edit here)                                          |
+| ------------- | ---------------------------- | ---------------------------------------------------------------------------- |
 | common-models | `submodules/common-models/`  | `AdminPage/application/models/common`, `FrontEnd/application/models/common`   |
 | common-helper | `submodules/common-helper/`  | `AdminPage/application/helpers/common`, `FrontEnd/application/helpers/common` |
 
-**Edit flow (common code is edited ONLY in the canonical source, never inside the apps):**
+Edit flow (common code is edited ONLY in the canonical source, never inside the apps):
 
-1. In the canonical source (`submodules/common-models` or `submodules/common-helper`): `git fetch origin && git checkout v3-master && git pull && git checkout -b feature/v3/[ORIGIN]#[IID]`.
-2. Edit the files there; commit with the `#[IID] - …` message.
-3. **Push** the submodule feature branch to remote (required so the apps can pull it).
-4. In each consuming app that needs the change, cd into the consuming path (`application/models/common` or `application/helpers/common`) and run `git fetch origin && git checkout feature/v3/[ORIGIN]#[IID] && git pull` — this moves the app's submodule pointer in the **working tree only**.
+1. In the canonical source: `git fetch origin && git checkout v3-master && git pull && git checkout -b feature/v3/[ORIGIN]#[IID]`.
+2. Edit there; commit with the `#[IID] - …` message.
+3. **Push** the submodule feature branch (required so the apps can pull it).
+4. In each consuming app, cd into the consuming path (`application/models/common` or `application/helpers/common`) and `git fetch origin && git checkout feature/v3/[ORIGIN]#[IID] && git pull` — moves the pointer in the **working tree only**.
 
-**Do not commit or push the pointer bump** in AdminPage/FrontEnd — do not `git add` the submodule gitlink, do not commit it, do not push the app repo for the pointer change. The pushed submodule branch alone carries the common-code change; whoever merges wires the pointer.
+**Never commit or push the pointer bump** in AdminPage/FrontEnd: do not `git add` the submodule gitlink, do not commit it, do not push the app repo for the pointer change. The pushed submodule branch alone carries the common-code change; whoever merges wires the pointer. Only submodule feature branches are pushed; app branches are committed locally only and exclude the gitlink.
 
-Only common-submodule feature branches are pushed; AdminPage/FrontEnd app branches are committed locally only (no push, no MR) and their commits **exclude the submodule gitlink**.
+Human helpers (zsh, from inside an app repo; the agent runs the equivalent plain `git`):
 
-**Human helpers (zsh, run from inside an app repo)** — interactive; the agent runs the equivalent plain `git` commands instead, but these document the intended paths/ops:
-
-- `ussub` — show submodule branch status (`application/models/common`, `application/helpers/common`).
+- `ussub` — show submodule branch status.
 - `ussub_gp` — fetch + pull the current branch of both submodules.
-- `ussub_gbf` — fzf-pick a submodule + branch, then checkout + pull (interactive → agent uses plain `git checkout`/`git pull`).
+- `ussub_gbf` — fzf-pick a submodule + branch, then checkout + pull.
 
-## Rules
+## Rules & reference files
 
-- `${CLAUDE_PLUGIN_ROOT}/rules/clean-code-php.md`, `${CLAUDE_PLUGIN_ROOT}/rules/clean-code-javascript.md`.
-- Reference screens: `_docs/ECSITE_SCREENS.md` (verify ECSite user-facing impact).
+- Clean-code: `${CLAUDE_PLUGIN_ROOT}/rules/clean-code-php.md`, `${CLAUDE_PLUGIN_ROOT}/rules/clean-code-javascript.md`.
+- Reference screens: `../unioss-investigate/ecsite-screens.md` (verify ECSite user-facing impact).

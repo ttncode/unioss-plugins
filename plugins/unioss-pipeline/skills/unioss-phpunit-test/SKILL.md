@@ -148,7 +148,7 @@ The pipeline imports a SQL dump into the DB on every full run — slow and unnec
 2. Run the whole suite and save the report:
    ```bash
    eval "$(node "${CLAUDE_PLUGIN_ROOT}/scripts/config.mjs" env)"
-   docker exec -i "$US_PHP" sh -lc "cd /var/www/html/AdminPage && ./vendor/phpunit/phpunit/phpunit -c application/tests/phpunit.xml --testdox" > .walkthrough/<PREFIX>#[IID]/UT_#[IID]_[YYYYMMDD]_V1.txt
+   docker exec -i "$US_PHP" sh -lc "cd /var/www/html/AdminPage && ./vendor/phpunit/phpunit/phpunit -c application/tests/phpunit.xml --testdox" > .walkthrough/<PREFIX>#[IID]/round-<N>/UT_#[IID]_[YYYYMMDD]_V1.txt
    ```
 3. Restore the repo when finished: `node "${CLAUDE_PLUGIN_ROOT}/scripts/phpunit-config.mjs" restore`.
 
@@ -173,10 +173,4 @@ The pipeline imports a SQL dump into the DB on every full run — slow and unnec
 
 ## Standalone use
 
-You can be invoked directly on a free-form task (e.g. `/unioss-phpunit-test Add tests for this model …`), outside the orchestrated pipeline. When **no orchestrator context** was handed to you — no ticket, no round path:
-
-- Do the requested task on the file(s) named, using this skill's rules and domain knowledge.
-- **Write nothing under `.walkthrough/`** — no round folders, no INVESTIGATION / PLAN / CHANGES / REVIEW / TEST / UT artifacts, no state files — **unless the user explicitly asks** for a written artifact.
-- Skip pipeline gates and round bookkeeping.
-
-When the orchestrator dispatches you with a round path, behave exactly as the pipeline sections above describe.
+See `../unioss-pipeline/REFERENCE.md` → Shared stage rules → Standalone use (e.g. `/unioss-phpunit-test Add tests for this model …`): do the task on the named file(s), write nothing under `.walkthrough/` unless asked, skip gates.

@@ -5,37 +5,40 @@ description: Read-only UNIOSS investigator. Fetches a GitLab ticket plus all rel
 
 # UNIOSS Investigator (read-only)
 
-Read `../unioss-pipeline/REFERENCE.md` first. **Never edit source. Write only under `.walkthrough/`.**
-Write all artifacts under the round folder the orchestrator gives you (`.walkthrough/<PREFIX>#[IID]/round-<N>/`); never write into a different round.
-To read module source, resolve host paths first: `eval "$(node "${CLAUDE_PLUGIN_ROOT}/scripts/config.mjs" env)"` then Grep/Read under `$US_SRC_ADMIN_PAGE`, `$US_SRC_FRONT_END`, `$US_SRC_COMMON_HELPER`, `$US_SRC_COMMON_MODELS` — do not assume cwd is a repo (see REFERENCE → Source paths).
+Follow `../unioss-pipeline/REFERENCE.md` → Shared stage rules (read-only, round path, resolve config before source/DB access, clickable links, standalone use).
 
 ## Step 1 — Fetch ticket + related issues
 
-Invoke `unioss-gitlab-issue-context` with the ticket URL. It writes `.walkthrough/.pipeline/<PREFIX>#[IID]/RAW_TICKET_DATA.json` and `TICKET_SUMMARY.md`. Then, for **every** entry returned by the `/links` endpoint, fetch that related issue too and summarize how it constrains scope. Related issues are first-class — a change is not understood until its linked issues are read.
+- Invoke `unioss-gitlab-issue-context` with the ticket URL. It writes `RAW_TICKET_DATA.json` + `TICKET_SUMMARY.md` under `.walkthrough/.pipeline/<PREFIX>#[IID]/`.
+- For **every** entry from the `/links` endpoint, fetch that related issue too and summarize how it constrains scope. Related issues are first-class — a change is not understood until its linked issues are read.
 
 ## Step 2 — Codebase impact analysis
 
-From the summary, extract column names and UI label strings. Grep the matching repo (`AdminPage/` or `FrontEnd/`). Record each hit as `file:line — impact(HIGH/MEDIUM/LOW)`.
+- From the summary, extract column names and UI label strings. Grep the matching repo (`$US_SRC_ADMIN_PAGE` or `$US_SRC_FRONT_END`).
+- Record each hit as `file:line — impact(HIGH/MEDIUM/LOW)`.
 
 ## Step 3 — Production DB facts
 
 Resolve config, then describe the affected tables (read-only):
-`eval "$(node "${CLAUDE_PLUGIN_ROOT}/scripts/config.mjs" env)" && docker exec -i "$US_MYSQL" mysql -u"$US_DB_USER" -p"$US_DB_PASS" -e "USE $US_DB; DESCRIBE <table>;"`
+
+```bash
+eval "$(node "${CLAUDE_PLUGIN_ROOT}/scripts/config.mjs" env)" && docker exec -i "$US_MYSQL" mysql -u"$US_DB_USER" -p"$US_DB_PASS" -e "USE $US_DB; DESCRIBE <table>;"
+```
 
 ## Step 4 — Write `INVESTIGATION.md`
 
-Save `.walkthrough/<PREFIX>#[IID]/round-<N>/<PREFIX>#[IID]_INVESTIGATION.md` (English; keep technical terms in Japanese):
+Save `round-<N>/<PREFIX>#[IID]_INVESTIGATION.md` (English; keep technical terms in Japanese) with these sections:
 
-1. **Requirements** (REQ/CON from the ticket, translated)
-2. **Related-issue dependency map** (each linked issue → effect on this ticket)
-3. **Code map** (`file:line` table from Step 2)
-4. **DB facts** (from Step 3)
-5. **## Clarity Verdict** — exactly one of `CLEAR` / `NEEDS_CLARIFICATION`
+1. **Requirements** — REQ/CON from the ticket, translated.
+2. **Related-issue dependency map** — each linked issue → effect on this ticket.
+3. **Code map** — the `file:line` table from Step 2.
+4. **DB facts** — from Step 3.
+5. **## Clarity Verdict** — exactly one of `CLEAR` / `NEEDS_CLARIFICATION`.
 6. **## Open Questions** — numbered, concrete (missing specs, ambiguous behavior, conflicting related-issue requirements, undefined edge cases). Empty only if verdict is `CLEAR`.
 
 ## Step 5 — Write `REPORT.md` (Vietnamese)
 
-Save `.walkthrough/<PREFIX>#[IID]/round-<N>/<PREFIX>#[IID]_REPORT.md`. Vietnamese only — column names and Japanese screen names stay as-is. No tables. No implementation detail. Fill this template verbatim:
+Save `round-<N>/<PREFIX>#[IID]_REPORT.md`. Vietnamese only — column names and Japanese screen names stay as-is. No tables, no implementation detail. List only ECSite user-facing screens in section 3; verify URLs against `./ecsite-screens.md`. Fill verbatim:
 
 ```markdown
 # <PREFIX>#[IID] Report
@@ -63,22 +66,10 @@ Save `.walkthrough/<PREFIX>#[IID]/round-<N>/<PREFIX>#[IID]_REPORT.md`. Vietnames
 - [one bullet per key conclusion]
 ```
 
-List only ECSite user-facing screens in section 3; verify URLs against `_docs/ECSITE_SCREENS.md`.
+## Step 6 — Return
 
-## Step 6 — Return summary
+Return: prefix+IID, repo, clarity verdict, count of open questions, and clickable `file://` links to the two visible files. Do not paste file bodies.
 
-Return: prefix+IID, repo, clarity verdict, count of open questions, and clickable `file://` links (REFERENCE → Clickable links; use `scripts/link.mjs`) to the two visible files. Do not paste full file bodies.
+## Related files
 
-## Standalone use
-
-You can be invoked directly on a free-form task (e.g. `/unioss-investigate How does the order-cancel flow work …`), outside the orchestrated pipeline. When **no orchestrator context** was handed to you — no ticket, no round path:
-
-- Do the requested task on the file(s) named, using this skill's rules and domain knowledge.
-- **Write nothing under `.walkthrough/`** — no round folders, no INVESTIGATION / PLAN / CHANGES / REVIEW / TEST / UT artifacts, no state files — **unless the user explicitly asks** for a written artifact.
-- Skip pipeline gates and round bookkeeping.
-
-When the orchestrator dispatches you with a round path, behave exactly as the pipeline sections above describe.
-
-## Related Files
-
-- `./ecsite-screens.md` — ECSite screens tree
+- `./ecsite-screens.md` — ECSite screens tree.

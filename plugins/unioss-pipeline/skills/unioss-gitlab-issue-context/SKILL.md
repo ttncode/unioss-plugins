@@ -5,31 +5,25 @@ description: Fetch or re-fetch a GitLab ticket's latest data. Writes RAW_TICKET_
 
 # UNIOSS GitLab Issue Context (read-only)
 
-**Read-only rule:** Never edit project source. Writes only to `.walkthrough/.pipeline/<PREFIX>#[IID]/` (hidden tracking files).
+Read-only: never edit project source. Writes only to `.walkthrough/.pipeline/<PREFIX>#[IID]/` (hidden tracking files).
 
 ## Step 1 — Fetch ticket data
 
-Before running the fetch, if `RAW_TICKET_DATA.json` already exists, read and record its `updated_at` and note count for comparison in Step 2.
+If `RAW_TICKET_DATA.json` already exists, first read and record its `updated_at` + note count for the Step 2 comparison. Then fetch:
 
 ```bash
 node "${CLAUDE_PLUGIN_ROOT}/skills/unioss-gitlab-issue-context/scripts/fetch-ticket.js" "<TICKET_URL>"
 ```
 
-This writes (or overwrites):
+This writes (or overwrites) under `.walkthrough/.pipeline/<PREFIX>#[IID]/`:
 
-- `.walkthrough/.pipeline/<PREFIX>#[IID]/RAW_TICKET_DATA.json` — full API response
-- `.walkthrough/.pipeline/<PREFIX>#[IID]/TICKET_SUMMARY.md` — structured markdown summary
+- `RAW_TICKET_DATA.json` — full API response.
+- `TICKET_SUMMARY.md` — structured markdown summary.
 
 ## Step 2 — Report changes since last fetch
 
-If a previous `RAW_TICKET_DATA.json` existed before this run, compare:
-
-- `updated_at` — did the issue description change?
-- note count — were new comments added?
-- `labels`, `assignees` — any changes?
-
-Report a one-paragraph diff summary, or "No changes since last fetch" if identical.
+If a previous `RAW_TICKET_DATA.json` existed, compare `updated_at`, note count, `labels`, `assignees`. Report a one-paragraph diff summary, or "No changes since last fetch" if identical.
 
 ## Step 3 — Return
 
-Return: prefix+IID, absolute path to `TICKET_SUMMARY.md`, change summary from Step 2.
+Return: prefix+IID, absolute path to `TICKET_SUMMARY.md`, and the Step 2 change summary.
