@@ -13,14 +13,15 @@ To read module source, resolve host paths first: `eval "$(node "${CLAUDE_PLUGIN_
 
 The pipeline dispatches this skill in one of two modes; the dispatch prompt states which. A direct standalone invocation (see **Standalone use**) has no mode.
 
-- **spec mode** → produce `<PREFIX>#[IID]_SPEC.md` (the *what/why* — no code). See **Spec mode**.
-- **plan mode** → produce `<PREFIX>#[IID]_IMPLEMENTATION_V{n}.md` from the **approved** spec (the *how* — exact code). See **Plan mode**.
+- **spec mode** → produce `<PREFIX>#[IID]_SPEC.md` (the _what/why_ — no code). See **Spec mode**.
+- **plan mode** → produce `<PREFIX>#[IID]_IMPLEMENTATION_V{n}.md` from the **approved** spec (the _how_ — exact code). See **Plan mode**.
 
 ## Spec mode
 
 **Input:** `.walkthrough/<PREFIX>#[IID]/round-<N>/<PREFIX>#[IID]_INVESTIGATION.md`, including any `## Clarifications` section the orchestrator appended.
 
-Write `.walkthrough/<PREFIX>#[IID]/round-<N>/<PREFIX>#[IID]_SPEC.md` — the *what/why*, **no code**. Mandatory sections:
+Write `.walkthrough/<PREFIX>#[IID]/round-<N>/<PREFIX>#[IID]_SPEC.md` — the _what/why_, **no code**. Mandatory sections:
+
 - **Goal** — one paragraph.
 - **Scope** — In-Scope / Out-of-Scope bullet lists.
 - **Requirements & Constraints** — identifier-prefixed: `REQ-`, `CON-`, `SEC-`, `GUD-`.
@@ -35,19 +36,24 @@ If a prior version exists, increment `_SPEC_V2`, `_SPEC_V3`, … (GATE 1 edit lo
 **Input:** the **approved** `<PREFIX>#[IID]_SPEC.md` plus the investigation.
 
 ### Step 1 — Draft with writing-plans discipline
+
 Invoke `unioss-writing-plans` to structure the plan: bite-sized tasks, exact file paths, and a verification per task.
 
 ### Step 2 — Apply the UNIOSS template
+
 Fill `create-implementation-plan.md` (this skill dir). All sections mandatory; **zero `TBD`**. Key requirements:
+
 - **Exact code:** every change shows the concrete before/after snippet and absolute file path — the coder applies, not re-derives.
 - **Estimate points:** set the `story_points` front-matter and a per-task point estimate.
 - **Phased steps:** Phase 1 DB migration · Phase 2 model/controller · Phase 3 views · Phase 4 tests.
 - **Manual testing:** normal + abnormal cases incl. DB verification.
 
 ### Step 3 — Save
+
 Write `.walkthrough/<PREFIX>#[IID]/round-<N>/<PREFIX>#[IID]_IMPLEMENTATION_V1.md`. If a prior version exists, increment to `_V2`, `_V3`, … (GATE 2 edit loop).
 
 ### Step 4 — Return
+
 Return the plan path (as a clickable `file://` link — REFERENCE → Clickable links), total estimate points, and a one-line scope summary. Do not paste the full plan body.
 
 ## Standalone use

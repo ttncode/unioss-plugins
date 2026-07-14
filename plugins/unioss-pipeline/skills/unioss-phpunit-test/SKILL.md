@@ -125,6 +125,7 @@ Examples:
 The pipeline imports a SQL dump into the DB on every full run — slow and unnecessary while iterating. Use **fast mode** while writing tests, **full mode** only when a review is accepted.
 
 ### Fast mode — only new/modified tests
+
 1. Apply the device-independent test config (no git stash needed), skipping the slow dump import:
    ```bash
    node "${CLAUDE_PLUGIN_ROOT}/scripts/phpunit-config.mjs" apply --skip-import
@@ -139,6 +140,7 @@ The pipeline imports a SQL dump into the DB on every full run — slow and unnec
 3. When done iterating, restore the repo: `node "${CLAUDE_PLUGIN_ROOT}/scripts/phpunit-config.mjs" restore`.
 
 ### Full mode — all tests with a fresh DB (on GATE 3 accept)
+
 1. Apply the test config with the dump import enabled (fresh DB):
    ```bash
    node "${CLAUDE_PLUGIN_ROOT}/scripts/phpunit-config.mjs" apply --import

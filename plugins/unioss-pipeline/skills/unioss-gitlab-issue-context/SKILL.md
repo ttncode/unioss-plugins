@@ -16,12 +16,14 @@ node "${CLAUDE_PLUGIN_ROOT}/skills/unioss-gitlab-issue-context/scripts/fetch-tic
 ```
 
 This writes (or overwrites):
+
 - `.walkthrough/.pipeline/<PREFIX>#[IID]/RAW_TICKET_DATA.json` — full API response
 - `.walkthrough/.pipeline/<PREFIX>#[IID]/TICKET_SUMMARY.md` — structured markdown summary
 
 ## Step 2 — Report changes since last fetch
 
 If a previous `RAW_TICKET_DATA.json` existed before this run, compare:
+
 - `updated_at` — did the issue description change?
 - note count — were new comments added?
 - `labels`, `assignees` — any changes?

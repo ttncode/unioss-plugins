@@ -13,11 +13,13 @@ Read its checklist. For any missing **light** dependency (node, jq) it prints an
 After running the script, check whether the Playwright MCP server is loaded in this session by verifying that `mcp__playwright__browser_navigate` is available as a tool. Report the result in the same checklist format:
 
 If available:
+
 ```
   [OK] Playwright MCP
 ```
 
 If not available:
+
 ```
   [XX] Playwright MCP — not loaded
        -> Close and reopen Claude Code to activate it.

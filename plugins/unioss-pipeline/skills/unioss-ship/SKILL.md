@@ -10,10 +10,12 @@ Read `../unioss-pipeline/REFERENCE.md` first — follow its Branches, Protected-
 This skill pushes each feature branch and **creates the MR via the GitLab API** (`ship.mjs create`), setting assignee/reviewer/label/merge-options from config. If the create fails (token lacks `api` scope, or you decline the write), it falls back to a pre-filled "new MR" URL you click. It **never merges**.
 
 ## Preconditions
+
 - Determine the touched repos + their feature branches from the latest round's `CHANGES.md` (per REFERENCE branch naming: origin repo `feature/v3/#[IID]`, others `feature/v3/[ORIGIN]#[IID]`).
 - Verify every branch to ship is a `feature/v3/…` branch. **Abort** if any is a protected branch (`master`, `v3-master`, `develop`, `v3-develop`, `v3-develop-tps`).
 
 ## Mode: staging
+
 1. For each touched repo, ensure its feature branch is current, then **push** it: `git push -u origin <branch>` (the MR source must exist on the remote; app branches were local-only until now, submodule branches are already pushed).
 2. For each touched repo, create the MR via the GitLab API (never merges); the title is the ticket commit subject `#[IID] - [Message]`:
    ```bash
@@ -26,6 +28,7 @@ This skill pushes each feature branch and **creates the MR via the GitLab API** 
 3. Present the created MR URL(s) (or the fallback links). Creation sets assignee/reviewer/label/options from config; **merge stays a human action**. STOP.
 
 ## Mode: customer
+
 1. **Sync with base.** On each touched repo's feature branch: `git fetch origin && git merge origin/v3-master`. On a merge conflict → **stop**, tell the user to resolve it manually, do not continue.
 2. **Re-run tests.** AdminPage: invoke `unioss-implement` full mode (full PHPUnit with a fresh DB) → save `UT_#[IID]_[YYYYMMDD]_V{n}.txt`. FrontEnd: no unit tests. If tests fail → find the root cause, propose a fix plan, **ask the user to approve** it, apply via `unioss-implement`, re-run; loop until green.
 3. **Push** each feature branch: `git push -u origin <branch>`.
@@ -37,6 +40,7 @@ This skill pushes each feature branch and **creates the MR via the GitLab API** 
 5. Present all MR URLs together. STOP.
 
 ## Rules
+
 - Pushing the feature branch and creating the MR (`ship.mjs create`) are the two permitted GitLab writes — perform them. The push is a required network operation; if the environment blocks it, tell the user and retry rather than skipping. **Never merge**, never write any other GitLab endpoint, never touch a protected branch except as an MR **target**.
 - Emit every artifact/URL as-is from `ship.mjs`; emit artifact file paths as clickable links (`scripts/link.mjs`, REFERENCE → Clickable links).
 - All config (targets, reviewers, assignee, label, merge options) comes from `ship.*` in config — never hardcode.

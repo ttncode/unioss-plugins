@@ -10,22 +10,22 @@ All per-machine values come from `node "${CLAUDE_PLUGIN_ROOT}/scripts/config.mjs
 (resolution: env → `.walkthrough/.config/unioss.config.json` → built-in default).
 Do not hardcode these in commands — resolve them.
 
-| Key | Default | Used for |
-| --- | --- | --- |
-| `gitlab.host` | `gitlab.unioss.jp` | API + image URLs |
-| `repos.adminPage.id` / `.path` | `32` / `AdminPage/` | project id, repo path |
-| `repos.frontEnd.id` / `.path` | `31` / `FrontEnd/` | project id, repo path |
-| `docker.mysql` / `docker.php` | `mysql-unioss3` / `php-unioss3` | container names |
-| `db.name` / `db.user` / `db.password` | `_unioss` / `root` / `ProotW` | DB access |
-| `git.baseBranch` | `v3-master` | base for feature branches |
-| `git.protected` | `master, v3-master, develop, v3-develop, v3-develop-tps` | never-commit list |
-| `ship.assignee` | `nghia.truong` | MR assignee (both modes) |
-| `ship.label` | `UNIOSS 3` | MR label if it exists on the project |
-| `ship.staging.targetBranch` / `.reviewer` | `v3-develop-tps` / `dat.pham` | internal-staging MR target + reviewer |
-| `ship.customer.targetBranch` / `.reviewer` | `v3-develop` / `r.yosimura` | customer-staging MR target + reviewer |
-| `artifactRoot` | `.walkthrough` | output dir |
-| `source.root` | current workspace (cwd) | host root that holds the module checkouts |
-| `source.modules.*` | `admin-page`→`AdminPage`, `front-end`→`FrontEnd`, `common-helper`, `common-models` | on-disk subdir per module |
+| Key                                        | Default                                                                            | Used for                                  |
+| ------------------------------------------ | ---------------------------------------------------------------------------------- | ----------------------------------------- |
+| `gitlab.host`                              | `gitlab.unioss.jp`                                                                 | API + image URLs                          |
+| `repos.adminPage.id` / `.path`             | `32` / `AdminPage/`                                                                | project id, repo path                     |
+| `repos.frontEnd.id` / `.path`              | `31` / `FrontEnd/`                                                                 | project id, repo path                     |
+| `docker.mysql` / `docker.php`              | `mysql-unioss3` / `php-unioss3`                                                    | container names                           |
+| `db.name` / `db.user` / `db.password`      | `_unioss` / `root` / `ProotW`                                                      | DB access                                 |
+| `git.baseBranch`                           | `v3-master`                                                                        | base for feature branches                 |
+| `git.protected`                            | `master, v3-master, develop, v3-develop, v3-develop-tps`                           | never-commit list                         |
+| `ship.assignee`                            | `nghia.truong`                                                                     | MR assignee (both modes)                  |
+| `ship.label`                               | `UNIOSS 3`                                                                         | MR label if it exists on the project      |
+| `ship.staging.targetBranch` / `.reviewer`  | `v3-develop-tps` / `dat.pham`                                                      | internal-staging MR target + reviewer     |
+| `ship.customer.targetBranch` / `.reviewer` | `v3-develop` / `r.yosimura`                                                        | customer-staging MR target + reviewer     |
+| `artifactRoot`                             | `.walkthrough`                                                                     | output dir                                |
+| `source.root`                              | current workspace (cwd)                                                            | host root that holds the module checkouts |
+| `source.modules.*`                         | `admin-page`→`AdminPage`, `front-end`→`FrontEnd`, `common-helper`, `common-models` | on-disk subdir per module                 |
 
 Secrets: `GITLAB_TOKEN` is env-only (required). `db.password` resolves env `DB_PASSWORD`
 → file → default. `testing_DB` is a fixed codebase constant — not configurable.
@@ -39,10 +39,10 @@ docker exec -i "$US_MYSQL" mysql -u"$US_DB_USER" -p"$US_DB_PASS" -e "USE $US_DB;
 
 ## Repos & Prefixes
 
-| Repo        | Path (under project root) | GitLab Project ID | Ticket prefix |
-| ----------- | ------------------------- | ----------------- | ------------- |
-| AdminPage   | `AdminPage/`              | 32                | `AP#[IID]`    |
-| FrontEnd    | `FrontEnd/`               | 31                | `FE#[IID]`    |
+| Repo      | Path (under project root) | GitLab Project ID | Ticket prefix |
+| --------- | ------------------------- | ----------------- | ------------- |
+| AdminPage | `AdminPage/`              | 32                | `AP#[IID]`    |
+| FrontEnd  | `FrontEnd/`               | 31                | `FE#[IID]`    |
 
 Both are CodeIgniter 3 / PHP 8.1. The only divergence: FrontEnd skips PHPUnit unit tests.
 
@@ -52,6 +52,7 @@ Both are CodeIgniter 3 / PHP 8.1. The only divergence: FrontEnd skips PHPUnit un
 
 Each run is a **round**. Visible artifacts live under
 `.walkthrough/<PREFIX>#[IID]/round-<N>/` (the human reads these):
+
 - `ROUND_BRIEF.md` (round 2+: what this round must do)
 - `<PREFIX>#[IID]_INVESTIGATION.md`, `<PREFIX>#[IID]_REPORT.md` (vi)
 - `<PREFIX>#[IID]_SPEC.md` (what/why — scope, requirements, acceptance criteria; `_SPEC_V{n}` on edits)
@@ -124,7 +125,7 @@ Tester env access (login + email verification) resolves from config: `US_TESTER_
 
 - **Base branch:** always create feature branches from `v3-master`. Fetch first: `git fetch origin && git checkout v3-master && git pull`.
 - **⛔ Protected — NEVER commit, push, force-push, rebase, or otherwise modify these branches (local or remote):** `master`, `v3-master`, `develop`, `v3-develop`, `v3-develop-tps`. Before any `git commit`/`git push`, verify the current branch is NOT one of these — abort if it is.
-- **Branch naming.** The *origin repo* is the repo the ticket URL belongs to (`AdminPage` or `FrontEnd`).
+- **Branch naming.** The _origin repo_ is the repo the ticket URL belongs to (`AdminPage` or `FrontEnd`).
   - Origin repo: `feature/v3/#[IID]`
   - Every OTHER repo that is changed: `feature/v3/[ORIGIN_REPO]#[IID]`
 
@@ -153,12 +154,13 @@ Example: `#1834 - Remove the price form from the product editing screen`.
 
 ## Submodules (common-models / common-helper)
 
-| Submodule     | Canonical source (EDIT HERE) | Consumed in apps (do NOT edit here)                                          |
-| ------------- | ---------------------------- | ---------------------------------------------------------------------------- |
+| Submodule     | Canonical source (EDIT HERE) | Consumed in apps (do NOT edit here)                                           |
+| ------------- | ---------------------------- | ----------------------------------------------------------------------------- |
 | common-models | `submodules/common-models/`  | `AdminPage/application/models/common`, `FrontEnd/application/models/common`   |
 | common-helper | `submodules/common-helper/`  | `AdminPage/application/helpers/common`, `FrontEnd/application/helpers/common` |
 
 **Edit flow (common code is edited ONLY in the canonical source, never inside the apps):**
+
 1. In the canonical source (`submodules/common-models` or `submodules/common-helper`): `git fetch origin && git checkout v3-master && git pull && git checkout -b feature/v3/[ORIGIN]#[IID]`.
 2. Edit the files there; commit with the `#[IID] - …` message.
 3. **Push** the submodule feature branch to remote (required so the apps can pull it).
@@ -169,6 +171,7 @@ Example: `#1834 - Remove the price form from the product editing screen`.
 Only common-submodule feature branches are pushed; AdminPage/FrontEnd app branches are committed locally only (no push, no MR) and their commits **exclude the submodule gitlink**.
 
 **Human helpers (zsh, run from inside an app repo)** — interactive; the agent runs the equivalent plain `git` commands instead, but these document the intended paths/ops:
+
 - `ussub` — show submodule branch status (`application/models/common`, `application/helpers/common`).
 - `ussub_gp` — fetch + pull the current branch of both submodules.
 - `ussub_gbf` — fzf-pick a submodule + branch, then checkout + pull (interactive → agent uses plain `git checkout`/`git pull`).

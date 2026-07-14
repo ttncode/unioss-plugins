@@ -25,6 +25,7 @@ Resolve config, then describe the affected tables (read-only):
 ## Step 4 — Write `INVESTIGATION.md`
 
 Save `.walkthrough/<PREFIX>#[IID]/round-<N>/<PREFIX>#[IID]_INVESTIGATION.md` (English; keep technical terms in Japanese):
+
 1. **Requirements** (REQ/CON from the ticket, translated)
 2. **Related-issue dependency map** (each linked issue → effect on this ticket)
 3. **Code map** (`file:line` table from Step 2)
@@ -40,19 +41,25 @@ Save `.walkthrough/<PREFIX>#[IID]/round-<N>/<PREFIX>#[IID]_REPORT.md`. Vietnames
 # <PREFIX>#[IID] Report
 
 ### 1. Mục tiêu:
+
 - [one bullet per goal/objective]
 
 ### 2. Kết quả điều tra:
+
 - [one bullet per target field/area investigated]
 
 ### 3. Phạm vi ảnh hưởng:
+
 **Tính năng**
+
 - [feature name (Japanese screen name)]
 
 **URLs**
+
 - `/path`
 
 ### 4. Kết luận:
+
 - [one bullet per key conclusion]
 ```
 
@@ -71,3 +78,7 @@ You can be invoked directly on a free-form task (e.g. `/unioss-investigate How d
 - Skip pipeline gates and round bookkeeping.
 
 When the orchestrator dispatches you with a round path, behave exactly as the pipeline sections above describe.
+
+## Related Files
+
+- `./ecsite-screens.md` — ECSite screens tree

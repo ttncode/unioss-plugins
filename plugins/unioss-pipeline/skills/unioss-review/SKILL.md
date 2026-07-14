@@ -24,6 +24,7 @@ Read `.walkthrough/<PREFIX>#[IID]/round-<N>/<PREFIX>#[IID]_CHANGES.md` to get th
 ```bash
 git diff            # working-tree changes from the coder stage
 ```
+
 Judge `+` lines for the quality of new/changed code. Do **not** ignore `-` lines — each removal is a change with consequences. Whenever the diff deletes a referenceable symbol (a constant, function/method, class, DB column, route, config key, parameter, or a guard/branch), grep the repo for surviving references — e.g. `grep -rn "REMOVED_NAME" AdminPage FrontEnd` — and flag any remaining usage as 🔴 Critical (the change breaks callers). Likewise, when a signature, return shape, or column is changed (not just added), check the call sites. Unchanged context outside the diff is otherwise out of scope.
 
 ### Step 4 — Classify Each Issue
