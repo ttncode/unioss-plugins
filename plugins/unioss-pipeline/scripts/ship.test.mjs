@@ -62,14 +62,18 @@ test('mrCreatePayload emits empty id arrays when a user is unresolved', () => {
   assert.deepEqual(body.reviewer_ids, []);
 });
 
-test('repoRef maps repo keys to project id + web path', () => {
-  assert.deepEqual(repoRef(process.cwd(), 'adminPage'), { id: 32, webPath: 'unioss/AdminPage' });
-  assert.deepEqual(repoRef(process.cwd(), 'frontEnd'), { id: 31, webPath: 'unioss/FrontEnd' });
+test('repoRef maps module keys to project id + web path', () => {
+  assert.deepEqual(repoRef(process.cwd(), 'admin-page'), { id: 32, webPath: 'unioss/AdminPage' });
+  assert.deepEqual(repoRef(process.cwd(), 'front-end'), { id: 31, webPath: 'unioss/FrontEnd' });
 });
 
 test('repoRef resolves the submodule repos', () => {
-  assert.deepEqual(repoRef(process.cwd(), 'commonHelper'), { id: 18, webPath: 'unioss/common-helper' });
-  assert.deepEqual(repoRef(process.cwd(), 'commonModels'), { id: 19, webPath: 'unioss/common-models' });
+  assert.deepEqual(repoRef(process.cwd(), 'common-helper'), { id: 18, webPath: 'unioss/common-helper' });
+  assert.deepEqual(repoRef(process.cwd(), 'common-models'), { id: 19, webPath: 'unioss/common-models' });
+});
+
+test('repoRef rejects the old camelCase keys rather than silently resolving', () => {
+  assert.throws(() => repoRef(process.cwd(), 'adminPage'), /Unknown repo key/);
 });
 
 test('mrTitle is fixed: Merge <branch> into <target>', () => {

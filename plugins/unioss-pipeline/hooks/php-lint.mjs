@@ -12,7 +12,7 @@ process.stdin.on('end', () => {
   if (!file.endsWith('.php')) process.exit(0);
 
   const cfg = resolveConfig();
-  const repo = cfg.repos.adminPage.path.replace(/\/+$/, ''); // "AdminPage"
+  const repo = cfg.source.modules['admin-page'].replace(/\/+$/, ''); // "AdminPage"
   const marker = `/${repo}/`;
   const idx = file.indexOf(marker);
   if (idx === -1) process.exit(0);

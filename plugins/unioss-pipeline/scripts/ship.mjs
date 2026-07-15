@@ -42,19 +42,21 @@ export function mrCreatePayload({ sourceBranch, targetBranch, title, assigneeId,
   };
 }
 
+// Module key -> GitLab web path. Not per-machine, so it stays in code; the
+// project id lives in config (gitlab.projects).
 const REPO_WEB = {
-  adminPage: 'unioss/AdminPage',
-  frontEnd: 'unioss/FrontEnd',
-  commonHelper: 'unioss/common-helper',
-  commonModels: 'unioss/common-models',
+  'admin-page': 'unioss/AdminPage',
+  'front-end': 'unioss/FrontEnd',
+  'common-helper': 'unioss/common-helper',
+  'common-models': 'unioss/common-models',
 };
 const REPO_KEYS = Object.keys(REPO_WEB).join('|');
 
 export function repoRef(cwd, repoKey) {
   const cfg = resolveConfig(cwd);
-  const repo = cfg.repos[repoKey];
-  if (!repo || !REPO_WEB[repoKey]) throw new Error(`Unknown repo key: ${repoKey} (use ${REPO_KEYS})`);
-  return { id: repo.id, webPath: REPO_WEB[repoKey] };
+  const id = cfg.gitlab.projects[repoKey];
+  if (typeof id !== 'number' || !REPO_WEB[repoKey]) throw new Error(`Unknown repo key: ${repoKey} (use ${REPO_KEYS})`);
+  return { id, webPath: REPO_WEB[repoKey] };
 }
 
 // The MR title is fixed by house convention — derived from the branch and the

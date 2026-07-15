@@ -4,6 +4,9 @@
       { "matcher": "Edit|Write", "hooks": [
         { "type": "command", "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/guard-migrations.mjs\"" },
         { "type": "command", "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/guard-rounds.mjs\"" }
+      ] },
+      { "matcher": "Bash", "hooks": [
+        { "type": "command", "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/guard-protected-branch.mjs\"" }
       ] }
     ],
     "PostToolUse": [

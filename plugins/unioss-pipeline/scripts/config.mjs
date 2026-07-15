@@ -5,28 +5,14 @@ import { existsSync, readFileSync, mkdirSync, writeFileSync, readdirSync } from 
 import { join, dirname, basename, relative } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
+// Ordered by how likely a value is to need changing: per-machine first,
+// per-team next, project-wide last.
+// A module key (`admin-page`, `common-helper`, …) is the one vocabulary:
+// source.modules gives its path on disk, gitlab.projects gives its project id.
 export const DEFAULTS = {
-  gitlab: { host: 'gitlab.unioss.jp' },
-  repos: {
-    adminPage: { id: 32, path: 'AdminPage/' },
-    frontEnd: { id: 31, path: 'FrontEnd/' },
-    commonHelper: { id: 18, path: 'submodules/common-helper/' },
-    commonModels: { id: 19, path: 'submodules/common-models/' },
-  },
-  docker: { mysql: 'mysql-unioss3', php: 'php-unioss3' },
-  db: { name: '_unioss', user: 'root', password: 'ProotW' },
-  git: {
-    baseBranch: 'v3-master',
-    protected: ['master', 'v3-master', 'develop', 'v3-develop', 'v3-develop-tps'],
-  },
-  ship: {
-    assignee: 'nghia.truong',
-    label: 'UNIOSS 3',
-    staging: { targetBranch: 'v3-develop-tps', reviewer: 'dat.pham', deleteSourceBranch: false, squash: false },
-    customer: { targetBranch: 'v3-develop', reviewer: 'r.yosimura', deleteSourceBranch: true, squash: false },
-  },
+  // ── Per-machine ──
   source: {
-    root: null,
+    root: null, // null = the workspace you opened Claude in
     modules: {
       'admin-page': 'AdminPage',
       'front-end': 'FrontEnd',
@@ -34,9 +20,23 @@ export const DEFAULTS = {
       'common-models': 'common-models',
     },
   },
-  tester: {
-    mailhog: 'http://localhost:8225',
-    ecsiteLogin: 'http://localhost:2380/storetax/login',
+  docker: { mysql: 'mysql-unioss3', php: 'php-unioss3' },
+  db: { name: '_unioss', user: 'root', password: 'ProotW' },
+
+  // ── Per-team ──
+  ship: {
+    assignee: 'nghia.truong',
+    label: 'UNIOSS 3',
+    staging: { targetBranch: 'v3-develop-tps', reviewer: 'dat.pham', deleteSourceBranch: false, squash: false },
+    customer: { targetBranch: 'v3-develop', reviewer: 'r.yosimura', deleteSourceBranch: true, squash: false },
+  },
+
+  // ── Project-wide ──
+  gitlab: {
+    host: 'gitlab.unioss.jp',
+    projects: { 'admin-page': 32, 'front-end': 31, 'common-helper': 18, 'common-models': 19 },
+    baseBranch: 'v3-master',
+    protected: ['master', 'v3-master', 'develop', 'v3-develop', 'v3-develop-tps'],
   },
   artifactRoot: '.walkthrough',
 };
@@ -115,20 +115,17 @@ export function buildEnv(cwd = process.cwd()) {
   const srcLines = Object.entries(c.source.modules).map(
     ([key, dir]) => `US_SRC_${key.toUpperCase().replace(/-/g, '_')}=${sq(join(srcRoot, dir))}`,
   );
+  // Only vars a skill actually reads. Anything unused was removed — an export
+  // nobody consumes is a value that can rot without anyone noticing.
   return [
     `US_MYSQL=${sq(c.docker.mysql)}`,
     `US_PHP=${sq(c.docker.php)}`,
     `US_DB=${sq(c.db.name)}`,
     `US_DB_USER=${sq(c.db.user)}`,
     `US_DB_PASS=${sq(c.db.password)}`,
-    `US_GITLAB_HOST=${sq(c.gitlab.host)}`,
-    `US_AP_PATH=${sq(c.repos.adminPage.path)}`,
-    `US_FE_PATH=${sq(c.repos.frontEnd.path)}`,
-    `US_BASE_BRANCH=${sq(c.git.baseBranch)}`,
-    `US_ARTIFACT_ROOT=${sq(c.artifactRoot)}`,
+    `US_BASE_BRANCH=${sq(c.gitlab.baseBranch)}`,
+    `US_PROTECTED=${sq(c.gitlab.protected.join(' '))}`,
     `US_SRC_ROOT=${sq(srcRoot)}`,
-    `US_TESTER_MAILHOG=${sq(c.tester.mailhog)}`,
-    `US_TESTER_ECSITE_LOGIN=${sq(c.tester.ecsiteLogin)}`,
     ...srcLines,
   ].join('\n');
 }
@@ -159,17 +156,16 @@ export function runCheck(cwd = process.cwd()) {
   const warnings = [];
   const isStr = (v) => typeof v === 'string' && v.length > 0;
   if (!isStr(c.gitlab.host)) errors.push('gitlab.host must be a non-empty string');
-  for (const r of Object.keys(c.repos)) {
-    if (typeof c.repos[r].id !== 'number') errors.push(`repos.${r}.id must be a number`);
-    if (!isStr(c.repos[r].path)) errors.push(`repos.${r}.path must be a non-empty string`);
+  for (const [key, id] of Object.entries(c.gitlab.projects)) {
+    if (typeof id !== 'number') errors.push(`gitlab.projects.${key} must be a number`);
+    if (!(key in c.source.modules)) errors.push(`gitlab.projects.${key} has no matching source.modules.${key}`);
   }
   if (!isStr(c.docker.mysql)) errors.push('docker.mysql must be a non-empty string');
   if (!isStr(c.docker.php)) errors.push('docker.php must be a non-empty string');
   if (!isStr(c.db.name) || !isStr(c.db.user) || !isStr(c.db.password)) errors.push('db.name/user/password must be non-empty strings');
-  if (!isStr(c.git.baseBranch)) errors.push('git.baseBranch must be a non-empty string');
-  if (!Array.isArray(c.git.protected) || c.git.protected.length === 0) errors.push('git.protected must be a non-empty array');
+  if (!isStr(c.gitlab.baseBranch)) errors.push('gitlab.baseBranch must be a non-empty string');
+  if (!Array.isArray(c.gitlab.protected) || c.gitlab.protected.length === 0) errors.push('gitlab.protected must be a non-empty array');
   if (!isStr(c.artifactRoot)) errors.push('artifactRoot must be a non-empty string');
-  if (!isStr(c.tester.mailhog) || !isStr(c.tester.ecsiteLogin)) errors.push('tester.mailhog/ecsiteLogin must be non-empty strings');
   if (!isStr(c.source.root)) errors.push('source.root must resolve to a non-empty string');
   for (const [key, dir] of Object.entries(c.source.modules)) {
     if (!existsSync(join(c.source.root, dir))) warnings.push(`source module '${key}' not found at ${join(c.source.root, dir)}`);

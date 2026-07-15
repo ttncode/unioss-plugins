@@ -18,12 +18,12 @@ Follow `../unioss-pipeline/REFERENCE.md` → its Branches, Protected-branch, and
 
 Every touched repo gets its own MR, including the submodules.
 
-| Repo key       | GitLab project         | Ship it when                        |
-| -------------- | ---------------------- | ----------------------------------- |
-| `adminPage`    | `unioss/AdminPage`     | the coder changed AdminPage         |
-| `frontEnd`     | `unioss/FrontEnd`      | the coder changed FrontEnd          |
-| `commonHelper` | `unioss/common-helper` | the coder changed the common helper |
-| `commonModels` | `unioss/common-models` | the coder changed the common models |
+| Repo key        | GitLab project         | Ship it when                        |
+| --------------- | ---------------------- | ----------------------------------- |
+| `admin-page`    | `unioss/AdminPage`     | the coder changed AdminPage         |
+| `front-end`     | `unioss/FrontEnd`      | the coder changed FrontEnd          |
+| `common-helper` | `unioss/common-helper` | the coder changed the common helper |
+| `common-models` | `unioss/common-models` | the coder changed the common models |
 
 ## Workflow
 

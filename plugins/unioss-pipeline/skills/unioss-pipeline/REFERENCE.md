@@ -31,22 +31,23 @@ When the orchestrator dispatches you with a round path, behave exactly as the pi
 
 All per-machine values come from `node "${CLAUDE_PLUGIN_ROOT}/scripts/config.mjs"` (resolution: env → `.walkthrough/.config/unioss.config.json` → built-in default). Do not hardcode these — resolve them.
 
-| Key                                        | Default                                                                            | Used for                                  |
-| ------------------------------------------ | ---------------------------------------------------------------------------------- | ----------------------------------------- |
-| `gitlab.host`                              | `gitlab.unioss.jp`                                                                 | API + image URLs                          |
-| `repos.adminPage.id` / `.path`             | `32` / `AdminPage/`                                                                | project id, repo path                     |
-| `repos.frontEnd.id` / `.path`              | `31` / `FrontEnd/`                                                                 | project id, repo path                     |
-| `docker.mysql` / `docker.php`              | `mysql-unioss3` / `php-unioss3`                                                    | container names                           |
-| `db.name` / `db.user` / `db.password`      | `_unioss` / `root` / `ProotW`                                                      | DB access                                 |
-| `git.baseBranch`                           | `v3-master`                                                                        | base for feature branches                 |
-| `git.protected`                            | `master, v3-master, develop, v3-develop, v3-develop-tps`                           | never-commit list                         |
-| `ship.assignee`                            | `nghia.truong`                                                                     | MR assignee (both modes)                  |
-| `ship.label`                               | `UNIOSS 3`                                                                         | MR label if it exists on the project      |
-| `ship.staging.targetBranch` / `.reviewer`  | `v3-develop-tps` / `dat.pham`                                                      | internal-staging MR target + reviewer     |
-| `ship.customer.targetBranch` / `.reviewer` | `v3-develop` / `r.yosimura`                                                        | customer-staging MR target + reviewer     |
-| `artifactRoot`                             | `.walkthrough`                                                                     | output dir                                |
-| `source.root`                              | current workspace (cwd)                                                            | host root that holds the module checkouts |
-| `source.modules.*`                         | `admin-page`→`AdminPage`, `front-end`→`FrontEnd`, `common-helper`, `common-models` | on-disk subdir per module                 |
+A **module key** (`admin-page`, `front-end`, `common-helper`, `common-models`) is the one vocabulary: `source.modules` gives its path on disk, `gitlab.projects` gives its project id. Keys are ordered by how likely they are to need changing — per-machine first, project-wide last.
+
+| Key                                        | Default                                                  | Used for                                  |
+| ------------------------------------------ | -------------------------------------------------------- | ----------------------------------------- |
+| `source.root`                              | current workspace (cwd)                                  | host root that holds the module checkouts |
+| `source.modules.<key>`                     | `AdminPage`, `FrontEnd`, `common-helper`, `common-models` | **the** on-disk path per module           |
+| `docker.mysql` / `docker.php`              | `mysql-unioss3` / `php-unioss3`                          | container names                           |
+| `db.name` / `db.user` / `db.password`      | `_unioss` / `root` / `ProotW`                            | DB access                                 |
+| `ship.assignee`                            | `nghia.truong`                                           | MR assignee (both modes)                  |
+| `ship.label`                               | `UNIOSS 3`                                               | MR label if it exists on the project      |
+| `ship.staging.targetBranch` / `.reviewer`  | `v3-develop-tps` / `dat.pham`                            | internal-staging MR target + reviewer     |
+| `ship.customer.targetBranch` / `.reviewer` | `v3-develop` / `r.yosimura`                              | customer-staging MR target + reviewer     |
+| `gitlab.host`                              | `gitlab.unioss.jp`                                       | API + image URLs                          |
+| `gitlab.projects.<key>`                    | `32`, `31`, `18`, `19`                                   | GitLab project id per module              |
+| `gitlab.baseBranch`                        | `v3-master`                                              | base for feature branches                 |
+| `gitlab.protected`                         | `master, v3-master, develop, v3-develop, v3-develop-tps` | never-write list (enforced by a hook)     |
+| `artifactRoot`                             | `.walkthrough`                                           | output dir                                |
 
 - **Secrets:** `GITLAB_TOKEN` is env-only (required). `db.password` resolves env `DB_PASSWORD` → file → default.
 - `testing_DB` is a fixed codebase constant — not configurable.
@@ -55,12 +56,14 @@ All per-machine values come from `node "${CLAUDE_PLUGIN_ROOT}/scripts/config.mjs
 
 ## Repos & prefixes
 
-| Repo          | Path (under project root)    | GitLab Project ID | Ticket prefix | Ship repo key  |
-| ------------- | ---------------------------- | ----------------- | ------------- | -------------- |
-| AdminPage     | `AdminPage/`                 | 32                | `AP#[IID]`    | `adminPage`    |
-| FrontEnd      | `FrontEnd/`                  | 31                | `FE#[IID]`    | `frontEnd`     |
-| common-helper | `submodules/common-helper/`  | 18                | —             | `commonHelper` |
-| common-models | `submodules/common-models/`  | 19                | —             | `commonModels` |
+| Module key      | Repo          | GitLab Project ID | Ticket prefix |
+| --------------- | ------------- | ----------------- | ------------- |
+| `admin-page`    | AdminPage     | 32                | `AP#[IID]`    |
+| `front-end`     | FrontEnd      | 31                | `FE#[IID]`    |
+| `common-helper` | common-helper | 18                | —             |
+| `common-models` | common-models | 19                | —             |
+
+Paths are **not** listed here — they are per-machine and live only in `source.modules.<key>` (run `/unioss-doctor` to see the resolved value, or `config.mjs scan --write` to repair them).
 
 The two apps are CodeIgniter 3 / PHP 8.1. Only divergence: FrontEnd skips PHPUnit unit tests. `<PREFIX>` (`AP`/`FE`) is decided from the ticket URL — the submodules never own a ticket, but they do get their own MR when changed (`/unioss-ship`).
 
@@ -125,12 +128,13 @@ grep -rn "some_symbol" "$US_SRC_ADMIN_PAGE/application"
 
 - Browser verification uses the Playwright and/or chrome-devtools MCP servers. The tester drives the affected UI flow and snapshots when useful.
 - The plugin's Playwright server is namespaced by the harness: its tools are `mcp__plugin_unioss-pipeline_playwright__browser_*` — **not** `mcp__playwright__*`. Permission rule: `mcp__plugin_unioss-pipeline_playwright` (`/unioss-doctor` offers to grant it).
-- Tester env access resolves from config: `US_TESTER_ECSITE_LOGIN` (`http://localhost:2380/storetax/login`), `US_TESTER_MAILHOG` (`http://localhost:8225`). Login credentials are ticket/seed-specific. See `../unioss-verify/tester-access.md`.
+- Tester URLs and credentials live in `../unioss-verify/tester-access.md` — that file is the single source. They are not config.
 
 ## Branches, base & protected
 
-- **Base branch:** always cut feature branches from `v3-master`. Fetch first: `git fetch origin && git checkout v3-master && git pull`.
-- **⛔ Protected — NEVER commit, push, force-push, rebase, or modify (local or remote):** `master`, `v3-master`, `develop`, `v3-develop`, `v3-develop-tps`. Before any commit/push, verify the current branch is NOT one of these — abort if it is.
+- **Base branch:** always cut feature branches from `gitlab.baseBranch` (`v3-master`). Fetch first: `git fetch origin && git checkout v3-master && git pull` — checkout/fetch/pull on the base branch are fine; it is *writes* that are forbidden.
+- **⛔ Protected — NEVER commit, push, force-push, rebase, reset, revert, cherry-pick, or merge into (local or remote):** every branch in `gitlab.protected` — `master`, `v3-master`, `develop`, `v3-develop`, `v3-develop-tps`. Before any write, verify the current branch is NOT one of these — abort if it is.
+- This is **enforced**, not merely documented: the `guard-protected-branch` PreToolUse hook blocks any such `git` command and exits non-zero. Resolve the list with `US_PROTECTED` (from `config.mjs env`); never hardcode it. Protected branches are legal only as an MR **target**.
 - **Naming.** The _origin repo_ is the repo the ticket URL belongs to (`AdminPage` or `FrontEnd`).
   - Origin repo: `feature/v3/#[IID]`
   - Every OTHER repo changed: `feature/v3/[ORIGIN_REPO]#[IID]`

@@ -59,7 +59,7 @@ export function applyPhpunitXml(content) {
 
 function adminPageDir(cwd) {
   const c = resolveConfig(cwd);
-  return join(c.source.root, c.repos.adminPage.path);
+  return join(c.source.root, c.source.modules['admin-page']);
 }
 
 function runApply(cwd, skipImport) {

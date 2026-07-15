@@ -1,6 +1,8 @@
 {
   "name": "unioss-pipeline",
-  "version": "1.8.3",
-  "description": "UNIOSS A→Z ticket pipeline: gated investigator → planner → coder → reviewer → tester with PHPUnit + Playwright verification.",
-  "author": { "name": "ttncode" }
+  "version": "1.8.4",
+  "description": "UNIOSS A\u2192Z ticket pipeline: gated investigator \u2192 planner \u2192 coder \u2192 reviewer \u2192 tester with PHPUnit + Playwright verification.",
+  "author": {
+    "name": "ttncode"
+  }
 }

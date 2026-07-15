@@ -5,8 +5,8 @@
     A GitLab ticket in — an investigated, planned, coded, reviewed, tested, ship-ready change out.
   </p>
 
-[![version](https://img.shields.io/badge/version-1.6.0-blue)](./plugins/unioss-pipeline/.claude-plugin/plugin.json)
-[![tests](https://img.shields.io/badge/tests-82%20passing-brightgreen)](#)
+[![version](https://img.shields.io/badge/version-1.8.4-blue)](./plugins/unioss-pipeline/.claude-plugin/plugin.json)
+[![tests](https://img.shields.io/badge/tests-99%20passing-brightgreen)](#)
 [![PHP](https://img.shields.io/badge/PHP-8.1-777bb4)](#)
 [![CodeIgniter](https://img.shields.io/badge/CodeIgniter-3.x-ee4323)](#)
 [![Claude Code](https://img.shields.io/badge/Claude%20Code-plugin-d97757)](#)
@@ -23,8 +23,8 @@
 **⚡ Fast setup**
 
 - Two commands to install; `/unioss-doctor` checks deps, containers, token, and browser.
-- **Zero config** on a standard UNIOSS box — defaults for containers, GitLab host, project IDs, repos, branches, and DB.
-- Override only what differs, in one gitignored file.
+- **Zero config** on a standard UNIOSS box — defaults for containers, GitLab host, project IDs, module paths, branches, and DB.
+- Every setting in one gitignored file; `config.mjs scan` repairs module paths that differ on your box.
 
 **🤖 Automation (A→Z)**
 
@@ -38,7 +38,7 @@
 - **Human-gated** — stops at 4 gates (spec, plan, review, ship). No runaway edits.
 - Review enforces the UNIOSS **CI3 + PHP 8.1 clean-code + security** checklist.
 - **Real tests** — PHPUnit in Docker; UI driven in a real browser (Playwright) with screenshots.
-- Never commits or pushes a **protected branch**.
+- Never commits or pushes a **protected branch** — a hook blocks it, not just a rule in a doc.
 
 ## Pipeline
 
@@ -63,7 +63,7 @@
 ╰──────────────────────────────────────────────────────────────────────╯
 ```
 
-Artifacts land in `.walkthrough/<PREFIX>#<IID>/round-<N>/` as clickable links.
+Artifacts land in `.walkthrough/<PREFIX>#<IID>/round-<N>/`, surfaced as Ctrl+Click-able paths.
 
 ## Commands
 
@@ -107,12 +107,16 @@ Grouped by pipeline stage. Each stage skill also runs standalone (`/skill-name <
 
 ## Configuration
 
-- **Scaffold:** `node "${CLAUDE_PLUGIN_ROOT}/scripts/config.mjs" init` → `.walkthrough/.config/unioss.config.json`
-- **Resolution:** env → file → default, deep-merged — set only the keys you change.
+One file holds everything: `.walkthrough/.config/unioss.config.json` (gitignored). `/unioss-doctor` creates it for you.
+
+- **Scaffold:** `node "${CLAUDE_PLUGIN_ROOT}/scripts/config.mjs" init` — writes every key, grouped per-machine → per-team → project-wide.
+- **Resolution:** env → file → default, deep-merged.
+- **Module keys** (`admin-page`, `front-end`, `common-helper`, `common-models`) are the one vocabulary: `source.modules.<key>` is its path on disk, `gitlab.projects.<key>` is its GitLab project id.
 - **Inspect / validate:** `config.mjs print` · `config.mjs check` (`/unioss-doctor` runs check).
-- **Wrong module paths:** `config.mjs scan` locates them; `scan --write` repairs the config (`/unioss-doctor` offers this).
+- **Wrong module paths:** `config.mjs scan` locates them; `scan --write` repairs the file (`/unioss-doctor` offers this).
 - **Secrets (env only):** `GITLAB_TOKEN` (required) · `DB_PASSWORD` (optional).
 - **Tester browser:** `! npx playwright install --with-deps chrome` if Chrome is missing.
+- **Tester URLs/credentials** are not config — they live in `skills/unioss-verify/tester-access.md`.
 
 ## Requirements
 

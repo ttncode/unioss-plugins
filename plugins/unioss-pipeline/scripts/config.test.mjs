@@ -18,8 +18,23 @@ test('defaults: absent file yields built-in values', () => {
   const dir = workspace(undefined);
   const cfg = resolveConfig(dir);
   assert.equal(cfg.docker.mysql, 'mysql-unioss3');
-  assert.equal(cfg.repos.adminPage.id, 32);
+  assert.equal(cfg.gitlab.projects['admin-page'], 32);
   assert.equal(cfg.db.password, 'ProotW');
+  rmSync(dir, { recursive: true, force: true });
+});
+
+test('every gitlab.projects key has a matching source.modules path', () => {
+  const dir = workspace(undefined);
+  const cfg = resolveConfig(dir);
+  assert.deepEqual(Object.keys(cfg.gitlab.projects).sort(), Object.keys(cfg.source.modules).sort());
+  rmSync(dir, { recursive: true, force: true });
+});
+
+test('module paths live only in source.modules — no second copy to drift', () => {
+  const dir = workspace(undefined);
+  const cfg = resolveConfig(dir);
+  assert.equal(cfg.repos, undefined);
+  assert.equal(cfg.source.modules['admin-page'], 'AdminPage');
   rmSync(dir, { recursive: true, force: true });
 });
 
@@ -110,16 +125,17 @@ test('ship reviewer is overridable from file', () => {
   rmSync(dir, { recursive: true, force: true });
 });
 
-test('tester block defaults resolve', () => {
-  const c = resolveConfig('/tmp/ws-tester');
-  assert.equal(c.tester.mailhog, 'http://localhost:8225');
-  assert.equal(c.tester.ecsiteLogin, 'http://localhost:2380/storetax/login');
+test('buildEnv exports the protected list so the guard and skills can read it', () => {
+  const env = buildEnv('/tmp/ws-env');
+  assert.match(env, /US_PROTECTED='master v3-master develop v3-develop v3-develop-tps'/);
+  assert.match(env, /US_BASE_BRANCH='v3-master'/);
 });
 
-test('buildEnv exports US_TESTER_* vars', () => {
-  const env = buildEnv('/tmp/ws-tester');
-  assert.match(env, /US_TESTER_MAILHOG='http:\/\/localhost:8225'/);
-  assert.match(env, /US_TESTER_ECSITE_LOGIN='http:\/\/localhost:2380\/storetax\/login'/);
+test('buildEnv exports nothing that has no consumer', () => {
+  const env = buildEnv('/tmp/ws-env');
+  for (const dead of ['US_GITLAB_HOST', 'US_AP_PATH', 'US_FE_PATH', 'US_ARTIFACT_ROOT', 'US_TESTER_']) {
+    assert.ok(!env.includes(dead), `${dead} has no consumer and must not be exported`);
+  }
 });
 
 test('scanModules: flags a wrong path and locates the real directory', () => {

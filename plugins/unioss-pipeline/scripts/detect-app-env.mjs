@@ -69,9 +69,11 @@ function detectOneApp(app, appPath, root, override) {
 export function detectAppEnvironments(root = resolveConfig().source.root) {
   const cfg = resolveConfig();
   const override = detectCiEnvOverride(root);
+  // Paths come from source.modules — the same place `config.mjs scan` repairs,
+  // so a scanned-fixed layout can no longer disagree with what we look at here.
   return [
-    detectOneApp('AdminPage', cfg.repos.adminPage.path, root, override),
-    detectOneApp('FrontEnd', cfg.repos.frontEnd.path, root, override),
+    detectOneApp('AdminPage', cfg.source.modules['admin-page'], root, override),
+    detectOneApp('FrontEnd', cfg.source.modules['front-end'], root, override),
   ];
 }
 
