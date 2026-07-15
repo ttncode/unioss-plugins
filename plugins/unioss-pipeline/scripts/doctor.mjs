@@ -83,13 +83,15 @@ for (const c of checks) {
   }
 }
 
+const pwAllowed = playwrightAllowed();
+lines.push(`  ${pwAllowed ? '✓' : '!'}  Playwright MCP`);
+if (!pwAllowed) {
+  lines.push('     └ Browser actions prompt every time.', `       Grant rule: ${PLAYWRIGHT_RULE}`);
+}
+
 if (lightMissing.length && pm) {
   lines.push('', `  Light deps:  ${lightMissing.map(installCmd).join('  &&  ')}`);
 }
-const pwAllowed = playwrightAllowed();
-lines.push('', '  Playwright MCP ships with this plugin (npx @playwright/mcp@latest).');
-lines.push(`  ${pwAllowed ? '✓' : '!'}  Browser permissions: ${pwAllowed ? 'pre-allowed' : 'prompts on every action'}`);
-if (!pwAllowed) lines.push(`     └ grant rule: ${PLAYWRIGHT_RULE}`);
 
 lines.push('', ' Configuration', RULE, row('Key', 'Value', 'Source'));
 for (const { key, value, source } of valueSources()) {
@@ -100,7 +102,7 @@ for (const { key, value, source } of valueSources()) {
 lines.push(row('GITLAB_TOKEN', process.env.GITLAB_TOKEN ? '******' : 'MISSING', 'env'));
 
 // Long failure detail must stay OUT of the grid — wrapping it shreds the table.
-lines.push('', ' Environment', RULE, row('App', 'Value', 'Source'));
+lines.push('', ' App Environment', RULE, row('App', 'Value', 'Source'));
 const envDetail = [];
 for (const e of detectAppEnvironments()) {
   if (e.found) lines.push(row(e.app, e.resolved, e.override ? `override: ${e.override.source}` : 'default'));
@@ -134,7 +136,6 @@ const status = !allOk
     ? 'Dependencies OK — source module paths need attention (see above).'
     : 'All checks passed — pipeline ready.';
 lines.push('', ` Status   ${status}`);
-lines.push('', ' Override locally:  node scripts/config.mjs init', '   (.walkthrough/.config/unioss.config.json)');
 
 console.log('\n' + box('UNIOSS Pipeline · Environment Check', lines, WIDTH) + '\n');
 // Machine-readable flags: /unioss-doctor reads these to decide which questions to ask.

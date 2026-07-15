@@ -23,25 +23,23 @@ None. Takes no arguments.
 3. **Light deps.** For a missing `node` / `jq` the script prints an install command — offer to run it (ask first). For Docker, the containers, and `GITLAB_TOKEN`, relay the printed guidance; never auto-install Docker or set secrets.
 4. **`BAD_COMMON_SOURCES=<keys>` printed?** The configured module paths do not exist here. Ask Decision prompt **(a)**.
 5. **`PLAYWRIGHT_PERMS=ask` printed?** The tester will need approval for every browser action. Ask Decision prompt **(b)**.
-6. **MCP loaded?** Check whether `mcp__plugin_unioss-pipeline_playwright__browser_navigate` is available as a tool this session.
+6. **MCP loaded?** Check whether `mcp__plugin_unioss-pipeline_playwright__browser_navigate` is available as a tool this session. Say nothing if it is — the table already reports Playwright. Report **only** the failure, per Output below.
 
 ## Output
 
-Reply in **exactly** this shape. Fill the placeholders; change nothing else:
+Reply in **exactly** this shape. Fill the placeholder; change nothing else:
 
 ````
 ```
 <paste the FULL stdout of doctor.mjs here — every row, character-for-character>
 ```
-
-  [OK] Playwright MCP
-
-<one line: what is ready, and what the user must still do>
 ````
 
 - The fenced block is **mandatory and comes first**. Paste the script's box verbatim — never redraw, re-pad, reflow, rebuild, shorten, or replace it with prose such as "all checks pass". A reply without the fenced table is a failed run, no matter how accurate the prose is.
 - This table is the payload, not decoration: **print it even when a brevity, concise, or terse-output style is active.** Such styles do not apply here.
-- If step 6 found no MCP tool, swap that line for:
+- **Add nothing after the table when everything passes.** The table's `Status` line already says it — restating it in prose is duplication. Silence is the success case.
+- **Add a line after the table only when the user must act**, and only for what the table does not already say.
+- If step 6 found **no** MCP tool, add this after the table (the table cannot detect it — only this session can):
 
   ```
     [XX] Playwright MCP — not loaded
