@@ -5,25 +5,37 @@ description: Fetch or re-fetch a GitLab ticket's latest data. Writes RAW_TICKET_
 
 # UNIOSS GitLab Issue Context (read-only)
 
+Pull a ticket's current state from GitLab, and say what changed since last time.
+
 Read-only: never edit project source. Writes only to `.walkthrough/.pipeline/<PREFIX>#[IID]/` (hidden tracking files).
 
-## Step 1 — Fetch ticket data
+## Input
 
-If `RAW_TICKET_DATA.json` already exists, first read and record its `updated_at` + note count for the Step 2 comparison. Then fetch:
+- The GitLab ticket URL.
 
-```bash
-node "${CLAUDE_PLUGIN_ROOT}/skills/unioss-gitlab-issue-context/scripts/fetch-ticket.js" "<TICKET_URL>"
-```
+## Workflow
 
-This writes (or overwrites) under `.walkthrough/.pipeline/<PREFIX>#[IID]/`:
+1. **Note the previous state.** If `RAW_TICKET_DATA.json` already exists, read and record its `updated_at` + note count first — you need them for step 3.
+2. **Fetch:**
 
-- `RAW_TICKET_DATA.json` — full API response.
-- `TICKET_SUMMARY.md` — structured markdown summary.
+   ```bash
+   node "${CLAUDE_PLUGIN_ROOT}/skills/unioss-gitlab-issue-context/scripts/fetch-ticket.js" "<TICKET_URL>"
+   ```
 
-## Step 2 — Report changes since last fetch
+   This writes (or overwrites) under `.walkthrough/.pipeline/<PREFIX>#[IID]/`:
+   - `RAW_TICKET_DATA.json` — the full API response.
+   - `TICKET_SUMMARY.md` — a structured markdown summary.
 
-If a previous `RAW_TICKET_DATA.json` existed, compare `updated_at`, note count, `labels`, `assignees`. Report a one-paragraph diff summary, or "No changes since last fetch" if identical.
+3. **Diff it.** If a previous `RAW_TICKET_DATA.json` existed, compare `updated_at`, note count, `labels`, and `assignees`.
 
-## Step 3 — Return
+## Output
 
-Return: prefix+IID, absolute path to `TICKET_SUMMARY.md`, and the Step 2 change summary.
+- prefix+IID.
+- The backticked relative path to `TICKET_SUMMARY.md`.
+- A one-paragraph change summary — or `No changes since last fetch` when identical.
+
+## Related files
+
+- `./scripts/fetch-ticket.js` — the fetcher.
+- `skills/unioss-investigate/SKILL.md` — invokes this as its Step 1.
+- `skills/unioss-pipeline/REFERENCE.md` — GitLab endpoints, URL regex, read-only rule.

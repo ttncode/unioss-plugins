@@ -5,16 +5,25 @@ description: Generate, update, and debug high-quality PHPUnit tests for UNIOSS C
 
 # UNIOSS PHPUnit Testing Skill
 
-You are an expert PHP/CodeIgniter who are working on UNIOSS project:
+Write and repair PHPUnit tests for UNIOSS CodeIgniter modules — isolated, and run in Docker.
 
-- Project uses PHPUnit for testing.
-- Project uses Docker for development.
-- Project uses a sql dump file to set up the database. Therefore, some data is already available.
+You are an expert PHP/CodeIgniter developer on the UNIOSS project:
 
-## When to Use
+- The project uses PHPUnit for testing.
+- The project uses Docker for development.
+- The project seeds the database from a SQL dump, so some data already exists.
 
-- Generate/Update test cases for new, modified code or commit hash.
-- Fix failing or flaky PHPUnit tests in UNIOSS projects.
+## Input
+
+Use this skill when asked to:
+
+- Generate/update test cases for new code, modified code, or a commit hash.
+- Fix failing or flaky PHPUnit tests.
+
+Needed:
+
+- The target source (default: `unioss3/AdminPage`).
+- The changed logic — a diff, or the commit hashes.
 
 ## Workflow
 
@@ -171,6 +180,20 @@ The pipeline imports a SQL dump into the DB on every full run — slow and unnec
     }
     ```
 
+## Output
+
+- The new/updated test files, passing in Docker.
+- **Fast mode (coder, pre-review):** the filtered run's result — no file under `.walkthrough/`.
+- **Full mode (GATE 3 accept):** the full-suite output saved to `round-<N>/UT_#[IID]_[YYYYMMDD]_V{n}.txt`.
+- Report the pass/fail counts and any test you could not make green — never present a skipped or filtered run as a full pass.
+
 ## Standalone use
 
 See `../unioss-pipeline/REFERENCE.md` → Shared stage rules → Standalone use (e.g. `/unioss-phpunit-test Add tests for this model …`): do the task on the named file(s), write nothing under `.walkthrough/` unless asked, skip gates.
+
+## Related files
+
+- `./examples/*` — passing tests; read these before writing any test code.
+- `scripts/phpunit-config.mjs` — `apply --skip-import` (fast), `apply --import` (full), `restore`.
+- `skills/unioss-implement/SKILL.md` — the coder that invokes this.
+- `skills/unioss-pipeline/REFERENCE.md` — config resolution, DB access.

@@ -7,15 +7,15 @@ description: 'Use when the user asks to generate migration files for UNIOSS proj
 
 You are working in a CodeIgniter 3 repository with timestamp-based migrations.
 
-## Input (from the user message)
+## Input
 
-The user may optionally add:
+From the user message. All optional:
 
 - "production only" (meaning: do not keep staging/testing/vbox copies)
 - a ticket id: f353, a1768, etc (meaning: include in the migration file name)
 - column type/default/null/after (if provided, honor it)
 
-## Rules & structure
+### Rules & structure
 
 - Migration filename format:
   `<timestamp>_<action>_<ticket_id>_<index>.php`, example: `20260114101209_alter_column_administrator_id_nullable_to_status_histories_table_a1678_222.php`
@@ -34,17 +34,9 @@ The user may optionally add:
   - file pattern: `Migration_<timestamp>_test.php`
   - test file contains constants that include the timestamp / migration version; update them too.
 
-## Goal (what you must deliver)
+## Workflow
 
-1. All migration files is added and migrate correctly.
-2. All relevant migration config files have their "target migration version", comment the latest target version and add the new target version below.
-3. The migration test file(s) are added with the test cases correctly.
-
-Keep diffs minimal. Do not change unrelated code.
-
----
-
-## Execution plan (do this in order)
+Do this in order.
 
 ### 1) Parse user intent from the prompt
 
@@ -272,3 +264,17 @@ Goal: Create a new migration test file for the new migration file.
       // TODOME: Add test case for down status
   }
   ```
+
+## Output
+
+1. All migration files added, and they migrate correctly.
+2. Every relevant migration config file carries the target migration version: the previous target commented out, the new target added below it.
+3. The migration test file(s) added, with correct test cases.
+
+Keep diffs minimal. Do not change unrelated code.
+
+## Related files
+
+- `skills/unioss-bump-migration/SKILL.md` — retimestamping an existing migration set.
+- `skills/unioss-implement/migration-verify.md` — the up/down/re-up verification the coder runs.
+- `skills/unioss-phpunit-test/SKILL.md` — running the generated migration tests.

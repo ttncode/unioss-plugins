@@ -3,45 +3,45 @@ name: unioss-bump-migration
 description: Bump migration timestamp, reindex files, and update migration config/tests for UNIOSS.
 ---
 
-# Unioss Migration Bumper
+# UNIOSS Migration Bumper
 
-Use this skill to update a set of migrations (and associated configs/tests) from an old timestamp to a new one.
+Move a set of migrations — plus their configs and tests — from an old timestamp to a new one.
 
-## 1. Parameters
+## Input
 
-- **OLD_TS**: 14-digit timestamp of target migrations (e.g., `20260114101209`).
-- **NEW_TS**: 14-digit replacement timestamp (provided by user or current time via `date +"%Y%m%d%H%M%S"`).
+- **OLD_TS** — 14-digit timestamp of the target migrations (e.g. `20260114101209`).
+- **NEW_TS** — 14-digit replacement timestamp. From the user, or `date +"%Y%m%d%H%M%S"`.
 
-## 2. Locations
+### Locations
 
-- **Migrations**: `AdminPage/application/migrations/{production,staging,testing,virtualbox_direct_domain}/`
+- **Migrations** — `AdminPage/application/migrations/{production,staging,testing,virtualbox_direct_domain}/`
   - Format: `<TS>_<action>_<ticket>_<index>.php`
-- **Configs**: `AdminPage/application/config/{production,staging,virtualbox_direct_domain}/migration.php`
-- **Tests**: `AdminPage/application/tests/migrations/`
-  - File: `Migration_<TS>_test.php`
+- **Configs** — `AdminPage/application/config/{production,staging,virtualbox_direct_domain}/migration.php`
+- **Tests** — `AdminPage/application/tests/migrations/Migration_<TS>_test.php`
 
-## 3. Workflow
+## Workflow
 
-### A. Rename & Update Migrations
+### A. Rename & update migrations
 
 1. Find all PHP files starting with `OLD_TS_`.
-2. **Reindex**: Calculate a `NEW_INDEX` for each file. This must be a unique, monotonically increasing number (e.g., `001`, `002`) that is greater than the index of the **most recent migration** (the one with the highest timestamp) in that environment's migration folder. **CRITICAL**: Do not simply use the absolute maximum index found in the directory, as some folders contain outlier files with very high indices (e.g., `1471`) from much older timestamps. Always sort files by timestamp first to identify the current active sequence index.
-3. **Rename**: Replace `OLD_TS` with `NEW_TS` and update the trailing index to `NEW_INDEX`.
-4. **Update Class Name**: Update the class name inside the file to match the new filename `timestamp (new) + action + ticket + index (new)`.
+2. **Reindex.** Calculate a `NEW_INDEX` for each file: unique, monotonically increasing (e.g. `001`, `002`), greater than the index of the **most recent migration** (highest timestamp) in that environment's folder.
 
-### B. Update Config Files
+   **CRITICAL:** do not use the absolute maximum index in the directory — some folders hold outlier files with very high indices (e.g. `1471`) left by much older timestamps. Always sort by timestamp first to find the current active sequence index.
 
-In `production`, `staging`, and `virtualbox_direct_domain` config folders:
+3. **Rename.** Replace `OLD_TS` with `NEW_TS` and update the trailing index to `NEW_INDEX`.
+4. **Update the class name** inside the file to match the new filename: timestamp (new) + action + ticket + index (new).
+
+### B. Update config files
+
+In the `production`, `staging`, and `virtualbox_direct_domain` config folders:
 
 1. Locate the `migration_version` lines.
 2. **Remove** any line (commented or active) containing `OLD_TS`.
-3. **If OLD_TS was the active version**: Simply replace `OLD_TS` with `NEW_TS` in that line.
-4. **If OLD_TS was NOT active**:
+3. **If OLD_TS was the active version:** replace `OLD_TS` with `NEW_TS` in that line.
+4. **If OLD_TS was NOT active:**
    - Comment out the current active `migration_version`.
    - Insert `$config['migration_version'] = NEW_TS;` as the new active version.
-5. No empty line between migrations versions in config files
-
-#### Example (Config Update)
+5. No empty line between migration versions in config files.
 
 **Case: OLD_TS is NOT the active version**
 
@@ -69,17 +69,25 @@ $config['migration_version'] = 20260110180000;
 $config['migration_version'] = 20260111180000;
 ```
 
-### C. Update Migration Tests
+### C. Update migration tests
 
-1. **Rename**: `Migration_<OLD_TS>_test.php` to `Migration_<NEW_TS>_test.php`.
-2. **Update Content**:
-   - Replace `OLD_TS` with `NEW_TS` in class name and references.
-   - Set `MIGRATION_VERSION_UP` constant to `NEW_TS`.
-   - Set `MIGRATION_VERSION_DOWN` constant to the latest timestamp remaining in the migration directory (the version to revert to).
+1. **Rename** `Migration_<OLD_TS>_test.php` → `Migration_<NEW_TS>_test.php`.
+2. **Update content:**
+   - Replace `OLD_TS` with `NEW_TS` in the class name and all references.
+   - Set `MIGRATION_VERSION_UP` to `NEW_TS`.
+   - Set `MIGRATION_VERSION_DOWN` to the latest timestamp remaining in the migration directory (the version to revert to).
 
-## 4. Verification
+## Output
 
-- Run `rg "<OLD_TS>"` to ensure no stale references remain in `AdminPage/application`.
-- Verify class names exactly match new filenames.
-- Ensure config files have exactly one active `migration_version` matching `NEW_TS`.
-- Summarize changes: `NEW_TS` used, files renamed, and config diff snippet.
+Verify before reporting:
+
+- `rg "<OLD_TS>"` returns nothing under `AdminPage/application` — no stale references.
+- Class names exactly match their new filenames.
+- Each config file has exactly one active `migration_version`, and it is `NEW_TS`.
+
+Then summarize: the `NEW_TS` used, the files renamed, and a config diff snippet.
+
+## Related files
+
+- `skills/unioss-generate-migration/SKILL.md` — creating migrations in the first place.
+- `skills/unioss-implement/migration-verify.md` — the up/down/re-up verification.

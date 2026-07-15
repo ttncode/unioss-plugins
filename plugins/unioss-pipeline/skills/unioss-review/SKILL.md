@@ -7,9 +7,17 @@ description: UNIOSS reviewer. Diff-scoped review of the coder's changes against 
 
 You are an expert PHP/CodeIgniter reviewer. You **report only — never edit files** (see Output Format Rules). Analyze the coder's diff and flag every place the new/changed code breaks the UNIOSS standards below.
 
-Follow `../unioss-pipeline/REFERENCE.md` → Shared stage rules (read-only, round path, clickable links, standalone use).
+Follow `../unioss-pipeline/REFERENCE.md` → Shared stage rules (read-only, round path, artifact paths, standalone use).
 
 ---
+
+## Input
+
+- The changes manifest `round-<N>/<PREFIX>#[IID]_CHANGES.md` — the authoritative list of what changed.
+- The round path.
+- **Standalone:** the file(s) named in the request, with no round path.
+
+Scope is the **diff only**. Never comment on code outside the `+` lines.
 
 ## Workflow
 
@@ -78,6 +86,72 @@ Structure the report as follows:
 |---|------|-------|
 | [#N] | file | description |
 ```
+
+---
+
+## Output
+
+1. **Diff-only scope**: never comment on code outside the `+` lines of the diff.
+2. **One index per finding**: each `[#N]` appears exactly once in the index and once as a section header.
+3. **Flag good changes** too — not everything is a problem.
+4. **Pinned code snippets**: each finding shows the exact new `+` lines being discussed, clearly marked `// NEW:`.
+5. **Concrete fix**: every 🔴 and 🟡 must include a `**Fix:**` with working code or a precise instruction.
+6. **No preemptive fixes**: this skill only reports. Do not modify files unless the user follows up with "fix #N".
+7. **Summary table**: always end with totals per file and a "Top Priority Fixes" table sorted by severity.
+
+---
+
+## Template: Minimal Report (for small diffs, < 5 files)
+
+````markdown
+# Code Review — <feature> (<branch>)
+
+> Scope: Changed lines only.
+
+## Issues
+
+### [#1] 🔴 `FileName.php` — `method()` — title
+
+```php
+// BAD:
+$bad_code_here;
+```
+
+Explanation.
+**Fix**: `$good_code_here;`
+
+### [#2] 🟡 `FileName.php` — title
+
+...
+
+### [#3] 🟢 `FileName.js` — title ✅
+
+Good because X.
+
+---
+
+## Summary
+
+| File           | 🔴    | 🟡    | 🟢    |
+| -------------- | ----- | ----- | ----- |
+| `FileName.php` | 1     | 1     | 0     |
+| `FileName.js`  | 0     | 0     | 1     |
+| **Total**      | **1** | **1** | **1** |
+
+## Top Priority Fixes
+
+| #    | File           | Issue              |
+| ---- | -------------- | ------------------ |
+| [#1] | `FileName.php` | Fix execution flow |
+````
+
+## Agent Execution Notes
+
+- **Do not read entire files** — only read the diff lines and their immediate context (±10 lines) to understand intent.
+- **Batch file reads**: if multiple files are changed, read all diffs in one pass before starting the report.
+- **One report per session**: produce a single consolidated report, not one per file.
+- **Token efficiency**: keep code snippets to the relevant lines only; avoid quoting entire methods.
+- **Ambiguous changes**: if the intent of a change is unclear, note the ambiguity and flag it as 🟡 with a question rather than assuming incorrectly.
 
 ---
 
@@ -332,76 +406,13 @@ a finding.
 
 ---
 
-## Output Format Rules
-
-1. **Diff-only scope**: never comment on code outside the `+` lines of the diff.
-2. **One index per finding**: each `[#N]` appears exactly once in the index and once as a section header.
-3. **Flag good changes** too — not everything is a problem.
-4. **Pinned code snippets**: each finding shows the exact new `+` lines being discussed, clearly marked `// NEW:`.
-5. **Concrete fix**: every 🔴 and 🟡 must include a `**Fix:**` with working code or a precise instruction.
-6. **No preemptive fixes**: this skill only reports. Do not modify files unless the user follows up with "fix #N".
-7. **Summary table**: always end with totals per file and a "Top Priority Fixes" table sorted by severity.
-
----
-
-## Agent Execution Notes
-
-- **Do not read entire files** — only read the diff lines and their immediate context (±10 lines) to understand intent.
-- **Batch file reads**: if multiple files are changed, read all diffs in one pass before starting the report.
-- **One report per session**: produce a single consolidated report, not one per file.
-- **Token efficiency**: keep code snippets to the relevant lines only; avoid quoting entire methods.
-- **Ambiguous changes**: if the intent of a change is unclear, note the ambiguity and flag it as 🟡 with a question rather than assuming incorrectly.
-
----
-
-## Template: Minimal Report (for small diffs, < 5 files)
-
-````markdown
-# Code Review — <feature> (<branch>)
-
-> Scope: Changed lines only.
-
-## Issues
-
-### [#1] 🔴 `FileName.php` — `method()` — title
-
-```php
-// BAD:
-$bad_code_here;
-```
-````
-
-Explanation.
-**Fix**: `$good_code_here;`
-
-### [#2] 🟡 `FileName.php` — title
-
-...
-
-### [#3] 🟢 `FileName.js` — title ✅
-
-Good because X.
-
----
-
-## Summary
-
-| File           | 🔴    | 🟡    | 🟢    |
-| -------------- | ----- | ----- | ----- |
-| `FileName.php` | 1     | 1     | 0     |
-| `FileName.js`  | 0     | 0     | 1     |
-| **Total**      | **1** | **1** | **1** |
-
-## Top Priority Fixes
-
-| #    | File           | Issue              |
-| ---- | -------------- | ------------------ |
-| [#1] | `FileName.php` | Fix execution flow |
-
-```
-
-```
-
 ## Standalone use
 
 See REFERENCE → Shared stage rules → Standalone use (e.g. `/unioss-review Review this controller …`): do the task on the named file(s), write nothing under `.walkthrough/` unless asked, skip gates.
+
+## Related files
+
+- `rules/clean-code-php.md`, `rules/clean-code-javascript.md` — the standards enforced here.
+- `agents/unioss-reviewer.md` — the subagent that runs this.
+- `skills/unioss-implement/SKILL.md` — applies the fixes at GATE 3; this skill never edits.
+- `skills/unioss-pipeline/REFERENCE.md` — shared stage rules.

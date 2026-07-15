@@ -2,23 +2,61 @@
 description: Check (and offer to install) the UNIOSS pipeline's dependencies on this machine.
 ---
 
-**1. Ensure the config exists**, then run the doctor. `init` is a no-op if the file is already there:
+# UNIOSS Doctor
 
-```bash
-node "${CLAUDE_PLUGIN_ROOT}/scripts/config.mjs" init
-node "${CLAUDE_PLUGIN_ROOT}/scripts/doctor.mjs"
+Check the pipeline's environment on this machine, and repair what can be repaired.
+
+## Input
+
+None. Takes no arguments.
+
+## Workflow
+
+1. **Ensure the config exists, then run the doctor.** `init` is a no-op when the file is already there:
+
+   ```bash
+   node "${CLAUDE_PLUGIN_ROOT}/scripts/config.mjs" init
+   node "${CLAUDE_PLUGIN_ROOT}/scripts/doctor.mjs"
+   ```
+
+2. **Keep the script's stdout.** It is the pre-rendered table — the payload of this command. You will paste it into the Output template below.
+3. **Light deps.** For a missing `node` / `jq` the script prints an install command — offer to run it (ask first). For Docker, the containers, and `GITLAB_TOKEN`, relay the printed guidance; never auto-install Docker or set secrets.
+4. **`BAD_COMMON_SOURCES=<keys>` printed?** The configured module paths do not exist here. Ask Decision prompt **(a)**.
+5. **`PLAYWRIGHT_PERMS=ask` printed?** The tester will need approval for every browser action. Ask Decision prompt **(b)**.
+6. **MCP loaded?** Check whether `mcp__plugin_unioss-pipeline_playwright__browser_navigate` is available as a tool this session.
+
+## Output
+
+Reply in **exactly** this shape. Fill the placeholders; change nothing else:
+
+````
+```
+<paste the FULL stdout of doctor.mjs here — every row, character-for-character>
 ```
 
-**2. Print the whole table, verbatim.** The table IS the output of this command — the user ran `/unioss-doctor` to read it, not to read your opinion of it.
+  [OK] Playwright MCP
 
-- Copy the script's box output into your reply **character-for-character**, inside a fenced code block. Every row. It is already formatted and padded — never redraw, re-pad, reflow, or rebuild it.
-- **Never summarize, compress, shorten, or replace it** with prose like "all checks pass". A summary instead of the table is a failed run.
-- This **overrides any active brevity, compression, or terse-output style** (e.g. a caveman/concise mode telling you to drop tables). Those styles do not apply to this command's output. If a style says "no decorative tables", it is wrong here: this table is the payload, not decoration.
-- Add your prose commentary **after** the fenced table, never instead of it.
+<one line: what is ready, and what the user must still do>
+````
 
-Then act on what it reports: for any missing **light** dependency (node, jq) it prints an install command — offer to run that command for the user (ask first). For Docker, the unioss containers, and `GITLAB_TOKEN`, relay the printed guidance; do not auto-install Docker or set secrets.
+- The fenced block is **mandatory and comes first**. Paste the script's box verbatim — never redraw, re-pad, reflow, rebuild, shorten, or replace it with prose such as "all checks pass". A reply without the fenced table is a failed run, no matter how accurate the prose is.
+- This table is the payload, not decoration: **print it even when a brevity, concise, or terse-output style is active.** Such styles do not apply here.
+- If step 6 found no MCP tool, swap that line for:
 
-**3. Fix wrong source-module paths.** If the doctor's last line is `BAD_COMMON_SOURCES=<keys>`, the configured module paths do not exist on this machine. Ask **verbatim** — exact wording, exact options, no added explanation:
+  ```
+    [XX] Playwright MCP — not loaded
+         -> Close and reopen Claude Code to activate it.
+            If the problem persists, reinstall the plugin:
+            /plugin install unioss-pipeline
+  ```
+
+- Decision prompts (below), if triggered, come after the table.
+
+## Decision prompts
+
+Print **verbatim** — exact wording, exact option order, no added explanation. Wait for the user's number.
+
+**(a) Wrong common sources:**
 
 ```
 Default common sources is wrong path. What would you like to do?
@@ -29,10 +67,10 @@ Default common sources is wrong path. What would you like to do?
 Which option?
 ```
 
-- `1` → `node "${CLAUDE_PLUGIN_ROOT}/scripts/config.mjs" scan --write`, then re-run the doctor and report what changed. If a module is reported `not found`, say so — it cannot be repaired by scanning.
+- `1` → `node "${CLAUDE_PLUGIN_ROOT}/scripts/config.mjs" scan --write`, re-run the doctor, report what changed. A module reported `not found` cannot be repaired by scanning — say so.
 - `2` → change nothing.
 
-**4. Stop the browser permission prompts.** If the doctor prints `PLAYWRIGHT_PERMS=ask`, the tester will need approval for every browser action. Ask **verbatim** — exact wording, exact options, no added explanation:
+**(b) Browser permissions:**
 
 ```
 Playwright asks permission on every browser action. What would you like to do?
@@ -43,24 +81,12 @@ Playwright asks permission on every browser action. What would you like to do?
 Which option?
 ```
 
-- `1` → `node "${CLAUDE_PLUGIN_ROOT}/scripts/playwright-perms.mjs" allow`. This grants the whole Playwright MCP server in the workspace's `.claude/settings.local.json` (local and gitignored — never commit an auto-approval for the team). Tell the user it takes effect in a new session.
+- `1` → `node "${CLAUDE_PLUGIN_ROOT}/scripts/playwright-perms.mjs" allow`. Grants the whole Playwright MCP server in the workspace's `.claude/settings.local.json` (local and gitignored — never commit an auto-approval for the team). Takes effect in a new session.
 - `2` → change nothing.
 
-**5. Confirm the MCP server is loaded.** Check whether `mcp__plugin_unioss-pipeline_playwright__browser_navigate` is available as a tool in this session. Report in the same checklist format:
+## Related files
 
-If available:
-
-```
-  [OK] Playwright MCP
-```
-
-If not available:
-
-```
-  [XX] Playwright MCP — not loaded
-       -> Close and reopen Claude Code to activate it.
-          If the problem persists, reinstall the plugin:
-          /plugin install unioss-pipeline
-```
-
-End by summarizing what is ready and what the user must still do.
+- `scripts/doctor.mjs` — renders the table; prints the `BAD_COMMON_SOURCES` / `PLAYWRIGHT_PERMS` flags.
+- `scripts/config.mjs` — `init`, `check`, `scan [--write]`.
+- `scripts/playwright-perms.mjs` — `check`, `allow`.
+- `skills/unioss-pipeline/REFERENCE.md` — config resolution + MCP naming.

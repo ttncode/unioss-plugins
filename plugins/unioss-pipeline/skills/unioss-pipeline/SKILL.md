@@ -5,11 +5,13 @@ description: UNIOSS A→Z ticket pipeline orchestrator. Given a GitLab ticket UR
 
 # UNIOSS Pipeline Orchestrator (main thread)
 
+Drive a ticket from A to Z, stopping at every human gate.
+
 Read `REFERENCE.md` (this dir) first — its branch, protected-branch, submodule, and commit rules are binding. You run in the MAIN thread: dispatch read-only stages as subagents, run the coder yourself, own the gates.
 
-## Entry modes
+## Input
 
-Three ways in. All share the same gates, rounds, and stages; they differ only in what starts the run and which early steps are skipped.
+Three entry modes. All share the same gates, rounds, and stages; they differ only in what starts the run and which early steps are skipped.
 
 - **ticket mode** — `/unioss-pipeline <url>` (default). New GitLab ticket, full flow from Investigate. `<PREFIX>` is `AP`/`FE` from the URL.
 - **feedback mode** — `/unioss-feedback <url>`. Ticket already has ≥1 sealed round. Open round N+1 (never restart):
@@ -21,7 +23,9 @@ Three ways in. All share the same gates, rounds, and stages; they differ only in
   1. Run Parse (Flow step 1): derive artifact identity `TASK#<short-slug>` (kebab-case of a few keywords); create `round-1/` + `.walkthrough/.pipeline/TASK#<slug>/`; write `round-1/ROUND_BRIEF.md` from the request.
   2. Run the normal Flow **from the investigator (step 2)**, but skip its GitLab fetch + DB-from-ticket steps — map impact from the request text + code only. No GitLab links in artifacts.
 
-## State & resume
+## Workflow
+
+### State & resume
 
 State file: `.walkthrough/.pipeline/<PREFIX>#[IID]/pipeline-state.json` —
 `{ current_round, rounds: { "<n>": { stage, gate_decisions, spec_version, spec_approved, plan_version, review_counts, test_status } } }`.
@@ -34,7 +38,7 @@ On start, determine the round:
 
 Update the current round's entry after every stage. On resume within a round: if `spec_approved` is true, skip the spec stage + GATE 1 and continue at the plan phase; otherwise resume at the spec stage.
 
-## Step 0 — Show the plan, get the go-ahead
+### Step 0 — Show the plan, get the go-ahead
 
 Parse the URL (REFERENCE regex) → IID + origin repo → prefix `AP`/`FE`. Render the plan table by running the script:
 
@@ -42,11 +46,11 @@ Parse the URL (REFERENCE regex) → IID + origin repo → prefix `AP`/`FE`. Rend
 node "${CLAUDE_PLUGIN_ROOT}/scripts/plan-table.mjs" <PREFIX> [IID] <current_round>
 ```
 
-- **Print its output verbatim**, character-for-character, in a fenced code block. It is already flush — never hand-draw, re-pad, reflow, or rebuild it, and never summarize it into prose. This **overrides any active brevity/compression style** that says to drop tables: this table is the payload, not decoration.
-- Then **stop — ask the user to confirm before any stage runs.** Wait for them to say proceed. Run no stage until they confirm.
-- **Rounds.** All artifacts go under `.walkthrough/<PREFIX>#[IID]/round-<current_round>/`. On a re-run (a sealed round exists), first write `round-<current_round>/ROUND_BRIEF.md` capturing exactly what this round must do (ticket delta since last round and/or user instruction), and state that all prior rounds stay frozen. Every stage is scoped to the brief and treats prior rounds as an immutable baseline. Never write outside the current round (sealed-round guard enforces this).
+Print its output per the **Output → Step 0** contract below, then **stop — ask the user to confirm before any stage runs.** Wait for them to say proceed. Run no stage until they confirm.
 
-## Flow
+**Rounds.** All artifacts go under `.walkthrough/<PREFIX>#[IID]/round-<current_round>/`. On a re-run (a sealed round exists), first write `round-<current_round>/ROUND_BRIEF.md` capturing exactly what this round must do (ticket delta since last round and/or user instruction), and state that all prior rounds stay frozen. Every stage is scoped to the brief and treats prior rounds as an immutable baseline. Never write outside the current round (sealed-round guard enforces this).
+
+### Flow
 
 1. **Parse** the URL → IID + origin repo → prefix. Determine `current_round`. Create `.walkthrough/.pipeline/<PREFIX>#[IID]/` and `.walkthrough/<PREFIX>#[IID]/round-<current_round>/`. Pass that round path to every subagent.
 2. **Investigator** — dispatch the `unioss-pipeline:unioss-investigator` agent (**investigate mode**) with the URL. Writes INVESTIGATION.md only; returns a clarity verdict + open-question count.
@@ -62,7 +66,29 @@ node "${CLAUDE_PLUGIN_ROOT}/scripts/plan-table.mjs" <PREFIX> [IID] <current_roun
     - **fix** → invoke `unioss-pipeline:unioss-implement` to apply fixes + re-run filtered tests → ask "re-review or proceed?"; if re-review, go to step 9.
     - **accept** → (AdminPage) invoke `unioss-pipeline:unioss-implement` full mode: full suite with a fresh DB (`phpunit-config apply --import`) → `round-<current_round>/UT_#[IID]_[YYYYMMDD]_V1.txt`.
 11. **Tester** — dispatch the `unioss-pipeline:unioss-tester` agent with the CHANGES.md path + acceptance criteria. Writes TEST_RESULTS.md; returns pass/fail. If any UI criterion is SKIPPED (no browser MCP), note it explicitly — never treat SKIPPED as a pass.
-12. **Finalize** — for every repo the coder touched, commit on its feature branch using `#[IID] - [Message]`. Per REFERENCE: app branches (AdminPage/FrontEnd) are committed locally only (no push, no MR) and exclude the submodule gitlink; submodule branches are pushed. Never touch a protected branch. Present a final summary: branch per repo, spec, plan, changes, review status, test status, and the backticked relative path to every artifact. If UI verification was SKIPPED, surface "UI verification: SKIPPED — no browser MCP configured" prominently. Then ask Decision prompt **(b)**.
+12. **Finalize** — for every repo the coder touched, commit on its feature branch using `#[IID] - [Message]`. Per REFERENCE: app branches (AdminPage/FrontEnd) are committed locally only (no push, no MR) and exclude the submodule gitlink; submodule branches are pushed. Never touch a protected branch. Present the final summary per **Output → Step 12**, then ask Decision prompt **(b)**.
+
+## Output
+
+### Step 0 — the plan table
+
+Print `plan-table.mjs` output **verbatim**, character-for-character, in a fenced code block:
+
+````
+```
+<paste the FULL stdout of plan-table.mjs here — every row>
+```
+
+Confirm to start the Investigate stage?
+````
+
+It is already flush — never hand-draw, re-pad, reflow, rebuild, or summarize it into prose. This table is the payload, not decoration: **print it even when a brevity, concise, or terse-output style is active.**
+
+### Step 12 — the final summary
+
+- Branch per repo · spec · plan · changes · review status · test status.
+- The backticked relative path to every artifact.
+- If UI verification was SKIPPED, surface `UI verification: SKIPPED — no browser MCP configured` prominently.
 
 ## Decision prompts
 
@@ -103,3 +129,11 @@ Which option?
 - Protected branches are read-only (REFERENCE → Branches). Verify the current branch before any commit/push.
 - Keep main context lean: rely on subagents' returned summaries; read full artifacts only when a gate needs it.
 - Emit every artifact as a workspace-relative path in backticks (REFERENCE → Artifact paths) — never a `file://` URL.
+
+## Related files
+
+- `./REFERENCE.md` — config, repos, branches, artifact layout, submodules, MCP.
+- `scripts/plan-table.mjs` — renders the Step 0 table.
+- `agents/unioss-investigator.md`, `unioss-planner.md`, `unioss-reviewer.md`, `unioss-tester.md` — the dispatched subagents.
+- `skills/unioss-implement/SKILL.md` — the coder (main thread).
+- `skills/unioss-ship/SKILL.md` — invoked by Decision prompt (b).
