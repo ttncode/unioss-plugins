@@ -11,10 +11,10 @@ Single source of truth for every stage. When a skill says "follow REFERENCE → 
 Every stage skill (investigator, planner, coder, reviewer, tester, ship, api-spec, gitlab-context) follows these:
 
 - **Read this file first.** Its Branch, Protected-branch, Submodule, and Commit rules are binding.
-- **Read-only by default.** Never edit project source. `Write` only under `.walkthrough/`. The only writers are the coder (`unioss-implement`) and ship (push + MR).
+- **Read-only by default.** Never edit project source. `Write` only under `.walkthrough/`. The only writers are the coder (`unioss-pipeline:unioss-implement`) and ship (push + MR).
 - **Round path.** The orchestrator passes the round folder `.walkthrough/<PREFIX>#[IID]/round-<N>/` in your prompt. Write all artifacts there — never into a different round.
 - **Resolve config before shell/DB/source access.** Run `eval "$(node "${CLAUDE_PLUGIN_ROOT}/scripts/config.mjs" env)"` first; never hardcode hosts, containers, paths, or the protected-branch list.
-- **Clickable links.** Surface every artifact path by running `scripts/link.mjs` (see Clickable links) — never hand-write a `file://` URL or emit a bare path.
+- **Artifact paths.** Surface every artifact as a workspace-relative path in backticks (see Artifact paths) — never a `file://` URL.
 - **Return summaries, not bodies.** Return counts, verdicts, and links; never paste full artifact contents back to the orchestrator.
 
 ### Standalone use
@@ -50,16 +50,19 @@ All per-machine values come from `node "${CLAUDE_PLUGIN_ROOT}/scripts/config.mjs
 
 - **Secrets:** `GITLAB_TOKEN` is env-only (required). `db.password` resolves env `DB_PASSWORD` → file → default.
 - `testing_DB` is a fixed codebase constant — not configurable.
-- **Scaffold / inspect:** `config.mjs init` → `.walkthrough/.config/unioss.config.json`; `config.mjs print`; `config.mjs check` (run by `/unioss-doctor`).
+- **Missing config → init it first.** If `.walkthrough/.config/unioss.config.json` does not exist, run `config.mjs init` before anything else (no-op when it already exists).
+- **Scaffold / inspect:** `config.mjs init` → `.walkthrough/.config/unioss.config.json`; `config.mjs print`; `config.mjs check` (run by `/unioss-doctor`); `config.mjs scan [--write]` locates source modules when the configured paths are wrong.
 
 ## Repos & prefixes
 
-| Repo      | Path (under project root) | GitLab Project ID | Ticket prefix |
-| --------- | ------------------------- | ----------------- | ------------- |
-| AdminPage | `AdminPage/`              | 32                | `AP#[IID]`    |
-| FrontEnd  | `FrontEnd/`               | 31                | `FE#[IID]`    |
+| Repo          | Path (under project root)    | GitLab Project ID | Ticket prefix | Ship repo key  |
+| ------------- | ---------------------------- | ----------------- | ------------- | -------------- |
+| AdminPage     | `AdminPage/`                 | 32                | `AP#[IID]`    | `adminPage`    |
+| FrontEnd      | `FrontEnd/`                  | 31                | `FE#[IID]`    | `frontEnd`     |
+| common-helper | `submodules/common-helper/`  | 18                | —             | `commonHelper` |
+| common-models | `submodules/common-models/`  | 19                | —             | `commonModels` |
 
-Both are CodeIgniter 3 / PHP 8.1. Only divergence: FrontEnd skips PHPUnit unit tests. `<PREFIX>` (`AP`/`FE`) is decided from the ticket URL.
+The two apps are CodeIgniter 3 / PHP 8.1. Only divergence: FrontEnd skips PHPUnit unit tests. `<PREFIX>` (`AP`/`FE`) is decided from the ticket URL — the submodules never own a ticket, but they do get their own MR when changed (`/unioss-ship`).
 
 ## Artifact layout (project root `.walkthrough/`)
 
@@ -79,17 +82,13 @@ Visible artifacts (the human reads these), under `.walkthrough/<PREFIX>#[IID]/ro
 
 Hidden tracking, under `.walkthrough/.pipeline/<PREFIX>#[IID]/`: `RAW_TICKET_DATA.json`, `TICKET_SUMMARY.md`, `pipeline-state.json` (holds `current_round`).
 
-## Clickable links
+## Artifact paths
 
-- **Always run `link.mjs` — never hand-write a `file://` URL or emit a bare path.** The script handles the two things a hand-written link gets wrong: a bare `#` in a ticket dir (`AP#1583`) is mangled by the terminal linkifier (`#`→`%23`, spaces→`%20`), and under WSL a `file:///home/...` path won't open from a Windows-side editor.
+- **Surface every artifact as a plain workspace-relative path in backticks. Never build a `file://` URL.** The terminal linkifies the path itself, so the human can Ctrl+Click it:
 
-  ```bash
-  node "${CLAUDE_PLUGIN_ROOT}/scripts/link.mjs" ".walkthrough/AP#1583/round-1/AP#1583_REVIEW.md"
-  ```
+      `.walkthrough/AP#1583/round-1/AP#1583_REVIEW.md`
 
-- Output — native emits `file://`; under WSL it emits `file://wsl.localhost/<distro>/...` so a Windows editor resolves it:
-
-      [AP#1583_REVIEW.md](file:///abs/workspace/.walkthrough/AP%231583/round-1/AP%231583_REVIEW.md)
+- No URL means no percent-encoding and no `#` fragment to mangle — the failure mode that broke `file://` links cannot occur. Do not "improve" this by wrapping paths in a URL or a markdown link.
 
 ## GitLab (read-only except ship)
 
@@ -125,6 +124,7 @@ grep -rn "some_symbol" "$US_SRC_ADMIN_PAGE/application"
 ## MCP (tester)
 
 - Browser verification uses the Playwright and/or chrome-devtools MCP servers. The tester drives the affected UI flow and snapshots when useful.
+- The plugin's Playwright server is namespaced by the harness: its tools are `mcp__plugin_unioss-pipeline_playwright__browser_*` — **not** `mcp__playwright__*`. Permission rule: `mcp__plugin_unioss-pipeline_playwright` (`/unioss-doctor` offers to grant it).
 - Tester env access resolves from config: `US_TESTER_ECSITE_LOGIN` (`http://localhost:2380/storetax/login`), `US_TESTER_MAILHOG` (`http://localhost:8225`). Login credentials are ticket/seed-specific. See `../unioss-verify/tester-access.md`.
 
 ## Branches, base & protected

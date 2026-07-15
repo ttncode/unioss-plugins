@@ -6,7 +6,7 @@
   </p>
 
 [![version](https://img.shields.io/badge/version-1.6.0-blue)](./plugins/unioss-pipeline/.claude-plugin/plugin.json)
-[![tests](https://img.shields.io/badge/tests-72%20passing-brightgreen)](#)
+[![tests](https://img.shields.io/badge/tests-82%20passing-brightgreen)](#)
 [![PHP](https://img.shields.io/badge/PHP-8.1-777bb4)](#)
 [![CodeIgniter](https://img.shields.io/badge/CodeIgniter-3.x-ee4323)](#)
 [![Claude Code](https://img.shields.io/badge/Claude%20Code-plugin-d97757)](#)
@@ -89,7 +89,7 @@ Grouped by pipeline stage. Each stage skill also runs standalone (`/skill-name <
 | Code        | `unioss-implement`                             | Implement code changes                                              |
 | Review      | `unioss-review`                                | Review code changes against the CI3 + PHP 8.1 + security checklist. |
 | Verify      | `unioss-verify`                                | DB checks + browser-driven UI verification with screenshots.        |
-| Ship        | `unioss-ship`                                  | Ship code changes to GitLab and create an MR                        |
+| Ship        | `unioss-ship`                                  | Open an MR per touched repo (apps + submodules). Never merges.      |
 | Clarify     | `unioss-brainstorming`, `unioss-writing-plans` | GATE-0 clarify + plan structuring (superpowers-style).              |
 
 ## Install
@@ -110,6 +110,7 @@ Grouped by pipeline stage. Each stage skill also runs standalone (`/skill-name <
 - **Scaffold:** `node "${CLAUDE_PLUGIN_ROOT}/scripts/config.mjs" init` → `.walkthrough/.config/unioss.config.json`
 - **Resolution:** env → file → default, deep-merged — set only the keys you change.
 - **Inspect / validate:** `config.mjs print` · `config.mjs check` (`/unioss-doctor` runs check).
+- **Wrong module paths:** `config.mjs scan` locates them; `scan --write` repairs the config (`/unioss-doctor` offers this).
 - **Secrets (env only):** `GITLAB_TOKEN` (required) · `DB_PASSWORD` (optional).
 - **Tester browser:** `! npx playwright install --with-deps chrome` if Chrome is missing.
 

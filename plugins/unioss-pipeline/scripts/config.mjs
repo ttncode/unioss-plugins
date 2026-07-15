@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 // Single source of truth for UNIOSS pipeline configuration.
 // Resolution order (highest wins): env -> local file -> built-in default.
-import { existsSync, readFileSync, mkdirSync, writeFileSync } from 'node:fs';
-import { join, dirname } from 'node:path';
+import { existsSync, readFileSync, mkdirSync, writeFileSync, readdirSync } from 'node:fs';
+import { join, dirname, basename, relative } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
 export const DEFAULTS = {
@@ -10,6 +10,8 @@ export const DEFAULTS = {
   repos: {
     adminPage: { id: 32, path: 'AdminPage/' },
     frontEnd: { id: 31, path: 'FrontEnd/' },
+    commonHelper: { id: 18, path: 'submodules/common-helper/' },
+    commonModels: { id: 19, path: 'submodules/common-models/' },
   },
   docker: { mysql: 'mysql-unioss3', php: 'php-unioss3' },
   db: { name: '_unioss', user: 'root', password: 'ProotW' },
@@ -157,7 +159,7 @@ export function runCheck(cwd = process.cwd()) {
   const warnings = [];
   const isStr = (v) => typeof v === 'string' && v.length > 0;
   if (!isStr(c.gitlab.host)) errors.push('gitlab.host must be a non-empty string');
-  for (const r of ['adminPage', 'frontEnd']) {
+  for (const r of Object.keys(c.repos)) {
     if (typeof c.repos[r].id !== 'number') errors.push(`repos.${r}.id must be a number`);
     if (!isStr(c.repos[r].path)) errors.push(`repos.${r}.path must be a non-empty string`);
   }
@@ -179,6 +181,52 @@ export function runCheck(cwd = process.cwd()) {
   return { ok: errors.length === 0, report, errors, warnings };
 }
 
+const SCAN_SKIP = new Set(['node_modules', '.git', 'vendor', 'storage', '.walkthrough']);
+const SCAN_MAX_DEPTH = 3;
+
+function findDir(root, names, depth = 0) {
+  if (depth > SCAN_MAX_DEPTH) return null;
+  let entries;
+  try { entries = readdirSync(root, { withFileTypes: true }); } catch { return null; }
+  const dirs = entries.filter((e) => e.isDirectory() && !SCAN_SKIP.has(e.name));
+  const hit = dirs.find((e) => names.includes(e.name));
+  if (hit) return join(root, hit.name);
+  for (const d of dirs) {
+    const found = findDir(join(root, d.name), names, depth + 1);
+    if (found) return found;
+  }
+  return null;
+}
+
+// Locate each source module on disk. Used by /unioss-doctor when the configured
+// paths are wrong — the module layout differs per machine.
+export function scanModules(cwd = process.cwd()) {
+  const c = resolveConfig(cwd);
+  return Object.entries(c.source.modules).map(([key, dir]) => {
+    const configured = join(c.source.root, dir);
+    if (existsSync(configured)) return { key, configured: dir, found: dir, ok: true };
+    const names = [...new Set([basename(dir), key])];
+    const hit = findDir(c.source.root, names);
+    return { key, configured: dir, found: hit ? relative(c.source.root, hit) : null, ok: false };
+  });
+}
+
+// Write scanned module paths into the local config file. Only rewrites the keys
+// whose configured path was wrong and whose real location was found.
+export function applyScan(cwd = process.cwd()) {
+  const results = scanModules(cwd);
+  const fixes = results.filter((r) => !r.ok && r.found);
+  if (fixes.length === 0) return { written: false, fixes, path: configPath(cwd) };
+  const p = configPath(cwd);
+  const current = existsSync(p) ? JSON.parse(readFileSync(p, 'utf8')) : {};
+  const modules = { ...(current.source?.modules ?? {}) };
+  for (const f of fixes) modules[f.key] = f.found;
+  const next = deepMerge(current, { source: { modules } });
+  mkdirSync(dirname(p), { recursive: true });
+  writeFileSync(p, JSON.stringify(next, null, 2) + '\n');
+  return { written: true, fixes, path: p };
+}
+
 // ── CLI ──────────────────────────────────────────────────────────────────────
 const isMain = process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href;
 if (isMain) {
@@ -193,8 +241,23 @@ if (isMain) {
     const r = runCheck();
     process.stdout.write('\nUNIOSS pipeline — config check\n\n' + r.report + '\n');
     process.exit(r.ok ? 0 : 1);
+  } else if (cmd === 'scan') {
+    if (arg === '--write') {
+      const r = applyScan();
+      if (!r.written) process.stdout.write('Nothing to fix — every source module resolved.\n');
+      else {
+        for (const f of r.fixes) process.stdout.write(`  ${f.key}: ${f.configured} -> ${f.found}\n`);
+        process.stdout.write(`Written to ${r.path}\n`);
+      }
+    } else {
+      for (const m of scanModules()) {
+        if (m.ok) process.stdout.write(`  ok      ${m.key}: ${m.configured}\n`);
+        else if (m.found) process.stdout.write(`  FIXABLE ${m.key}: ${m.configured} -> ${m.found}\n`);
+        else process.stdout.write(`  MISSING ${m.key}: ${m.configured} (not found under source.root)\n`);
+      }
+    }
   } else {
-    process.stderr.write('Usage: config.mjs <print|get <key>|env|init|check>\n');
+    process.stderr.write('Usage: config.mjs <print|get <key>|env|init|check|scan [--write]>\n');
     process.exit(1);
   }
 }

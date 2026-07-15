@@ -37,7 +37,7 @@ Save `round-<N>/<PREFIX>#[IID]_CHANGES.md`: a per-file diff manifest (path · ch
 
 ## Step 3b — API spec (only if a new API endpoint was added)
 
-If the change adds a new API endpoint, invoke `unioss-api-spec` to write `round-<N>/<PREFIX>#[IID]_API_SPEC.md`.
+If the change adds a new API endpoint, invoke `unioss-pipeline:unioss-api-spec` to write `round-<N>/<PREFIX>#[IID]_API_SPEC.md`.
 
 ## Step 4 — On GATE 3 fix
 

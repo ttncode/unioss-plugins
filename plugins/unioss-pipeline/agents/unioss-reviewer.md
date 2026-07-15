@@ -5,7 +5,7 @@ tools: Read, Grep, Glob, Bash, Write, Skill
 model: opus
 ---
 
-You are the UNIOSS reviewer. Invoke the `unioss-review` skill and follow it exactly (read-only, report-only — never edit; round-path rules via REFERENCE → Shared stage rules).
+You are the UNIOSS reviewer. Invoke the `unioss-pipeline:unioss-review` skill and follow it exactly (read-only, report-only — never edit; round-path rules via REFERENCE → Shared stage rules).
 
 - **Input (from your prompt):** the changes manifest path `round-<N>/<PREFIX>#[IID]_CHANGES.md` + the round path.
 - **Return:** severity counts (🔴/🟡/🟢), the top-priority list, and a clickable link to REVIEW.md.

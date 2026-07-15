@@ -1,9 +1,9 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from 'node:fs';
+import { mkdtempSync, mkdirSync, writeFileSync, rmSync, readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { DEFAULTS, configPath, deepMerge, resolveConfig, buildEnv } from './config.mjs';
+import { DEFAULTS, configPath, deepMerge, resolveConfig, buildEnv, scanModules, applyScan } from './config.mjs';
 
 function workspace(fileContents) {
   const dir = mkdtempSync(join(tmpdir(), 'uniconf-'));
@@ -120,4 +120,51 @@ test('buildEnv exports US_TESTER_* vars', () => {
   const env = buildEnv('/tmp/ws-tester');
   assert.match(env, /US_TESTER_MAILHOG='http:\/\/localhost:8225'/);
   assert.match(env, /US_TESTER_ECSITE_LOGIN='http:\/\/localhost:2380\/storetax\/login'/);
+});
+
+test('scanModules: flags a wrong path and locates the real directory', () => {
+  const dir = workspace(undefined);
+  mkdirSync(join(dir, 'submodules', 'common-helper'), { recursive: true });
+  const byKey = Object.fromEntries(scanModules(dir).map((m) => [m.key, m]));
+  assert.equal(byKey['common-helper'].ok, false);
+  assert.equal(byKey['common-helper'].found, join('submodules', 'common-helper'));
+  rmSync(dir, { recursive: true, force: true });
+});
+
+test('scanModules: a correctly configured module reports ok and is not searched', () => {
+  const dir = workspace(undefined);
+  mkdirSync(join(dir, 'AdminPage'), { recursive: true });
+  const byKey = Object.fromEntries(scanModules(dir).map((m) => [m.key, m]));
+  assert.equal(byKey['admin-page'].ok, true);
+  assert.equal(byKey['admin-page'].found, 'AdminPage');
+  rmSync(dir, { recursive: true, force: true });
+});
+
+test('scanModules: reports found=null when the module is nowhere on disk', () => {
+  const dir = workspace(undefined);
+  const byKey = Object.fromEntries(scanModules(dir).map((m) => [m.key, m]));
+  assert.equal(byKey['common-models'].ok, false);
+  assert.equal(byKey['common-models'].found, null);
+  rmSync(dir, { recursive: true, force: true });
+});
+
+test('applyScan: writes only the repaired keys into the config file', () => {
+  const dir = workspace(undefined);
+  mkdirSync(join(dir, 'submodules', 'common-models'), { recursive: true });
+  const r = applyScan(dir);
+  assert.equal(r.written, true);
+  const written = JSON.parse(readFileSync(configPath(dir), 'utf8'));
+  assert.equal(written.source.modules['common-models'], join('submodules', 'common-models'));
+  // an unfixable module keeps its configured default rather than being nulled out
+  assert.equal(written.source.modules['common-helper'], undefined);
+  rmSync(dir, { recursive: true, force: true });
+});
+
+test('applyScan: no-op when every module already resolves', () => {
+  const dir = workspace(undefined);
+  for (const d of ['AdminPage', 'FrontEnd', 'common-helper', 'common-models']) mkdirSync(join(dir, d), { recursive: true });
+  const r = applyScan(dir);
+  assert.equal(r.written, false);
+  assert.deepEqual(r.fixes, []);
+  rmSync(dir, { recursive: true, force: true });
 });

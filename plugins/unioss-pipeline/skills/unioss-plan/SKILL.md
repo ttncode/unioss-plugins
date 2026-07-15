@@ -24,18 +24,18 @@ The pipeline dispatches this skill in one of two modes; the dispatch prompt stat
   - **Acceptance Criteria** — numbered, verifiable statements the tester can check.
   - **Open Questions** — must be empty (clarify happened at GATE 0). If you cannot empty it, say so in your return so the orchestrator reopens GATE 0.
   - **Related** — links to the investigation and any related issues.
-- If a prior version exists, increment `_SPEC_V2`, `_SPEC_V3`, … (GATE 1 edit loop).
-- **Return:** the spec path (`link.mjs` link) + a one-line scope summary. Do not paste the body.
+- On a GATE 1 edit, the dispatch prompt states which: **new version** → increment `_SPEC_V2`, `_SPEC_V3`, …; **update current** → edit the existing spec file in place, no new file.
+- **Return:** the spec path (backticked, relative) + a one-line scope summary. Do not paste the body.
 
 ## Plan mode
 
 - **Input:** the **approved** `<PREFIX>#[IID]_SPEC.md` plus the investigation.
 
-1. **Draft with writing-plans discipline.** Invoke `unioss-writing-plans` to structure the plan: bite-sized tasks, exact file paths, a verification per task.
+1. **Draft with writing-plans discipline.** Invoke `unioss-pipeline:unioss-writing-plans` to structure the plan: bite-sized tasks, exact file paths, a verification per task.
 2. **Apply the UNIOSS template.** Fill `create-implementation-plan.md` (this dir). All sections mandatory; **zero `TBD`**. Key requirements:
    - **Exact code:** every change shows the concrete before/after snippet + absolute path — the coder applies, not re-derives.
    - **Estimate points:** set the `story_points` front-matter and a per-task estimate.
    - **Phased steps:** Phase 1 DB migration · Phase 2 model/controller · Phase 3 views · Phase 4 tests.
    - **Manual testing:** normal + abnormal cases incl. DB verification.
-3. **Save** `round-<N>/<PREFIX>#[IID]_IMPLEMENTATION_V1.md`. If a prior version exists, increment `_V2`, `_V3`, … (GATE 2 edit loop).
-4. **Return** the plan path (`link.mjs` link), total estimate points, and a one-line scope summary. Do not paste the full plan.
+3. **Save** `round-<N>/<PREFIX>#[IID]_IMPLEMENTATION_V1.md`. On a GATE 2 edit, the dispatch prompt states which: **new version** → increment `_V2`, `_V3`, …; **update current** → edit the existing plan file in place, no new file.
+4. **Return** the plan path (backticked, relative), total estimate points, and a one-line scope summary. Do not paste the full plan.

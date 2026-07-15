@@ -25,7 +25,7 @@ eval "$(node "${CLAUDE_PLUGIN_ROOT}/scripts/config.mjs" env)" && docker exec -i 
 
 ## Step 3 — Verify UI flow
 
-- If any `mcp__playwright__browser_*` call fails (distribution error, connection refused, MCP not configured), **skip all UI test cases**: mark each `SKIPPED (MCP unavailable — verify manually)` in `TEST_RESULTS.md` and list the exact flows the user must verify manually. DB verification (Step 2) always runs regardless.
+- If any `mcp__plugin_unioss-pipeline_playwright__browser_*` call fails (distribution error, connection refused, MCP not configured), **skip all UI test cases**: mark each `SKIPPED (MCP unavailable — verify manually)` in `TEST_RESULTS.md` and list the exact flows the user must verify manually. DB verification (Step 2) always runs regardless.
 - When MCP is available, drive the affected screen(s): navigate, perform the ticket's action, assert the expected on-screen result.
 - Capture a screenshot at **each** moment per UI flow (mandatory): (1) after navigation, (2) after the ticket action, (3) after asserting the result. Save to `round-<N>/screenshots/<step-name>.png`.
 
@@ -39,4 +39,4 @@ Save `round-<N>/<PREFIX>#[IID]_TEST_RESULTS.md` containing: (a) DB verification 
 
 ## Step 5 — Return
 
-Return overall pass/fail, the count of failed criteria, and a `link.mjs` link to `TEST_RESULTS.md`. Do not paste the full report.
+Return overall pass/fail, the count of failed criteria, and the backticked relative path to `TEST_RESULTS.md`. Do not paste the full report.

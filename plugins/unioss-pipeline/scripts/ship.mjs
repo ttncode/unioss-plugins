@@ -42,14 +42,24 @@ export function mrCreatePayload({ sourceBranch, targetBranch, title, assigneeId,
   };
 }
 
-const REPO_WEB = { adminPage: 'unioss/AdminPage', frontEnd: 'unioss/FrontEnd' };
+const REPO_WEB = {
+  adminPage: 'unioss/AdminPage',
+  frontEnd: 'unioss/FrontEnd',
+  commonHelper: 'unioss/common-helper',
+  commonModels: 'unioss/common-models',
+};
+const REPO_KEYS = Object.keys(REPO_WEB).join('|');
 
 export function repoRef(cwd, repoKey) {
   const cfg = resolveConfig(cwd);
   const repo = cfg.repos[repoKey];
-  if (!repo || !REPO_WEB[repoKey]) throw new Error(`Unknown repo key: ${repoKey} (use adminPage|frontEnd)`);
+  if (!repo || !REPO_WEB[repoKey]) throw new Error(`Unknown repo key: ${repoKey} (use ${REPO_KEYS})`);
   return { id: repo.id, webPath: REPO_WEB[repoKey] };
 }
+
+// The MR title is fixed by house convention — derived from the branch and the
+// mode's target, never from the ticket subject.
+export const mrTitle = (sourceBranch, targetBranch) => `Merge ${sourceBranch} into ${targetBranch}`;
 
 async function gitlabUserId(host, token, username) {
   const res = await fetch(`https://${host}/api/v4/users?username=${encodeURIComponent(username)}`, {
@@ -60,7 +70,7 @@ async function gitlabUserId(host, token, username) {
   return users[0]?.id ?? null;
 }
 
-async function createMr({ cwd = process.cwd(), mode, repoKey, sourceBranch, title }) {
+async function createMr({ cwd = process.cwd(), mode, repoKey, sourceBranch }) {
   const token = process.env.GITLAB_TOKEN;
   if (!token) throw new Error('GITLAB_TOKEN is not set (needs `api` scope to create an MR)');
   if (!MODES.has(mode)) throw new Error(`Unknown ship mode: ${mode} (use staging|customer)`);
@@ -72,7 +82,7 @@ async function createMr({ cwd = process.cwd(), mode, repoKey, sourceBranch, titl
     gitlabUserId(cfg.gitlab.host, token, m.reviewer),
   ]);
   const payload = mrCreatePayload({
-    sourceBranch, targetBranch: m.targetBranch, title,
+    sourceBranch, targetBranch: m.targetBranch, title: mrTitle(sourceBranch, m.targetBranch),
     assigneeId, reviewerId, label: cfg.ship.label,
     removeSourceBranch: m.deleteSourceBranch, squash: m.squash,
   });
@@ -101,12 +111,12 @@ const isMain = process.argv[1] && import.meta.url === pathToFileURL(process.argv
 if (isMain) {
   const args = process.argv.slice(2);
   if (args[0] === 'create') {
-    const [, mode, repoKey, sourceBranch, ...titleParts] = args;
-    if (!mode || !repoKey || !sourceBranch || titleParts.length === 0) {
-      process.stderr.write('Usage: ship.mjs create <staging|customer> <adminPage|frontEnd> <branch> <title...>\n');
+    const [, mode, repoKey, sourceBranch] = args;
+    if (!mode || !repoKey || !sourceBranch) {
+      process.stderr.write(`Usage: ship.mjs create <staging|customer> <${REPO_KEYS}> <branch>\n`);
       process.exit(1);
     }
-    createMr({ mode, repoKey, sourceBranch, title: titleParts.join(' ') })
+    createMr({ mode, repoKey, sourceBranch })
       .then(({ webUrl }) => process.stdout.write(`MR created (not merged):\n  ${webUrl}\n`))
       .catch((e) => { process.stderr.write(`${e.message}\n`); process.exit(1); });
   } else {

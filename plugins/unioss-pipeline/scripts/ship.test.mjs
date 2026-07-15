@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { mrUrl, shipInfo, mrCreatePayload, repoRef } from './ship.mjs';
+import { mrUrl, shipInfo, mrCreatePayload, repoRef, mrTitle } from './ship.mjs';
 
 test('mrUrl encodes branch (# and /) and sets bracketed params', () => {
   const url = mrUrl({
@@ -65,6 +65,16 @@ test('mrCreatePayload emits empty id arrays when a user is unresolved', () => {
 test('repoRef maps repo keys to project id + web path', () => {
   assert.deepEqual(repoRef(process.cwd(), 'adminPage'), { id: 32, webPath: 'unioss/AdminPage' });
   assert.deepEqual(repoRef(process.cwd(), 'frontEnd'), { id: 31, webPath: 'unioss/FrontEnd' });
+});
+
+test('repoRef resolves the submodule repos', () => {
+  assert.deepEqual(repoRef(process.cwd(), 'commonHelper'), { id: 18, webPath: 'unioss/common-helper' });
+  assert.deepEqual(repoRef(process.cwd(), 'commonModels'), { id: 19, webPath: 'unioss/common-models' });
+});
+
+test('mrTitle is fixed: Merge <branch> into <target>', () => {
+  assert.equal(mrTitle('feature/v3/#1585', 'v3-develop-tps'), 'Merge feature/v3/#1585 into v3-develop-tps');
+  assert.equal(mrTitle('feature/v3/AdminPage#1585', 'v3-develop'), 'Merge feature/v3/AdminPage#1585 into v3-develop');
 });
 
 test('repoRef throws on unknown repo key', () => {

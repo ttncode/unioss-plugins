@@ -5,11 +5,18 @@ description: Read-only UNIOSS investigator. Fetches a GitLab ticket plus all rel
 
 # UNIOSS Investigator (read-only)
 
-Follow `../unioss-pipeline/REFERENCE.md` → Shared stage rules (read-only, round path, resolve config before source/DB access, clickable links, standalone use).
+Follow `../unioss-pipeline/REFERENCE.md` → Shared stage rules (read-only, round path, resolve config before source/DB access, artifact paths, standalone use).
+
+## Modes
+
+The dispatch prompt states the mode. They run at different points in the flow — never do both in one dispatch.
+
+- **investigate** (default) — Steps 1–4. Writes `INVESTIGATION.md` with the clarity verdict + open questions. Runs **before** GATE 0.
+- **report** — Step 5 only. Writes the PM-facing `REPORT.md` from the **already-clarified** `INVESTIGATION.md` (including its `## Clarifications` section, if any). Runs **after** GATE 0, so the PM never receives a report built on unanswered questions. Re-read `INVESTIGATION.md` first; do not re-run Steps 1–4.
 
 ## Step 1 — Fetch ticket + related issues
 
-- Invoke `unioss-gitlab-issue-context` with the ticket URL. It writes `RAW_TICKET_DATA.json` + `TICKET_SUMMARY.md` under `.walkthrough/.pipeline/<PREFIX>#[IID]/`.
+- Invoke `unioss-pipeline:unioss-gitlab-issue-context` with the ticket URL. It writes `RAW_TICKET_DATA.json` + `TICKET_SUMMARY.md` under `.walkthrough/.pipeline/<PREFIX>#[IID]/`.
 - For **every** entry from the `/links` endpoint, fetch that related issue too and summarize how it constrains scope. Related issues are first-class — a change is not understood until its linked issues are read.
 
 ## Step 2 — Codebase impact analysis
@@ -36,9 +43,23 @@ Save `round-<N>/<PREFIX>#[IID]_INVESTIGATION.md` (English; keep technical terms 
 5. **## Clarity Verdict** — exactly one of `CLEAR` / `NEEDS_CLARIFICATION`.
 6. **## Open Questions** — numbered, concrete (missing specs, ambiguous behavior, conflicting related-issue requirements, undefined edge cases). Empty only if verdict is `CLEAR`.
 
-## Step 5 — Write `REPORT.md` (Vietnamese)
+## Step 5 — Write `REPORT.md` (Vietnamese) — **report mode only**
 
-Save `round-<N>/<PREFIX>#[IID]_REPORT.md`. Vietnamese only — column names and Japanese screen names stay as-is. No tables, no implementation detail. List only ECSite user-facing screens in section 3; verify URLs against `./ecsite-screens.md`. Fill verbatim:
+This goes to the PM. Write it from the clarified `INVESTIGATION.md`, never before GATE 0.
+
+**Read `./report-example.md` first — that is the gold standard for length and tone. Match it.**
+
+Save `round-<N>/<PREFIX>#[IID]_REPORT.md`. Vietnamese only — column names and Japanese screen names stay as-is. List only ECSite user-facing screens in section 3; verify URLs against `./ecsite-screens.md`.
+
+Hard caps — a PM reads this in under a minute:
+
+- **Whole file ≤ 40 lines.** If it is longer, cut, don't reformat.
+- One line per bullet. No sub-bullets, no tables, no code blocks.
+- §1 ≤ 2 bullets · §2 one bullet per field/area investigated · §4 ≤ 3 bullets.
+- No implementation detail — no file names, no `file:line`, no SQL, no class/method names. Those live in `INVESTIGATION.md`.
+- State the conclusion plainly (可能/不可能, 影響あり/なし). No hedging, no next-step padding.
+
+Fill verbatim:
 
 ```markdown
 # <PREFIX>#[IID] Report
@@ -68,8 +89,12 @@ Save `round-<N>/<PREFIX>#[IID]_REPORT.md`. Vietnamese only — column names and 
 
 ## Step 6 — Return
 
-Return: prefix+IID, repo, clarity verdict, count of open questions, and `link.mjs` links to the two visible files. Do not paste file bodies.
+Do not paste file bodies. Return the backticked relative path to each file written, plus:
+
+- **investigate mode:** prefix+IID, repo, clarity verdict, count of open questions.
+- **report mode:** the report's line count (must be ≤ 40).
 
 ## Related files
 
+- `./report-example.md` — the gold standard for `REPORT.md` length and tone.
 - `./ecsite-screens.md` — ECSite screens tree.

@@ -3,9 +3,10 @@
 import { execSync } from 'node:child_process';
 import { platform } from 'node:os';
 import { existsSync } from 'node:fs';
-import { resolveConfig, runCheck, valueSources } from './config.mjs';
+import { resolveConfig, runCheck, valueSources, scanModules } from './config.mjs';
 import { detectAppEnvironments } from './detect-app-env.mjs';
-import { box } from './box.mjs';
+import { box, displayWidth } from './box.mjs';
+import { isAllowed as playwrightAllowed, RULE as PLAYWRIGHT_RULE } from './playwright-perms.mjs';
 
 const isWin = platform() === 'win32';
 const has = (cmd) => {
@@ -50,53 +51,93 @@ const checks = [
   { name: 'Chrome (tester browser)', ok: chromeOk, fix: 'Playwright Chrome not found — the tester cannot verify UI. Run in a real terminal (needs a TTY for sudo):  ! npx playwright install --with-deps chrome' },
 ];
 
-const WIDTH = 69;
+const WIDTH = 78;
 const SECRET_KEYS = new Set(['db.password']);
-const lines = [];
+const COL = { key: 34, value: 24, source: 14 };
+const RULE = ' ' + '─'.repeat(69);
 
+// Fixed-width cells: pad short, truncate long. Paths keep their tail (the
+// distinctive part); everything else keeps its head.
+const clip = (str, width, fromLeft = false) => {
+  const s = String(str);
+  if (displayWidth(s) <= width) return s + ' '.repeat(width - displayWidth(s));
+  return fromLeft ? '…' + Array.from(s).slice(-(width - 1)).join('') : Array.from(s).slice(0, width - 1).join('') + '…';
+};
+const row = (key, value, source, isPath = false) =>
+  ` ${clip(key, COL.key)}  ${clip(value, COL.value, isPath)}  ${clip(source, COL.source)}`;
+
+const home = process.env.HOME || '';
+const short = (p) => (home && String(p).startsWith(home) ? '~' + String(p).slice(home.length) : String(p));
+
+const lines = [];
 let allOk = true;
 const lightMissing = [];
 
-lines.push('Dependencies', '');
+lines.push('', ' Dependencies', RULE);
 for (const c of checks) {
   lines.push(`  ${c.ok ? '✓' : '✗'}  ${c.name}`);
   if (!c.ok) {
     allOk = false;
     if (c.light) lightMissing.push(c.name);
-    lines.push(`       └ ${c.fix}`);
+    lines.push(`     └ ${c.fix}`);
   }
 }
 
 if (lightMissing.length && pm) {
   lines.push('', `  Light deps:  ${lightMissing.map(installCmd).join('  &&  ')}`);
 }
+const pwAllowed = playwrightAllowed();
 lines.push('', '  Playwright MCP ships with this plugin (npx @playwright/mcp@latest).');
+lines.push(`  ${pwAllowed ? '✓' : '!'}  Browser permissions: ${pwAllowed ? 'pre-allowed' : 'prompts on every action'}`);
+if (!pwAllowed) lines.push(`     └ grant rule: ${PLAYWRIGHT_RULE}`);
 
-lines.push('', 'Configuration          value                 source');
+lines.push('', ' Configuration', RULE, row('Key', 'Value', 'Source'));
 for (const { key, value, source } of valueSources()) {
-  const shown = SECRET_KEYS.has(key) ? '******' : (Array.isArray(value) ? value.join(',') : String(value));
-  lines.push(`  ${key.padEnd(22)} ${shown.slice(0, 20).padEnd(21)} ${source}`);
+  const isPath = key === 'source.root';
+  const raw = SECRET_KEYS.has(key) ? '******' : (Array.isArray(value) ? value.join(',') : value);
+  lines.push(row(key, isPath ? short(raw) : raw, source, isPath));
 }
-lines.push(`  ${'GITLAB_TOKEN'.padEnd(22)} ${(process.env.GITLAB_TOKEN ? '******' : 'MISSING').padEnd(21)} env`);
+lines.push(row('GITLAB_TOKEN', process.env.GITLAB_TOKEN ? '******' : 'MISSING', 'env'));
 
-lines.push('', 'Environment            value                 source');
+// Long failure detail must stay OUT of the grid — wrapping it shreds the table.
+lines.push('', ' Environment', RULE, row('App', 'Value', 'Source'));
+const envDetail = [];
 for (const e of detectAppEnvironments()) {
-  if (!e.found) lines.push(`  ${e.app.padEnd(22)} ${'unknown'.padEnd(21)} ${e.reason}`);
+  if (e.found) lines.push(row(e.app, e.resolved, e.override ? `override: ${e.override.source}` : 'default'));
   else {
-    const source = e.override ? `override: ${e.override.source}` : 'default';
-    lines.push(`  ${e.app.padEnd(22)} ${String(e.resolved).padEnd(21)} ${source}`);
+    lines.push(row(e.app, 'unknown', 'not found'));
+    envDetail.push(`  ! ${e.app}: ${clip(short(e.reason), WIDTH - e.app.length - 8, true).trimEnd()}`);
   }
+}
+
+// Source modules: report wrong paths and whether a scan can repair them.
+// /unioss-doctor reads BAD_COMMON_SOURCES to decide whether to offer the fix.
+const modules = scanModules();
+const badModules = modules.filter((m) => !m.ok);
+if (badModules.length) {
+  lines.push('', ' Source modules', RULE, row('Module', 'Configured', 'Status'));
+  for (const m of modules) {
+    const status = m.ok ? 'ok' : m.found ? 'fixable by scan' : 'not found';
+    lines.push(row(m.key, m.configured, status));
+  }
+  for (const m of badModules.filter((x) => x.found)) lines.push(`  → ${m.key} found at: ${m.found}`);
 }
 
 const check = runCheck();
 if (!check.ok) allOk = false;
 for (const err of check.errors) lines.push('', `  ✗ config: ${err}`);
-for (const warn of check.warnings) lines.push(`  ! ${warn}`);
-const status = allOk
-  ? 'All checks passed — pipeline ready.'
-  : 'Issues found — resolve the ✗ items above, then re-run.';
-lines.push('', `Status   ${status}`);
-lines.push('', 'Override locally:  node scripts/config.mjs init', '  (.walkthrough/.config/unioss.config.json)');
+if (envDetail.length) lines.push('', ...envDetail);
+
+const status = !allOk
+  ? 'Issues found — resolve the ✗ items above, then re-run.'
+  : badModules.length
+    ? 'Dependencies OK — source module paths need attention (see above).'
+    : 'All checks passed — pipeline ready.';
+lines.push('', ` Status   ${status}`);
+lines.push('', ' Override locally:  node scripts/config.mjs init', '   (.walkthrough/.config/unioss.config.json)');
 
 console.log('\n' + box('UNIOSS Pipeline · Environment Check', lines, WIDTH) + '\n');
+// Machine-readable flags: /unioss-doctor reads these to decide which questions to ask.
+if (badModules.length) console.log(`BAD_COMMON_SOURCES=${badModules.map((m) => m.key).join(',')}`);
+if (!pwAllowed) console.log('PLAYWRIGHT_PERMS=ask');
 process.exit(allOk ? 0 : 1);
