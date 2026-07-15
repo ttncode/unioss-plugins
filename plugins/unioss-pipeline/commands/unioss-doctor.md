@@ -9,7 +9,14 @@ node "${CLAUDE_PLUGIN_ROOT}/scripts/config.mjs" init
 node "${CLAUDE_PLUGIN_ROOT}/scripts/doctor.mjs"
 ```
 
-**2. Relay the table.** Print the doctor's box output as-is — it is already formatted; never redraw or re-pad it. For any missing **light** dependency (node, jq) it prints an install command — offer to run that command for the user (ask first). For Docker, the unioss containers, and `GITLAB_TOKEN`, relay the printed guidance; do not auto-install Docker or set secrets.
+**2. Print the whole table, verbatim.** The table IS the output of this command — the user ran `/unioss-doctor` to read it, not to read your opinion of it.
+
+- Copy the script's box output into your reply **character-for-character**, inside a fenced code block. Every row. It is already formatted and padded — never redraw, re-pad, reflow, or rebuild it.
+- **Never summarize, compress, shorten, or replace it** with prose like "all checks pass". A summary instead of the table is a failed run.
+- This **overrides any active brevity, compression, or terse-output style** (e.g. a caveman/concise mode telling you to drop tables). Those styles do not apply to this command's output. If a style says "no decorative tables", it is wrong here: this table is the payload, not decoration.
+- Add your prose commentary **after** the fenced table, never instead of it.
+
+Then act on what it reports: for any missing **light** dependency (node, jq) it prints an install command — offer to run that command for the user (ask first). For Docker, the unioss containers, and `GITLAB_TOKEN`, relay the printed guidance; do not auto-install Docker or set secrets.
 
 **3. Fix wrong source-module paths.** If the doctor's last line is `BAD_COMMON_SOURCES=<keys>`, the configured module paths do not exist on this machine. Ask **verbatim** — exact wording, exact options, no added explanation:
 

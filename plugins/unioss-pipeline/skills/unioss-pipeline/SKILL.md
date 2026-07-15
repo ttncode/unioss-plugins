@@ -36,13 +36,14 @@ Update the current round's entry after every stage. On resume within a round: if
 
 ## Step 0 — Show the plan, get the go-ahead
 
-Parse the URL (REFERENCE regex) → IID + origin repo → prefix `AP`/`FE`. Render the plan table by running the script (it stays flush on its own — never hand-draw or re-pad it), print the output, then **stop — ask the user to confirm before any stage runs**:
+Parse the URL (REFERENCE regex) → IID + origin repo → prefix `AP`/`FE`. Render the plan table by running the script:
 
 ```bash
 node "${CLAUDE_PLUGIN_ROOT}/scripts/plan-table.mjs" <PREFIX> [IID] <current_round>
 ```
 
-- Wait for the user to say to proceed. Run no stage until they confirm.
+- **Print its output verbatim**, character-for-character, in a fenced code block. It is already flush — never hand-draw, re-pad, reflow, or rebuild it, and never summarize it into prose. This **overrides any active brevity/compression style** that says to drop tables: this table is the payload, not decoration.
+- Then **stop — ask the user to confirm before any stage runs.** Wait for them to say proceed. Run no stage until they confirm.
 - **Rounds.** All artifacts go under `.walkthrough/<PREFIX>#[IID]/round-<current_round>/`. On a re-run (a sealed round exists), first write `round-<current_round>/ROUND_BRIEF.md` capturing exactly what this round must do (ticket delta since last round and/or user instruction), and state that all prior rounds stay frozen. Every stage is scoped to the brief and treats prior rounds as an immutable baseline. Never write outside the current round (sealed-round guard enforces this).
 
 ## Flow
