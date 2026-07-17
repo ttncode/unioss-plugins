@@ -83,6 +83,8 @@ Visible artifacts (the human reads these), under `.walkthrough/<PREFIX>#[IID]/ro
 - `UT_#[IID]_[YYYYMMDD]_V{n}.txt` (full PHPUnit run, AdminPage only)
 - `screenshots/` (tester UI screenshots)
 
+Ticket-level (spans rounds — a sibling of `round-<N>/`, not inside one), under `.walkthrough/<PREFIX>#[IID]/`: `<PREFIX>#[IID]_SCOPE.md` (PM/QC-facing scope summary; overwritten in place every round, never versioned).
+
 Hidden tracking, under `.walkthrough/.pipeline/<PREFIX>#[IID]/`: `RAW_TICKET_DATA.json`, `TICKET_SUMMARY.md`, `pipeline-state.json` (holds `current_round`).
 
 ## Artifact paths

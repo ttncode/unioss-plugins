@@ -14,9 +14,9 @@ test('every line is the same display width (box stays flush)', () => {
   assert.equal(widths.size, 1, `ragged box: widths ${[...widths].join(', ')}`);
 });
 
-test('renders all 7 stages and 3 gates', () => {
+test('renders all 8 stages and 3 gates', () => {
   const out = planTable('AP', 1585, 1);
-  for (const stage of ['Investigate', 'Spec', 'Plan', 'Code', 'Review', 'Verify', 'Finalize']) {
+  for (const stage of ['Investigate', 'Spec', 'Plan', 'Code', 'Review', 'Verify', 'Scope', 'Finalize']) {
     assert.ok(out.includes(stage), `missing stage ${stage}`);
   }
   assert.equal((out.match(/GATE/g) ?? []).length, 4);

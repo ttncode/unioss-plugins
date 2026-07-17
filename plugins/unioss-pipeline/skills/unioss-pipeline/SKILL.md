@@ -1,6 +1,6 @@
 ---
 name: unioss-pipeline
-description: UNIOSS A→Z ticket pipeline orchestrator. Given a GitLab ticket URL, drives investigator → (clarify) → spec → GATE → planner → GATE → coder → reviewer → GATE → tester → branch+commit, stopping for human approval at the gates. Use when the user runs /unioss-pipeline <URL> or asks to run the full UNIOSS ticket pipeline.
+description: UNIOSS A→Z ticket pipeline orchestrator. Given a GitLab ticket URL, drives investigator → (clarify) → spec → GATE → planner → GATE → coder → reviewer → GATE → tester → scope → branch+commit, stopping for human approval at the gates. Use when the user runs /unioss-pipeline <URL> or asks to run the full UNIOSS ticket pipeline.
 ---
 
 # UNIOSS Pipeline Orchestrator (main thread)
@@ -66,7 +66,8 @@ Print its output per the **Output → Step 0** contract below, then **stop — a
     - **fix** → invoke `unioss-pipeline:unioss-implement` to apply fixes + re-run filtered tests → ask "re-review or proceed?"; if re-review, go to step 9.
     - **accept** → (AdminPage) invoke `unioss-pipeline:unioss-implement` full mode: full suite with a fresh DB (`phpunit-config apply --import`) → `round-<current_round>/UT_#[IID]_[YYYYMMDD]_V1.txt`.
 11. **Tester** — dispatch the `unioss-pipeline:unioss-tester` agent with the CHANGES.md path + acceptance criteria. Writes TEST_RESULTS.md; returns pass/fail. If any UI criterion is SKIPPED (no browser MCP), note it explicitly — never treat SKIPPED as a pass.
-12. **Finalize** — for every repo the coder touched, commit on its feature branch using `#[IID] - [Message]`. Per REFERENCE: app branches (AdminPage/FrontEnd) are committed locally only (no push, no MR) and exclude the submodule gitlink; submodule branches are pushed. Never touch a protected branch. Present the final summary per **Output → Step 12**, then ask Decision prompt **(b)**.
+12. **Scope** — dispatch the `unioss-pipeline:unioss-scope` agent with the CHANGES.md path + round path. Writes/updates `<PREFIX>#[IID]_SCOPE.md` in the ticket folder (a sibling of `round-<N>/`, not inside it — see REFERENCE → Artifact layout); returns its path. Runs even if the tester reported a SKIPPED UI criterion — the scope reflects the code change, not the verification outcome.
+13. **Finalize** — for every repo the coder touched, commit on its feature branch using `#[IID] - [Message]`. Per REFERENCE: app branches (AdminPage/FrontEnd) are committed locally only (no push, no MR) and exclude the submodule gitlink; submodule branches are pushed. Never touch a protected branch. Present the final summary per **Output → Step 13**, then ask Decision prompt **(b)**.
 
 ## Output
 
@@ -84,10 +85,10 @@ Confirm to start the Investigate stage?
 
 It is already flush — never hand-draw, re-pad, reflow, rebuild, or summarize it into prose. This table is the payload, not decoration: **print it even when a brevity, concise, or terse-output style is active.**
 
-### Step 12 — the final summary
+### Step 13 — the final summary
 
-- Branch per repo · spec · plan · changes · review status · test status.
-- The backticked relative path to every artifact.
+- Branch per repo · spec · plan · changes · review status · test status · scope.
+- The backticked relative path to every artifact, including `<PREFIX>#[IID]_SCOPE.md`.
 - If UI verification was SKIPPED, surface `UI verification: SKIPPED — no browser MCP configured` prominently.
 
 ## Decision prompts
@@ -108,7 +109,7 @@ Which option?
 - `1` → write the next version (`_SPEC_V{n+1}.md` / `_IMPLEMENTATION_V{n+1}.md`); bump `spec_version` / `plan_version`.
 - `2` → edit the current spec/plan file in place. No new file, no version bump.
 
-**(b) Pipeline complete** — at the end of Flow step 12:
+**(b) Pipeline complete** — at the end of Flow step 13:
 
 ```
 Implementation complete. What would you like to do?
@@ -134,6 +135,7 @@ Which option?
 
 - `./REFERENCE.md` — config, repos, branches, artifact layout, submodules, MCP.
 - `scripts/plan-table.mjs` — renders the Step 0 table.
-- `agents/unioss-investigator.md`, `unioss-planner.md`, `unioss-reviewer.md`, `unioss-tester.md` — the dispatched subagents.
+- `agents/unioss-investigator.md`, `unioss-planner.md`, `unioss-reviewer.md`, `unioss-tester.md`, `unioss-scope.md` — the dispatched subagents.
 - `skills/unioss-implement/SKILL.md` — the coder (main thread).
+- `skills/unioss-scope/SKILL.md` — the Step 12 scope writer.
 - `skills/unioss-ship/SKILL.md` — invoked by Decision prompt (b).

@@ -17,7 +17,8 @@ const STAGES = [
   ['5', 'Review', 'subagent · opus', 'REVIEW.md'],
   ['⛔', 'GATE 3', 'you', 'fix / accept'],
   ['6', 'Verify', 'subagent · sonnet', 'TEST_RESULTS.md (DB+UI)'],
-  ['7', 'Finalize', 'main', 'branch + commit (no push/MR)'],
+  ['7', 'Scope', 'subagent · sonnet', 'SCOPE.md'],
+  ['8', 'Finalize', 'main', 'branch + commit (no push/MR)'],
 ];
 
 const FOOTER = 'Gates stop for approval. Nothing runs until you confirm.';
