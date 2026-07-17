@@ -5,8 +5,8 @@
     A GitLab ticket in — an investigated, planned, coded, reviewed, tested, ship-ready change out.
   </p>
 
-[![version](https://img.shields.io/badge/version-1.8.4-blue)](./plugins/unioss-pipeline/.claude-plugin/plugin.json)
-[![tests](https://img.shields.io/badge/tests-99%20passing-brightgreen)](#)
+[![version](https://img.shields.io/badge/version-1.9.0-blue)](./plugins/unioss-pipeline/.claude-plugin/plugin.json)
+[![tests](https://img.shields.io/badge/tests-94%20passing-brightgreen)](#)
 [![PHP](https://img.shields.io/badge/PHP-8.1-777bb4)](#)
 [![CodeIgniter](https://img.shields.io/badge/CodeIgniter-3.x-ee4323)](#)
 [![Claude Code](https://img.shields.io/badge/Claude%20Code-plugin-d97757)](#)
@@ -103,7 +103,8 @@ Grouped by pipeline stage. Each stage skill also runs standalone (`/skill-name <
 - New ticket — `/unioss-pipeline https://gitlab.unioss.jp/unioss/AdminPage/-/work_items/1834`
 - Feedback (new round) — `/unioss-feedback <gitlab-url>`
 - No ticket — `/unioss-task "Add a CSV export button to the sales-ledger screen"`
-- Ship — `/unioss-ship staging` → `v3-develop-tps`; `/unioss-ship customer` (syncs `v3-master`, re-runs tests) → `v3-develop`
+- MR review feedback — `/unioss-mr-feedback <mr-url> [mr-url...]` — verifies and applies another developer's review comments, standalone (not part of the A→Z pipeline)
+- Ship — `/unioss-ship staging` → `v3-develop-tps`; `/unioss-ship customer` (syncs `v3-master`, re-runs tests) → `v3-develop`; both preview the plan and wait for "Proceed?" first
 
 ## Configuration
 
