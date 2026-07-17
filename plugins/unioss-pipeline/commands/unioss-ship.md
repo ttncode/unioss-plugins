@@ -15,10 +15,11 @@ Push the finalized branches and open one merge request per touched repo. Never m
 
 Use the `unioss-pipeline:unioss-ship` skill and follow it exactly:
 
-1. **staging** — push each feature branch, then open MRs into `v3-develop-tps`.
-2. **customer** — sync each branch with `v3-master`, re-run the tests, push, then open MRs into `v3-develop`.
-3. Every touched repo gets its own MR, including the submodules (`common-helper`, `common-models`).
-4. MRs are created via the GitLab API, with a pre-filled-URL fallback if creation fails.
+1. Print the plan for the resolved mode + touched repos and wait for "Proceed?" — the user may skip the sync/test steps by naming them in their reply.
+2. **staging** — push each feature branch, then open MRs into `v3-develop-tps`.
+3. **customer** — sync each branch with `v3-master`, re-run the tests, push, then open MRs into `v3-develop`.
+4. Every touched repo gets its own MR, including the submodules (`common-helper`, `common-models`).
+5. MRs are created via the GitLab API, with a pre-filled-URL fallback if creation fails.
 
 ## Output
 

@@ -32,6 +32,16 @@ Every touched repo gets its own MR, including the submodules.
 - Determine the touched repos + their feature branches from `CHANGES.md` (REFERENCE branch naming). Include any submodule the coder edited.
 - Verify every branch to ship is a `feature/v3/…` branch. **Abort** if any is a protected branch.
 
+### Preview
+
+Before any write (sync, test, push, MR-create), render the plan for the resolved mode and the touched-repo key list, print it verbatim, and wait for one reply:
+
+```bash
+node "${CLAUDE_PLUGIN_ROOT}/scripts/ship-plan.mjs" <staging|customer> <repoKey...>
+```
+
+A plain "proceed"/"yes"/"go ahead" (no skip mentioned) runs every listed step as-is. If the reply asks to skip the **sync** or **test** step (customer mode only — the only two steps that gate whether what gets pushed is known-good), echo the skip back once — e.g. "Skipping the test run — confirm?" — and wait for one more reply before continuing. Push and MR-creation are never offered as skippable: skipping either leaves nothing left to do.
+
 ### Mode: staging
 
 1. For each touched repo, ensure its feature branch is current, then **push**: `git push -u origin <branch>` (app branches were local-only until now; submodule branches are already pushed — pushing again is a no-op).
@@ -82,5 +92,6 @@ Every touched repo gets its own MR, including the submodules.
 ## Related files
 
 - `scripts/ship.mjs` — `create`, `mrTitle`, and the pre-filled-URL fallback.
+- `scripts/ship-plan.mjs` — the preview-gate plan text.
 - `scripts/config.mjs` — `ship.*` settings.
 - `skills/unioss-pipeline/REFERENCE.md` — branch naming, protected branches, submodules.
