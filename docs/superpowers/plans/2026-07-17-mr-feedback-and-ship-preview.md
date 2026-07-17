@@ -18,7 +18,7 @@
 - Commit message format: `#[IID] - [Message]`, single imperative line. `/unioss-mr-feedback`'s commits use the fixed message `#<ID> - Optimize code`.
 - Branch naming and the submodule edit-only-in-canonical-source flow (`REFERENCE.md` → Branches, Submodules) are binding wherever this plan touches a branch or a `common-models`/`common-helper` file.
 - Version target: `plugin.json` → `1.9.0` (from `1.8.4`).
-- Test baseline: `cd plugins/unioss-pipeline/scripts && node --test` → **99 passing** before this plan (per `README.md`'s badge). This plan adds 7 there (`ship-plan.test.mjs`) → **106**. A second, separate suite lives at `plugins/unioss-pipeline/skills/unioss-mr-feedback/scripts/` (skill-scoped, same pattern as the untested `unioss-gitlab-issue-context/scripts/`) and adds 9 tests there — run with `cd plugins/unioss-pipeline/skills/unioss-mr-feedback/scripts && node --test`. Combined total for the README badge: **115**.
+- Test baseline: `cd plugins/unioss-pipeline/scripts && node --test` → **78 passing**, measured directly (the `README.md` badge read 99 — stale, corrected by this plan). This plan adds 7 there (`ship-plan.test.mjs`) → **85**. A second, separate suite lives at `plugins/unioss-pipeline/skills/unioss-mr-feedback/scripts/` (skill-scoped, same pattern as the untested `unioss-gitlab-issue-context/scripts/`) and adds 9 tests there — run with `cd plugins/unioss-pipeline/skills/unioss-mr-feedback/scripts && node --test`. Combined total for the README badge: **94**.
 - Dropped from the original request: auto-syncing `v3-develop-tps` with `v3-master`. The user withdrew this after learning it requires a write to a protected branch, which the hook cannot permit. No task in this plan touches `v3-develop-tps`.
 
 ---
@@ -790,7 +790,7 @@ Replace with:
 
 ```markdown
 [![version](https://img.shields.io/badge/version-1.9.0-blue)](./plugins/unioss-pipeline/.claude-plugin/plugin.json)
-[![tests](https://img.shields.io/badge/tests-115%20passing-brightgreen)](#)
+[![tests](https://img.shields.io/badge/tests-94%20passing-brightgreen)](#)
 ```
 
 - [ ] **Step 3: Add the new command to the Usage list.** Find:
@@ -818,7 +818,7 @@ Replace with:
 
 - [ ] **Step 4: Verify**
 
-Run: `grep -n "1.9.0\|115%20passing\|unioss-mr-feedback" README.md plugins/unioss-pipeline/.claude-plugin/plugin.json`
+Run: `grep -n "1.9.0\|94%20passing\|unioss-mr-feedback" README.md plugins/unioss-pipeline/.claude-plugin/plugin.json`
 Expected: all three strings found across the two files.
 
 - [ ] **Step 5: Commit**
@@ -837,7 +837,7 @@ git commit -m "chore(unioss-pipeline): bump to 1.9.0"
 - [ ] **Step 1: Run the top-level script suite.**
 
 Run: `cd plugins/unioss-pipeline/scripts && node --test`
-Expected: `# tests 106` / `# pass 106` / `# fail 0` (99 baseline + 7 from Task 6).
+Expected: `# tests 85` / `# pass 85` / `# fail 0` (78 measured baseline + 7 from Task 6).
 
 - [ ] **Step 2: Run the skill-scoped suite.**
 
