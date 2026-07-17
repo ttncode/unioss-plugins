@@ -95,12 +95,13 @@ Hidden tracking, under `.walkthrough/.pipeline/<PREFIX>#[IID]/`: `RAW_TICKET_DAT
 
 - No URL means no percent-encoding and no `#` fragment to mangle — the failure mode that broke `file://` links cannot occur. Do not "improve" this by wrapping paths in a URL or a markdown link.
 
-## GitLab (read-only except ship)
+## GitLab (read-only except ship + mr-feedback)
 
 - Host: `gitlab.host` from config (default `gitlab.unioss.jp`). Token from `process.env.GITLAB_TOKEN`.
-- URL regex: `/https:\/\/([^/]+)\/([^/]+)\/([^/]+)(?:\/-\/|\/)(work_items|issues)\/(\d+)/` → groups: host, namespace, repo, type, IID.
-- Endpoints (GET, header `PRIVATE-TOKEN`): `/api/v4/projects/:id/issues/:iid`, `.../issues/:iid/notes?per_page=100`, `.../issues/:iid/links`.
-- ⛔ The **only** permitted GitLab writes are inside `/unioss-ship` (push a feature branch + `POST …/merge_requests`). Never POST/PUT/DELETE during any read stage. Never merge. Never print the token. MR creation needs the `api` scope; read stages need only `read_api`.
+- URL regex (tickets): `/https:\/\/([^/]+)\/([^/]+)\/([^/]+)(?:\/-\/|\/)(work_items|issues)\/(\d+)/` → groups: host, namespace, repo, type, IID.
+- URL regex (merge requests): `/https:\/\/([^/]+)\/([^/]+)\/([^/]+)\/-\/merge_requests\/(\d+)/` → groups: host, namespace, repo, IID.
+- Endpoints (GET, header `PRIVATE-TOKEN`): `/api/v4/projects/:id/issues/:iid`, `.../issues/:iid/notes?per_page=100`, `.../issues/:iid/links`, `.../merge_requests/:iid`, `.../merge_requests/:iid/discussions?per_page=100`, `.../merge_requests/:iid/changes`.
+- ⛔ GitLab **writes** are permitted in exactly two places: `/unioss-ship` (push a feature branch + `POST …/merge_requests`) and `/unioss-mr-feedback` (push a feature branch only, after the user approves the analyzed fixes — never creates or merges an MR). Never POST/PUT/DELETE during any read stage. Never merge, anywhere, ever. Never print the token. MR creation needs the `api` scope; a plain push needs `write_repository`; read stages need only `read_api`.
 
 ## Database (read-only; non-interactive `-i`, not `-it`)
 
