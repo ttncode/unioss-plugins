@@ -11,7 +11,7 @@ Single source of truth for every stage. When a skill says "follow REFERENCE → 
 Every stage skill (investigator, planner, coder, reviewer, tester, ship, api-spec, gitlab-context) follows these:
 
 - **Read this file first.** Its Branch, Protected-branch, Submodule, and Commit rules are binding.
-- **Read-only by default.** Never edit project source. `Write` only under `.walkthrough/`. The only writers are the coder (`unioss-pipeline:unioss-implement`) and ship (push + MR).
+- **Read-only by default.** Never edit project source. `Write` only under `.walkthrough/`. The only writers are the coder (`unioss-pipeline:unioss-implement`), ship (push + MR), and the standalone `unioss-mr-feedback` (edit + push, never MR — see GitLab below).
 - **Round path.** The orchestrator passes the round folder `.walkthrough/<PREFIX>#[IID]/round-<N>/` in your prompt. Write all artifacts there — never into a different round.
 - **Resolve config before shell/DB/source access.** Run `eval "$(node "${CLAUDE_PLUGIN_ROOT}/scripts/config.mjs" env)"` first; never hardcode hosts, containers, paths, or the protected-branch list.
 - **Artifact paths.** Surface every artifact as a workspace-relative path in backticks (see Artifact paths) — never a `file://` URL.
