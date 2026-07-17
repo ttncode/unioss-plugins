@@ -71,3 +71,44 @@ export function formatDiscussions(mr, discussions, changedFiles) {
 
   return lines.join('\n');
 }
+
+function resolveToken() {
+  const home = homedir();
+  if (home) {
+    const p = join(home, '.zshrc.local');
+    if (existsSync(p)) {
+      const m = readFileSync(p, 'utf8').match(/export GITLAB_TOKEN=(.+)/);
+      if (m) return m[1].trim();
+    }
+  }
+  return process.env.GITLAB_TOKEN;
+}
+
+async function apiGet(host, token, path) {
+  const res = await fetch(`https://${host}/api/v4/${path}`, { headers: { 'PRIVATE-TOKEN': token } });
+  if (!res.ok) throw new Error(`GitLab GET ${path} failed: HTTP ${res.status}`);
+  return res.json();
+}
+
+export async function fetchMrFeedback(mrUrlStr) {
+  const { host, projectPath, iid } = parseMrUrl(mrUrlStr);
+  const token = resolveToken();
+  if (!token) throw new Error('GITLAB_TOKEN not found in env or ~/.zshrc.local');
+  const encoded = encodeURIComponent(projectPath);
+  const mr = await apiGet(host, token, `projects/${encoded}/merge_requests/${iid}`);
+  const discussions = await apiGet(host, token, `projects/${encoded}/merge_requests/${iid}/discussions?per_page=100`);
+  const changes = await apiGet(host, token, `projects/${encoded}/merge_requests/${iid}/changes`);
+  const changedFiles = (changes.changes ?? []).map((c) => c.new_path);
+  return { mr: { ...mr, projectPath }, discussions, changedFiles };
+}
+
+const isMain = process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href;
+if (isMain) {
+  const url = process.argv[2];
+  if (!url) { process.stderr.write('Usage: fetch-mr-feedback.mjs <MR_URL>\n'); process.exit(1); }
+  fetchMrFeedback(url)
+    .then(({ mr, discussions, changedFiles }) => {
+      process.stdout.write(formatDiscussions(mr, discussions, changedFiles) + '\n');
+    })
+    .catch((e) => { process.stderr.write(`${e.message}\n`); process.exit(1); });
+}
