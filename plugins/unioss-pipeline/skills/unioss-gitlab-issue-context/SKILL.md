@@ -31,7 +31,7 @@ Read-only: never edit project source. Writes only to `.walkthrough/.pipeline/<PR
 ## Output
 
 - prefix+IID.
-- The backticked relative path to `TICKET_SUMMARY.md`.
+- The backticked absolute path to `TICKET_SUMMARY.md`.
 - A one-paragraph change summary — or `No changes since last fetch` when identical.
 
 ## Related files

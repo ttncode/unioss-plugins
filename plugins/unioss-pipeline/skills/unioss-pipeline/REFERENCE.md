@@ -14,7 +14,7 @@ Every stage skill (investigator, planner, coder, reviewer, tester, ship, api-spe
 - **Read-only by default.** Never edit project source. `Write` only under `.walkthrough/`. The only writers are the coder (`unioss-pipeline:unioss-implement`), ship (push + MR), and the standalone `unioss-mr-feedback` (edit + push, never MR — see GitLab below).
 - **Round path.** The orchestrator passes the round folder `.walkthrough/<PREFIX>#[IID]/round-<N>/` in your prompt. Write all artifacts there — never into a different round.
 - **Resolve config before shell/DB/source access.** Run `eval "$(node "${CLAUDE_PLUGIN_ROOT}/scripts/config.mjs" env)"` first; never hardcode hosts, containers, paths, or the protected-branch list.
-- **Artifact paths.** Surface every artifact as a workspace-relative path in backticks (see Artifact paths) — never a `file://` URL.
+- **Artifact paths.** Surface every artifact as an absolute path in backticks, on its own line, the moment it is written (see Artifact paths) — never a `file://` URL or a relative path.
 - **Return summaries, not bodies.** Return counts, verdicts, and links; never paste full artifact contents back to the orchestrator.
 
 ### Standalone use
@@ -39,7 +39,7 @@ A **module key** (`admin-page`, `front-end`, `common-helper`, `common-models`) i
 | `source.modules.<key>`                     | `AdminPage`, `FrontEnd`, `common-helper`, `common-models` | **the** on-disk path per module           |
 | `docker.mysql` / `docker.php`              | `mysql-unioss3` / `php-unioss3`                          | container names                           |
 | `db.name` / `db.user` / `db.password`      | `_unioss` / `root` / `ProotW`                            | DB access                                 |
-| `ship.assignee`                            | `nghia.truong`                                           | MR assignee (both modes)                  |
+| `ship.assignee`                            | `null` → auto (the `GITLAB_TOKEN` owner)                 | MR assignee (both modes); set a username to override |
 | `ship.label`                               | `UNIOSS 3`                                               | MR label if it exists on the project      |
 | `ship.staging.targetBranch` / `.reviewer`  | `v3-develop-tps` / `dat.pham`                            | internal-staging MR target + reviewer     |
 | `ship.customer.targetBranch` / `.reviewer` | `v3-develop` / `r.yosimura`                              | customer-staging MR target + reviewer     |
@@ -89,11 +89,12 @@ Hidden tracking, under `.walkthrough/.pipeline/<PREFIX>#[IID]/`: `RAW_TICKET_DAT
 
 ## Artifact paths
 
-- **Surface every artifact as a plain workspace-relative path in backticks. Never build a `file://` URL.** The terminal linkifies the path itself, so the human can Ctrl+Click it:
+- **Announce every file the moment its stage writes it — never wait for the final summary.** The instant a stage (investigator, reporter, spec, plan, coder, reviewer, tester, scope) finishes a file, print one standalone line per file so the human gets a clickable link immediately:
 
-      `.walkthrough/AP#1583/round-1/AP#1583_REVIEW.md`
+      📄 `/home/me/unioss/.walkthrough/AP#1583/round-1/AP#1583_REVIEW.md`
 
-- No URL means no percent-encoding and no `#` fragment to mangle — the failure mode that broke `file://` links cannot occur. Do not "improve" this by wrapping paths in a URL or a markdown link.
+- **Use the ABSOLUTE path** — prefix the workspace-relative path with the workspace root (the dir that holds `.walkthrough/`; run `pwd` once if unsure). An absolute path opens directly in the IDE. A *relative* path the IDE cannot resolve falls back to fuzzy file-search, which strips the `#` in `AP#1583` (→ `AP:1583`) and fails to open — that is the click-to-open bug.
+- **One file per line, each on its own line, wrapped in backticks.** Never wrap the path in a `file://` URL, a markdown link, or a table cell, and never percent-encode — those break the terminal's linkifier. The `#` stays literal; the absolute path resolves it correctly.
 
 ## GitLab (read-only except ship + mr-feedback)
 

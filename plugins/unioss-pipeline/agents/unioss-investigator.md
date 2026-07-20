@@ -27,7 +27,7 @@ From the dispatch prompt:
 
 - **investigate mode:** prefix+IID, repo, clarity verdict, open-question count.
 - **report mode:** the report's line count.
-- Both: the backticked relative path to each file written. Never paste file bodies.
+- Both: the backticked absolute path to each file written. Never paste file bodies.
 
 ## Related files
 

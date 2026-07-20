@@ -25,7 +25,7 @@ From the dispatch prompt:
 
 - Severity counts (🔴/🟡/🟢).
 - The top-priority list.
-- The backticked relative path to `REVIEW.md`. Never paste the report body.
+- The backticked absolute path to `REVIEW.md`. Never paste the report body.
 
 ## Related files
 

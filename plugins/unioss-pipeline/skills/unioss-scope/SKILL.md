@@ -37,7 +37,7 @@ Follow `../unioss-pipeline/REFERENCE.md` → Shared stage rules, with one delibe
 
 Structure must match `./scope-template.md` exactly — read `./scope-examples.md` first, that is the gold standard for tone and level of detail; match it.
 
-Return: the backticked relative path (`.walkthrough/<PREFIX>#[IID]/<PREFIX>#[IID]_SCOPE.md`), whether it was created or updated, and one line noting if a common-code change forced a multi-app scope.
+Return: the backticked absolute path (workspace root + `.walkthrough/<PREFIX>#[IID]/<PREFIX>#[IID]_SCOPE.md`), whether it was created or updated, and one line noting if a common-code change forced a multi-app scope.
 
 ## Related files
 

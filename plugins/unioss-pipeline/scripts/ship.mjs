@@ -72,6 +72,22 @@ async function gitlabUserId(host, token, username) {
   return users[0]?.id ?? null;
 }
 
+async function gitlabCurrentUser(host, token) {
+  const res = await fetch(`https://${host}/api/v4/user`, { headers: { 'PRIVATE-TOKEN': token } });
+  if (!res.ok) throw new Error(`GitLab current-user lookup failed: HTTP ${res.status}`);
+  const user = await res.json();
+  return { id: user.id ?? null, username: user.username };
+}
+
+// The MR assignee is whoever runs the ship: an explicit `ship.assignee` in config
+// wins; otherwise the GITLAB_TOKEN owner is auto-detected. Returns { id, username }.
+export async function resolveAssignee(cfg, host, token) {
+  if (cfg.ship.assignee) {
+    return { id: await gitlabUserId(host, token, cfg.ship.assignee), username: cfg.ship.assignee };
+  }
+  return gitlabCurrentUser(host, token);
+}
+
 async function createMr({ cwd = process.cwd(), mode, repoKey, sourceBranch }) {
   const token = process.env.GITLAB_TOKEN;
   if (!token) throw new Error('GITLAB_TOKEN is not set (needs `api` scope to create an MR)');
@@ -79,13 +95,13 @@ async function createMr({ cwd = process.cwd(), mode, repoKey, sourceBranch }) {
   const cfg = resolveConfig(cwd);
   const m = cfg.ship[mode];
   const { id, webPath } = repoRef(cwd, repoKey);
-  const [assigneeId, reviewerId] = await Promise.all([
-    gitlabUserId(cfg.gitlab.host, token, cfg.ship.assignee),
+  const [assignee, reviewerId] = await Promise.all([
+    resolveAssignee(cfg, cfg.gitlab.host, token),
     gitlabUserId(cfg.gitlab.host, token, m.reviewer),
   ]);
   const payload = mrCreatePayload({
     sourceBranch, targetBranch: m.targetBranch, title: mrTitle(sourceBranch, m.targetBranch),
-    assigneeId, reviewerId, label: cfg.ship.label,
+    assigneeId: assignee.id, reviewerId, label: cfg.ship.label,
     removeSourceBranch: m.deleteSourceBranch, squash: m.squash,
   });
   const res = await fetch(`https://${cfg.gitlab.host}/api/v4/projects/${id}/merge_requests`, {
@@ -101,7 +117,7 @@ async function createMr({ cwd = process.cwd(), mode, repoKey, sourceBranch }) {
 function renderSettings(s) {
   const onOff = (b) => (b ? 'ON' : 'OFF');
   return [
-    `  Assignee:              @${s.assignee}`,
+    `  Assignee:              ${s.assignee ? '@' + s.assignee : 'yourself (the GITLAB_TOKEN owner)'}`,
     `  Reviewer:              @${s.reviewer}`,
     `  Labels:                ${s.label} (only if it exists on the project)`,
     `  Delete source branch:  ${onOff(s.deleteSourceBranch)}`,

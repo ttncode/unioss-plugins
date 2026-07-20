@@ -71,6 +71,14 @@ Print its output per the **Output → Step 0** contract below, then **stop — a
 
 ## Output
 
+### After every stage — announce its artifacts
+
+The instant a stage returns, print the absolute path to each file it wrote, one per line, per REFERENCE → Artifact paths — **do not wait for Step 13.** This is mandatory for the gate-less stages the human would otherwise never see a link for: investigator (`INVESTIGATION.md`), reporter (`REPORT.md`), coder (`CHANGES.md`, `API_SPEC.md`), tester (`TEST_RESULTS.md`), and scope (`SCOPE.md`). Subagents return absolute paths; relay them verbatim — never downgrade to a relative path.
+
+```
+📄 `/abs/workspace/.walkthrough/AP#1583/round-1/AP#1583_INVESTIGATION.md`
+```
+
 ### Step 0 — the plan table
 
 Print `plan-table.mjs` output **verbatim**, character-for-character, in a fenced code block:
@@ -88,7 +96,7 @@ It is already flush — never hand-draw, re-pad, reflow, rebuild, or summarize i
 ### Step 13 — the final summary
 
 - Branch per repo · spec · plan · changes · review status · test status · scope.
-- The backticked relative path to every artifact, including `<PREFIX>#[IID]_SCOPE.md`.
+- The backticked absolute path to every artifact, including `<PREFIX>#[IID]_SCOPE.md`, each on its own line (REFERENCE → Artifact paths).
 - If UI verification was SKIPPED, surface `UI verification: SKIPPED — no browser MCP configured` prominently.
 
 ## Decision prompts
@@ -129,7 +137,7 @@ Which option?
 - Honor the gates — never run past Step 0, GATE 1, GATE 2, or GATE 3 without an explicit user decision.
 - Protected branches are read-only (REFERENCE → Branches). Verify the current branch before any commit/push.
 - Keep main context lean: rely on subagents' returned summaries; read full artifacts only when a gate needs it.
-- Emit every artifact as a workspace-relative path in backticks (REFERENCE → Artifact paths) — never a `file://` URL.
+- Emit every artifact as an absolute path in backticks the moment it is written (REFERENCE → Artifact paths) — never a `file://` URL, a markdown link, or a relative path.
 
 ## Related files
 

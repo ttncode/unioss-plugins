@@ -106,7 +106,7 @@ test('config path derives from the passed cwd, not the script location', () => {
 test('ship defaults expose per-mode target branch, reviewer, merge options', () => {
   const dir = workspace(undefined);
   const { ship } = resolveConfig(dir);
-  assert.equal(ship.assignee, 'nghia.truong');
+  assert.equal(ship.assignee, null);
   assert.equal(ship.label, 'UNIOSS 3');
   assert.equal(ship.staging.targetBranch, 'v3-develop-tps');
   assert.equal(ship.staging.reviewer, 'dat.pham');

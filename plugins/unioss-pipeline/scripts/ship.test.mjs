@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { mrUrl, shipInfo, mrCreatePayload, repoRef, mrTitle } from './ship.mjs';
+import { mrUrl, shipInfo, mrCreatePayload, repoRef, mrTitle, resolveAssignee } from './ship.mjs';
 
 test('mrUrl encodes branch (# and /) and sets bracketed params', () => {
   const url = mrUrl({
@@ -21,7 +21,7 @@ test('shipInfo staging pulls target/reviewer/options from config defaults', () =
   });
   assert.match(url, /target_branch%5D=v3-develop-tps$/);
   assert.equal(settings.reviewer, 'dat.pham');
-  assert.equal(settings.assignee, 'nghia.truong');
+  assert.equal(settings.assignee, null); // auto-detected at MR-create time, not here
   assert.equal(settings.deleteSourceBranch, false);
   assert.equal(settings.label, 'UNIOSS 3');
 });
@@ -60,6 +60,34 @@ test('mrCreatePayload emits empty id arrays when a user is unresolved', () => {
   const body = mrCreatePayload({ sourceBranch: 'b', targetBranch: 't', title: 'x' });
   assert.deepEqual(body.assignee_ids, []);
   assert.deepEqual(body.reviewer_ids, []);
+});
+
+test('resolveAssignee auto-detects the token owner when config assignee is unset', async () => {
+  const orig = globalThis.fetch;
+  globalThis.fetch = async (url) => {
+    assert.match(url, /\/api\/v4\/user$/); // the current-user endpoint, not a username lookup
+    return { ok: true, json: async () => ({ id: 42, username: 'runner.user' }) };
+  };
+  try {
+    const result = await resolveAssignee({ ship: { assignee: null } }, 'gitlab.unioss.jp', 'tok');
+    assert.deepEqual(result, { id: 42, username: 'runner.user' });
+  } finally {
+    globalThis.fetch = orig;
+  }
+});
+
+test('resolveAssignee honors an explicit config assignee over the token owner', async () => {
+  const orig = globalThis.fetch;
+  globalThis.fetch = async (url) => {
+    assert.match(url, /\/api\/v4\/users\?username=someone/); // looks up by username
+    return { ok: true, json: async () => [{ id: 7 }] };
+  };
+  try {
+    const result = await resolveAssignee({ ship: { assignee: 'someone' } }, 'gitlab.unioss.jp', 'tok');
+    assert.deepEqual(result, { id: 7, username: 'someone' });
+  } finally {
+    globalThis.fetch = orig;
+  }
 });
 
 test('repoRef maps module keys to project id + web path', () => {

@@ -25,7 +25,7 @@ export const DEFAULTS = {
 
   // ── Per-team ──
   ship: {
-    assignee: 'nghia.truong',
+    assignee: null, // auto-detect
     label: 'UNIOSS 3',
     staging: { targetBranch: 'v3-develop-tps', reviewer: 'dat.pham', deleteSourceBranch: false, squash: false },
     customer: { targetBranch: 'v3-develop', reviewer: 'r.yosimura', deleteSourceBranch: true, squash: false },
@@ -134,7 +134,9 @@ const SECRET_KEYS = new Set(['db.password']);
 
 export function formatPrint(cwd = process.cwd()) {
   const lines = valueSources(cwd).map(({ key, value, source }) => {
-    const shown = SECRET_KEYS.has(key) ? '******' : (Array.isArray(value) ? value.join(',') : value);
+    const shown = SECRET_KEYS.has(key) ? '******'
+      : value === null ? 'auto'
+      : Array.isArray(value) ? value.join(',') : value;
     return `  ${key.padEnd(22)} ${String(shown).padEnd(28)} (${source})`;
   });
   const token = process.env.GITLAB_TOKEN ? '******                       (env)' : 'MISSING                      (env)';

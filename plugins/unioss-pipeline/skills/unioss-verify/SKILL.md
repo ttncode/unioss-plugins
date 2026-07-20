@@ -48,7 +48,7 @@ Prove each acceptance criterion against the real DB and the real screen. Functio
   📸 [Description of what is shown](screenshots/step-name.png)
   ```
 
-Return: overall pass/fail, the count of failed criteria, and the backticked relative path to `TEST_RESULTS.md`. Never paste the full report.
+Return: overall pass/fail, the count of failed criteria, and the backticked absolute path to `TEST_RESULTS.md`. Never paste the full report.
 
 **`SKIPPED (MCP unavailable)` is never counted as a pass** — surface it explicitly.
 

@@ -80,7 +80,7 @@ A plain "proceed"/"yes"/"go ahead" (no skip mentioned) runs every listed step as
 ## Output
 
 - Present every created MR URL (or fallback link), all modes together, then **STOP**.
-- Emit each URL exactly as `ship.mjs` printed it. Emit artifact paths as backticked relative paths.
+- Emit each URL exactly as `ship.mjs` printed it. Emit artifact paths as backticked absolute paths.
 - Creation sets assignee/reviewer/label/merge-options from config.
 
 ## Rules

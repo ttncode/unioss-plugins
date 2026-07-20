@@ -23,7 +23,7 @@ From the dispatch prompt:
 
 ## Output
 
-- The backticked relative path to `<PREFIX>#[IID]_SCOPE.md`.
+- The backticked absolute path to `<PREFIX>#[IID]_SCOPE.md`.
 - Whether it was created or updated, and one line noting if a common-code change forced a multi-app scope.
 
 ## Related files

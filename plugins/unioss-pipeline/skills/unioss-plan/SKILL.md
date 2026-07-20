@@ -50,8 +50,8 @@ Write `round-<N>/<PREFIX>#[IID]_SPEC.md`. Mandatory sections:
 
 Never paste the spec or plan body.
 
-- **spec mode:** the spec path (backticked, relative) + a one-line scope summary.
-- **plan mode:** the plan path (backticked, relative), total estimate points, and a one-line scope summary.
+- **spec mode:** the spec path (backticked, absolute) + a one-line scope summary.
+- **plan mode:** the plan path (backticked, absolute), total estimate points, and a one-line scope summary.
 
 ## Related files
 

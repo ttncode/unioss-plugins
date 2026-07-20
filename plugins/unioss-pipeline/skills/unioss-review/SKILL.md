@@ -52,7 +52,7 @@ reset per file.
 
 ### Step 5 — Output the Report
 
-Write the report to `.walkthrough/<PREFIX>#[IID]/round-<N>/<PREFIX>#[IID]_REVIEW.md` and return the severity counts (🔴/🟡/🟢), the top-priority list, and the backticked relative path to `REVIEW.md` (REFERENCE → Artifact paths) — do not paste the full report body.
+Write the report to `.walkthrough/<PREFIX>#[IID]/round-<N>/<PREFIX>#[IID]_REVIEW.md` and return the severity counts (🔴/🟡/🟢), the top-priority list, and the backticked absolute path to `REVIEW.md` (REFERENCE → Artifact paths) — do not paste the full report body.
 
 Structure the report as follows:
 

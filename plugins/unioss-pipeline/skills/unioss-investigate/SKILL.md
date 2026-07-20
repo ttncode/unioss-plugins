@@ -60,7 +60,7 @@ Save `round-<N>/<PREFIX>#[IID]_REPORT.md`. Vietnamese only — column names and 
 
 ### `INVESTIGATION.md` — investigate mode
 
-The six sections above. Return: prefix+IID, repo, clarity verdict, count of open questions, and the backticked relative path. Never paste file bodies.
+The six sections above. Return: prefix+IID, repo, clarity verdict, count of open questions, and the backticked absolute path. Never paste file bodies.
 
 ### `REPORT.md` — report mode
 
@@ -100,7 +100,7 @@ Fill verbatim:
 - [one bullet per key conclusion]
 ```
 
-Return: the report's line count (must be ≤ 40) and the backticked relative path.
+Return: the report's line count (must be ≤ 40) and the backticked absolute path.
 
 ## Related files
 

@@ -62,7 +62,7 @@ Switch to **full mode**: `phpunit-config.mjs apply --import` (fresh DB), run the
 - `CHANGES.md` — a per-file diff manifest (path · change type · one-line summary) plus the fast-test result.
 - `API_SPEC.md` — only when a new endpoint was added.
 - `UT_#[IID]_[YYYYMMDD]_V{n}.txt` — only on GATE 3 accept.
-- Return the backticked relative path to each file written, the branch per repo, and the test result.
+- Return the backticked absolute path to each file written, the branch per repo, and the test result.
 
 ## Related files
 

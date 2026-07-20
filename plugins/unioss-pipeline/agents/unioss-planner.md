@@ -26,7 +26,7 @@ From the dispatch prompt:
 
 ## Output
 
-- The artifact path, backticked and relative.
+- The artifact path, backticked and absolute.
 - A one-line scope summary.
 - **plan mode:** total estimate points.
 - Never paste the spec or plan body.

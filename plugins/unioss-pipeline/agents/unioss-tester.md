@@ -28,7 +28,7 @@ From the dispatch prompt:
 - Overall pass/fail.
 - The count of failed criteria.
 - An explicit note if UI verification was SKIPPED — a SKIP is never a pass.
-- The backticked relative path to `TEST_RESULTS.md`. Never paste the report body.
+- The backticked absolute path to `TEST_RESULTS.md`. Never paste the report body.
 
 ## Related files
 
