@@ -138,7 +138,7 @@ _Auto-harvested from investigations. Facts carry a source._
 |---|---|---|
 | `/unioss-knowledge-ticket <gitlab-url>` | Summarize one ticket (WWWH: What/Why/Who/How) from issue + notes. Reuses the pipeline fetcher. | no |
 | `/unioss-knowledge-today` | Summarize all tickets created today across AP + FE → WWWH, one block per ticket, none dropped → `digests/<date>-daily.md`. | facts only |
-| `/unioss-knowledge-ask "<question>" [period]` | **Free-form read-only query.** Answers focus / praise-criticism / ticket-overview for any period. Writes a dated report under `digests/`; **never** touches `GLOBAL.md` / `rules/` / `sentiment/current.md`. See flow below. | no |
+| `/unioss-knowledge-ask "<question>" [period]` | **Free-form query.** Answers focus / praise-criticism / ticket-overview for any period. Read-only by default (dated report under `digests/`); after answering, offers a gated multi-option to fold findings into the KB. See flow below. | opt-in only |
 | `/unioss-knowledge-refresh [daily\|weekly\|monthly]` | Crawl + distill the **current** window. `daily`=new-ticket WWWH; `weekly`=praise/complaints → `sentiment/current.md` (auto) + propose rules → `rules/staged.md` (gated); `monthly`=customer focus → `GLOBAL.md` + monthly digest. | yes |
 | `/unioss-knowledge-approve` | Show `rules/staged.md`; promote approved → `rules/approved.md`, fold top into `GLOBAL.md`. | yes (rules) |
 | `/unioss-knowledge` | Status: staleness per layer, entry counts, pending staged-rule count (reads `index.json`). | no |
@@ -162,7 +162,19 @@ _Auto-harvested from investigations. Facts carry a source._
    Options 4–5 accept free-text entry. The picker is rendered via `AskUserQuestion` (its "Other" branch covers 4–5).
 3. **Crawl** the resolved window across AP + FE.
 4. **Answer** in the requested shape (focus bullets / praise+criticism split / WWWH ticket list).
-5. **Write** a dated read-only report → `digests/<period>-<intent>.md`. Append raw signals to `observations.jsonl` (deduped). **No** mutation of `GLOBAL.md` / `rules/` / `sentiment/current.md`.
+5. **Write** a dated read-only report → `digests/<period>-<intent>.md`. Append raw signals to `observations.jsonl` (deduped). **No** mutation of `GLOBAL.md` / `rules/` / `sentiment/current.md` yet.
+6. **Offer to update the KB** (multi-option, `AskUserQuestion`). The answer is read-only until the user opts in here — this is the sole bridge from `ask` into curated memory:
+
+   ```
+   Update the knowledge base with these findings?
+   1. No — keep report only (default)
+   2. Stage prescriptive rules for approval (→ rules/staged.md, gated)
+   3. Also refresh current sentiment + GLOBAL   [shown only when period = current]
+   ```
+
+   - Option 2 stages rules (still requires `/unioss-knowledge-approve` later — never live-writes rules).
+   - Option 3 is **hidden when the period is historical** — a June query must not overwrite July's live "now" KB. Guarded, not just conventionally discouraged.
+   - Default (no selection / option 1) leaves the store exactly as after step 5.
 
 Example phrasings → resolution:
 - `/unioss-knowledge-ask "what is the customer focusing on this month"` → intent `focus`, period current month → answer + `digests/2026-07-focus.md`.
@@ -224,7 +236,8 @@ Node scripts get `*.test.mjs` (repo convention):
 - staged-rule fingerprint dedupe
 - atomic-write / abort-on-error leaves store unchanged
 - `ask` intent + period parsing (incl. `YYYY-MM`, range, and missing-period → picker path)
-- `ask` never writes `GLOBAL.md` / `rules/` / `sentiment/current.md`
+- `ask` writes nothing to `GLOBAL.md` / `rules/` / `sentiment/current.md` until the user opts in
+- `ask` update-offer: option 3 hidden for historical periods; option 2 stages (never live-writes) rules
 
 ## Failure modes (degrade safe)
 
