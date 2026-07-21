@@ -32,7 +32,7 @@ git fetch origin && git checkout v3-master && git pull && git checkout -b <branc
 
 ### Step 1 — Apply the approved plan
 
-Apply the exact per-file changes from the plan. For migrations use `unioss-pipeline:unioss-generate-migration` / `unioss-pipeline:unioss-bump-migration`. Use `unioss-pipeline:codeignitor3-simplifier` to keep CI3 code clean.
+Apply the exact per-file changes from the plan. For migrations use `unioss-pipeline:unioss-generate-migration` / `unioss-pipeline:unioss-bump-migration`. Use `unioss-pipeline:codeigniter3-simplifier` to keep CI3 code clean.
 
 ### Step 1b — Verify the migration (only if the plan added one)
 
