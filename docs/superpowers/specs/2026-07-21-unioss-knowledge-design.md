@@ -134,13 +134,40 @@ _Auto-harvested from investigations. Facts carry a source._
 
 ## Commands
 
-| Command | Does |
-|---|---|
-| `/unioss-knowledge-ticket <gitlab-url>` | Summarize one ticket (WWWH: What/Why/Who/How) from issue + notes. Reuses the pipeline fetcher. |
-| `/unioss-knowledge-today` | Summarize all tickets created today across AP + FE → WWWH, one block per ticket, none dropped → `digests/<date>-daily.md`. |
-| `/unioss-knowledge-refresh [daily\|weekly\|monthly]` | Crawl + distill. `daily`=new-ticket WWWH; `weekly`=praise/complaints → `sentiment/current.md` (auto) + propose rules → `rules/staged.md` (gated); `monthly`=customer focus → `GLOBAL.md` + monthly digest. |
-| `/unioss-knowledge-approve` | Show `rules/staged.md`; promote approved → `rules/approved.md`, fold top into `GLOBAL.md`. |
-| `/unioss-knowledge` | Status: staleness per layer, entry counts, pending staged-rule count (reads `index.json`). |
+| Command | Does | Mutates KB? |
+|---|---|---|
+| `/unioss-knowledge-ticket <gitlab-url>` | Summarize one ticket (WWWH: What/Why/Who/How) from issue + notes. Reuses the pipeline fetcher. | no |
+| `/unioss-knowledge-today` | Summarize all tickets created today across AP + FE → WWWH, one block per ticket, none dropped → `digests/<date>-daily.md`. | facts only |
+| `/unioss-knowledge-ask "<question>" [period]` | **Free-form read-only query.** Answers focus / praise-criticism / ticket-overview for any period. Writes a dated report under `digests/`; **never** touches `GLOBAL.md` / `rules/` / `sentiment/current.md`. See flow below. | no |
+| `/unioss-knowledge-refresh [daily\|weekly\|monthly]` | Crawl + distill the **current** window. `daily`=new-ticket WWWH; `weekly`=praise/complaints → `sentiment/current.md` (auto) + propose rules → `rules/staged.md` (gated); `monthly`=customer focus → `GLOBAL.md` + monthly digest. | yes |
+| `/unioss-knowledge-approve` | Show `rules/staged.md`; promote approved → `rules/approved.md`, fold top into `GLOBAL.md`. | yes (rules) |
+| `/unioss-knowledge` | Status: staleness per layer, entry counts, pending staged-rule count (reads `index.json`). | no |
+
+**Ask vs. refresh:** `ask` answers questions (read-only, any period, historical safe). `refresh` feeds agents (mutates curated KB, current window only). A historical query must never overwrite the live GLOBAL/sentiment, which describe *now*.
+
+### `/unioss-knowledge-ask` flow
+
+1. **Parse** the question for (a) intent — `focus` | `sentiment` | `tickets` | general — and (b) period.
+2. **Period clarification.** If the period is missing or ambiguous, present a multi-option picker before crawling:
+
+   ```
+   Which period?
+   1. Current month (07/2026)
+   2. Previous month (06/2026)
+   3. This week
+   4. A specific month/year   (e.g. 2026-03)
+   5. A custom date range     (e.g. 2026-06-01..2026-06-30)
+   ```
+
+   Options 4–5 accept free-text entry. The picker is rendered via `AskUserQuestion` (its "Other" branch covers 4–5).
+3. **Crawl** the resolved window across AP + FE.
+4. **Answer** in the requested shape (focus bullets / praise+criticism split / WWWH ticket list).
+5. **Write** a dated read-only report → `digests/<period>-<intent>.md`. Append raw signals to `observations.jsonl` (deduped). **No** mutation of `GLOBAL.md` / `rules/` / `sentiment/current.md`.
+
+Example phrasings → resolution:
+- `/unioss-knowledge-ask "what is the customer focusing on this month"` → intent `focus`, period current month → answer + `digests/2026-07-focus.md`.
+- `/unioss-knowledge-ask "what did customers praise or criticize in June 2026"` → intent `sentiment`, period `2026-06` → answer + `digests/2026-06-sentiment.md`.
+- `/unioss-knowledge-ask "customer focus"` (no period) → picker → user picks → resolve.
 
 ### `/unioss-knowledge-today` flow (human sees all new tickets)
 
@@ -178,6 +205,7 @@ The store must survive re-runs, partial runs, and duplicate source data. Every w
 - **Repeated `refresh daily` (same day, many times):** date-keyed digest files are **overwritten**, not appended — `digests/<date>-daily.md` is regenerated in full each run. No accumulation from re-running.
 - **`observations.jsonl` dedupe:** each observation has a stable id `sha1(project:issue_iid:note_id)` (or `sha1(project:issue_iid:'issue')` for the issue body). Appends skip ids already present. Re-crawling the same window adds nothing new.
 - **Staged-rule dedupe:** each staged rule has a fingerprint `sha1(normalized_statement)`. A rule already in `staged.md` or `approved.md` is not re-proposed. Approving is idempotent — promoting an already-approved rule is a no-op.
+- **`ask` is read-only & idempotent:** re-running the same question/period overwrites its date-keyed report; never mutates `GLOBAL.md` / `rules/` / `sentiment/current.md`. A historical query can never corrupt the live "now" KB.
 - **`GLOBAL.md` / `sentiment/current.md` are pure renders:** fully regenerated from the store each distill — running twice yields byte-identical output (idempotent), no drift.
 - **Domain-fact append dedupe:** investigate appends a fact only if its normalized line isn't already in `domain/<module>.md`.
 - **Partial/failed crawl:** GitLab 401/429/5xx or network error → abort before any write; the store is left exactly as it was (no half-written digest, no partial jsonl). Writers stage to a temp file and atomic-rename on success.
@@ -195,6 +223,8 @@ Node scripts get `*.test.mjs` (repo convention):
 - WWWH count-in == count-out for `-today`
 - staged-rule fingerprint dedupe
 - atomic-write / abort-on-error leaves store unchanged
+- `ask` intent + period parsing (incl. `YYYY-MM`, range, and missing-period → picker path)
+- `ask` never writes `GLOBAL.md` / `rules/` / `sentiment/current.md`
 
 ## Failure modes (degrade safe)
 
@@ -208,10 +238,10 @@ Node scripts get `*.test.mjs` (repo convention):
 ```
 plugins/unioss-knowledge/
   .claude-plugin/plugin.json
-  commands/  unioss-knowledge.md  -ticket.md  -today.md  -refresh.md  -approve.md
+  commands/  unioss-knowledge.md  -ticket.md  -today.md  -ask.md  -refresh.md  -approve.md
   skills/    unioss-knowledge-*/SKILL.md   (per command flow)
   hooks/     inject-knowledge.mjs  hooks.json  (+ *.test.mjs)
-  scripts/   crawl.mjs  distill.mjs  wwwh.mjs  store.mjs  (+ *.test.mjs)
+  scripts/   crawl.mjs  distill.mjs  wwwh.mjs  store.mjs  period.mjs  (+ *.test.mjs)
 .claude-plugin/marketplace.json            (edit: register plugin)
 plugins/unioss-pipeline/skills/unioss-investigate/SKILL.md   (edit: KB read + domain append)
 ```
