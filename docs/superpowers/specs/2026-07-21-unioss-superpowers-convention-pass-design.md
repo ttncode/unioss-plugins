@@ -39,8 +39,19 @@ logic stay identical.
   - `db.password` (`ProotW`) stays — a **shared local-docker** dev password, same
     for the whole team, already env/file-overridable.
   - Therefore **no `config.test.mjs` change** and **no test change** in this pass.
-- `unioss-plan` and `unioss-writing-plans` are **distinct, both in use** — not a
-  dedup target (recorded so neither is deleted later).
+- `unioss-plan` keeps its **planner behavior** but adopts the **superpowers
+  writing-plans structure** (via the `unioss-writing-plans` fork) as its output
+  format, adding only two UNIOSS sections — **story points** and **Manual
+  Testing** — and UNIOSS-specific path/command examples. The old heavy template
+  `create-implementation-plan.md` (REQ-/CON-/phased tables) is **retired**.
+- **Vendor two more superpowers execution skills.** The `unioss-writing-plans`
+  fork references `superpowers:subagent-driven-development` and
+  `superpowers:executing-plans`, which do not exist in this self-contained plugin
+  → dangling on a superpowers-free machine. Vendor both as
+  `unioss-subagent-driven-development` and `unioss-executing-plans`; repoint the
+  fork; repoint its `finishing-a-development-branch` handoff to `/unioss-ship`.
+- **Multiple-choice questions.** When any UNIOSS skill must ask the user, it
+  presents superpowers-style multiple-choice options (not open-ended prose).
 - The typo'd skill id `codeignitor3-simplifier` is **renamed** to
   `codeigniter3-simplifier`; its one inbound reference is updated.
 - **Trim rule (explicit):** trimming a bloated skill means **only** removing
@@ -61,9 +72,12 @@ logic stay identical.
   project root" — machine-specific phrasing, made generic.
 - **Duplication to fix:** review rigor is described ad hoc in `unioss-mr-feedback`
   and `unioss-review` instead of sharing one vendored `receiving-code-review`.
-- **`unioss-plan` vs `unioss-writing-plans`:** distinct and both used —
-  `unioss-plan` is the planner stage skill; it *invokes* the vendored
-  `unioss-writing-plans` for task-structuring discipline. Neither is removed.
+- **`unioss-plan` vs `unioss-writing-plans`:** both stay as skills, but
+  `unioss-plan` now sources its plan **structure** from the fork instead of the
+  retired `create-implementation-plan.md` template.
+- **Dangling execution-skill references:** the `unioss-writing-plans` fork points
+  at `superpowers:subagent-driven-development` / `superpowers:executing-plans` /
+  `finishing-a-development-branch` — none present in this self-contained plugin.
 
 ---
 
@@ -128,6 +142,40 @@ update its `name:` frontmatter, then update the single inbound reference in
 `unioss-implement`. This changes a public invocation string — accepted by the
 user.
 
+### 6 — Vendor the two execution skills; fix dangling references
+
+- Vendor `skills/unioss-subagent-driven-development/SKILL.md` and
+  `skills/unioss-executing-plans/SKILL.md`, cloned from superpowers 6.1.1,
+  adapted to UNIOSS branch/commit rules (REFERENCE) and vocabulary. Keep their
+  superpowers `description` verbatim (vendored-fork rule).
+- Repoint the `unioss-writing-plans` fork:
+  `superpowers:subagent-driven-development` → `unioss-pipeline:unioss-subagent-driven-development`;
+  `superpowers:executing-plans` → `unioss-pipeline:unioss-executing-plans`;
+  the `finishing-a-development-branch` handoff → run `/unioss-ship`.
+- After this, `grep -rn "superpowers:" plugins/unioss-pipeline/` returns nothing.
+
+### 7 — Merge plan structure: `unioss-plan` adopts writing-plans format
+
+- `unioss-plan` plan-mode output = the superpowers writing-plans structure
+  (header + Goal/Architecture/Tech Stack + Global Constraints + `### Task N` with
+  Files/Interfaces/bite-sized steps/commit), **plus two UNIOSS sections**:
+  - **Story points** — a `**Story points:** N` line in the plan header and a
+    per-task estimate (preserves `unioss-plan`'s existing estimate behavior).
+  - **Manual Testing** — a `## Manual Testing` section (Normal + Abnormal cases,
+    incl. DB verification), carried over from the retired template's content.
+- UNIOSS-specific examples: PHP/CI3 paths, `docker exec … "$US_PHP"` commands,
+  migration phases — not the pytest/JS examples in the generic fork.
+- **Retire** `skills/unioss-plan/create-implementation-plan.md` (delete; it is a
+  template file, not a registered skill). Update `unioss-plan/SKILL.md` to
+  reference the fork's structure + the two added sections instead.
+
+### 8 — Multiple-choice questions (house rule)
+
+- Add a REFERENCE rule: when a skill must ask the user, present superpowers-style
+  multiple-choice options. Apply to the skills that actually ask — `unioss-investigate`
+  (clarifications at GATE 0) and `unioss-mr-feedback` (missing URL) — by noting the
+  multiple-choice expectation at their ask points.
+
 ---
 
 ## Non-goals
@@ -135,14 +183,23 @@ user.
 - No pipeline flow / gate / orchestration redesign.
 - No new features or commands.
 - No hook or script **logic** changes; no `config.mjs`/DEFAULTS changes.
-- No deletions of skills/commands/agents (none are orphaned).
+- No deletions of skills/commands/agents (none are orphaned). The only file
+  deleted is the retired `create-implementation-plan.md` template (item 7).
 - **No `*.test.mjs` changes at all** (unless the item-5 rename touches a test ref).
+- The vendored execution skills are **docs only** — they do not change how the
+  `unioss-pipeline` orchestrator dispatches its stages today.
 
 ## Verification
 
 - `node --test` passes for all `*.test.mjs`, unchanged from before the pass.
 - `grep` proves no `/home/`, `/Users/`, or "unioss3 project root" strings remain
   in shipped docs/scripts.
-- Every SKILL/command/agent `description` starts `Use when`.
+- Every skill `description` starts `Use when` (forks keep superpowers wording);
+  every agent starts `Use when dispatched by`; commands keep action-hint text.
 - Every touched skill still contains each rule it had before (spot-check the
   trimmed `unioss-review` against its pre-trim rule list).
+- `grep -rn "superpowers:" plugins/unioss-pipeline/` returns nothing (no dangling
+  cross-plugin references).
+- `create-implementation-plan.md` is gone and no doc references it.
+- `unioss-plan/SKILL.md` describes the writing-plans structure + Story points +
+  Manual Testing, with UNIOSS path/command examples.

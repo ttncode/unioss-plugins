@@ -39,9 +39,14 @@ Every task's requirements implicitly include this section.
 
 **Create:**
 - `skills/unioss-receiving-code-review/SKILL.md` — vendored review-reception rigor.
+- `skills/unioss-subagent-driven-development/SKILL.md` — vendored execution pattern.
+- `skills/unioss-executing-plans/SKILL.md` — vendored execution pattern.
 
 **Rename:**
 - `skills/codeignitor3-simplifier/` → `skills/codeigniter3-simplifier/`.
+
+**Delete:**
+- `skills/unioss-plan/create-implementation-plan.md` — retired plan template (item 7).
 
 **Modify (docs):** all 17 `skills/*/SKILL.md`, all 5 `agents/*.md`, all 8 `commands/*.md`, `skills/unioss-pipeline/REFERENCE.md`.
 
@@ -411,7 +416,157 @@ git commit -m "docs(unioss-pipeline): house-style agents; normalize command desc
 
 ---
 
-## Task 8: Final verification sweep and version bump
+## Task 8: Vendor the two execution skills and fix dangling references
+
+**Files:**
+- Create: `skills/unioss-subagent-driven-development/SKILL.md`
+- Create: `skills/unioss-executing-plans/SKILL.md`
+- Modify: `skills/unioss-writing-plans/SKILL.md` (repoint references)
+
+**Interfaces:**
+- Produces: skill ids `unioss-pipeline:unioss-subagent-driven-development`, `unioss-pipeline:unioss-executing-plans`.
+
+- [ ] **Step 1: Copy both source skills verbatim**
+
+```bash
+cp /home/ttndev/workspace/personal/superpowers/skills/subagent-driven-development/SKILL.md plugins/unioss-pipeline/skills/unioss-subagent-driven-development/SKILL.md
+cp /home/ttndev/workspace/personal/superpowers/skills/executing-plans/SKILL.md plugins/unioss-pipeline/skills/unioss-executing-plans/SKILL.md
+```
+(Create the directories first if `cp` complains.)
+
+- [ ] **Step 2: Rename each skill and add provenance**
+
+In each new file: set frontmatter `name:` to the `unioss-…` id; keep the `description:` verbatim (vendored-fork rule). Under the H1 add:
+
+```markdown
+*Vendored from superpowers (6.1.1), adapted for the UNIOSS pipeline.*
+```
+
+- [ ] **Step 3: Adapt UNIOSS-specific references inside the vendored skills**
+
+Where the superpowers originals reference sibling skills by bare name (`writing-plans`, `test-driven-development`, `verification-before-completion`, `finishing-a-development-branch`), repoint any that exist in this plugin to their `unioss-pipeline:unioss-…` id; for `finishing-a-development-branch`, replace the branch-finish handoff with "run `/unioss-ship`". Replace any git commit/branch example that conflicts with REFERENCE branch rules with the REFERENCE-compliant form (never touch protected branches). Do not change the pattern's logic.
+
+- [ ] **Step 4: Repoint the writing-plans fork's references**
+
+In `skills/unioss-writing-plans/SKILL.md`:
+- `superpowers:subagent-driven-development` → `unioss-pipeline:unioss-subagent-driven-development`
+- `superpowers:executing-plans` → `unioss-pipeline:unioss-executing-plans`
+- the "Execute tasks in this session using executing-plans" line → `unioss-pipeline:unioss-executing-plans`
+- any `finishing-a-development-branch` handoff → "run `/unioss-ship`".
+
+- [ ] **Step 5: Verify no cross-plugin dangling reference remains**
+
+Run: `grep -rn "superpowers:" plugins/unioss-pipeline/`
+Expected: no matches.
+
+- [ ] **Step 6: Commit**
+
+```bash
+git add plugins/unioss-pipeline/skills/unioss-subagent-driven-development plugins/unioss-pipeline/skills/unioss-executing-plans plugins/unioss-pipeline/skills/unioss-writing-plans/SKILL.md
+git commit -m "feat(unioss-pipeline): vendor executing-plans + subagent-driven-development; fix dangling refs"
+```
+
+---
+
+## Task 9: Merge plan structure — `unioss-plan` adopts writing-plans format
+
+**Files:**
+- Delete: `skills/unioss-plan/create-implementation-plan.md`
+- Modify: `skills/unioss-plan/SKILL.md`
+
+**Behavior preserved:** `unioss-plan` remains the planner stage (spec mode + plan mode, versioning, read-only, round paths). ONLY the plan-mode **output structure** changes.
+
+- [ ] **Step 1: Delete the retired template**
+
+```bash
+git rm plugins/unioss-pipeline/skills/unioss-plan/create-implementation-plan.md
+```
+
+- [ ] **Step 2: Rewrite plan-mode to use the writing-plans structure + 2 sections**
+
+In `skills/unioss-plan/SKILL.md`, replace the plan-mode step 2 ("Apply the UNIOSS template. Fill `./create-implementation-plan.md` …") with:
+
+```markdown
+2. **Structure the plan in the writing-plans format.** Invoke
+   `unioss-pipeline:unioss-writing-plans` and produce the plan in its structure:
+   the plan header (Goal / Architecture / Tech Stack / Global Constraints), then
+   `### Task N` blocks with **Files**, **Interfaces**, bite-sized steps, and a
+   commit per task. Use UNIOSS-specific examples throughout — absolute PHP/CI3
+   paths, `docker exec -i "$US_PHP" …` commands (resolve `$US_PHP` via
+   `eval "$(node "${CLAUDE_PLUGIN_ROOT}/scripts/config.mjs" env)"`), and migration
+   phases — not generic pytest/JS examples.
+   Add exactly two UNIOSS sections on top of that structure:
+   - **Story points** — a `**Story points:** <N>` line in the plan header and a
+     per-task estimate on each `### Task N`.
+   - **Manual Testing** — a `## Manual Testing` section after the tasks, split
+     into **Normal Cases** and **Abnormal Cases** (validation errors,
+     unauthorized access, fallback), each with explicit DB-verification steps.
+```
+
+- [ ] **Step 3: Update `unioss-plan` Related files**
+
+In the same file's `## Related files`, remove the `./create-implementation-plan.md` bullet and add:
+
+```markdown
+- `skills/unioss-writing-plans/SKILL.md` — the plan structure this stage produces (plus Story points + Manual Testing).
+```
+
+- [ ] **Step 4: Verify template gone and no references remain**
+
+```bash
+test ! -f plugins/unioss-pipeline/skills/unioss-plan/create-implementation-plan.md && echo "template deleted"
+grep -rn "create-implementation-plan" plugins/unioss-pipeline/ || echo "no references"
+```
+Expected: `template deleted` and `no references`.
+
+- [ ] **Step 5: Commit**
+
+```bash
+git add -A plugins/unioss-pipeline/skills/unioss-plan
+git commit -m "refactor(unioss-pipeline): unioss-plan adopts writing-plans structure; add story points + manual testing; retire old template"
+```
+
+---
+
+## Task 10: Multiple-choice question house rule
+
+**Files:**
+- Modify: `skills/unioss-pipeline/REFERENCE.md`
+- Modify: `skills/unioss-investigate/SKILL.md`
+- Modify: `skills/unioss-mr-feedback/SKILL.md`
+
+- [ ] **Step 1: Add the rule to REFERENCE**
+
+In `skills/unioss-pipeline/REFERENCE.md`, add one bullet in the shared rules:
+
+```markdown
+- **Asking the user:** when a stage must ask a question, present it as
+  superpowers-style **multiple-choice** options (2–4 concrete choices, a
+  recommended one first) rather than open-ended prose — one question at a time.
+```
+
+- [ ] **Step 2: Note it at the two real ask points**
+
+- In `skills/unioss-investigate/SKILL.md`, where clarifications are raised for GATE 0, append: "Phrase each clarification as a multiple-choice question (see REFERENCE → Asking the user)."
+- In `skills/unioss-mr-feedback/SKILL.md`, at the "Zero URLs found → ask the user" point, append: "Offer the ask as a short multiple-choice prompt where practical."
+
+- [ ] **Step 3: Verify**
+
+```bash
+grep -q "multiple-choice" plugins/unioss-pipeline/skills/unioss-pipeline/REFERENCE.md && echo "rule present"
+```
+Expected: `rule present`.
+
+- [ ] **Step 4: Commit**
+
+```bash
+git add plugins/unioss-pipeline/skills/unioss-pipeline/REFERENCE.md plugins/unioss-pipeline/skills/unioss-investigate/SKILL.md plugins/unioss-pipeline/skills/unioss-mr-feedback/SKILL.md
+git commit -m "docs(unioss-pipeline): require multiple-choice questions at user-ask points"
+```
+
+---
+
+## Task 11: Final verification sweep and version bump
 
 **Files:**
 - Modify: `.claude-plugin/plugin.json` (version bump)
@@ -438,6 +593,18 @@ grep -rn "codeignitor\|unioss3 project root\|/home/ttndev\|/Users/" plugins/unio
 echo "sweep done"
 ```
 Expected: no matches before `sweep done`.
+
+- [ ] **Step 2b: No dangling cross-plugin references; retired template gone; new skills present**
+
+```bash
+cd plugins/unioss-pipeline
+grep -rn "superpowers:" . && echo "DANGLING superpowers ref" || echo "no superpowers refs"
+grep -rn "create-implementation-plan" . && echo "STALE template ref" || echo "template retired"
+for s in unioss-receiving-code-review unioss-subagent-driven-development unioss-executing-plans; do
+  test -f "skills/$s/SKILL.md" && echo "$s present" || echo "$s MISSING"
+done
+```
+Expected: `no superpowers refs`, `template retired`, all three `present`.
 
 - [ ] **Step 3b: Progress-tracking directive present in every procedural skill**
 
@@ -478,7 +645,10 @@ Invoke `superpowers:finishing-a-development-branch` to present merge/PR options.
 
 **Spec coverage:**
 - Item 1 (house-style) → Tasks 5, 6, 7 (+ Global Constraints skeleton).
-- Progress-tracking checklist behavior (superpowers "todo per item") → Global Constraints directive + Tasks 3/5/6 insertion + Task 8 audit.
+- Progress-tracking checklist behavior (superpowers "todo per item") → Global Constraints directive + Tasks 3/5/6 insertion + Task 11 audit.
+- Item 6 (vendor execution skills, fix dangling refs) → Task 8.
+- Item 7 (unioss-plan adopts writing-plans structure; retire template) → Task 9.
+- Item 8 (multiple-choice questions) → Task 10.
 - Item 2 (vendor receiving-code-review) → Task 1.
 - Item 3 (de-machine-ify wording, no config/test change) → Task 3.
 - Item 4 (refresh forks) → Task 4.
@@ -489,4 +659,6 @@ Invoke `superpowers:finishing-a-development-branch` to present merge/PR options.
 
 **Placeholder scan:** exact description strings, exact grep commands, exact rename commands provided. The only judgment steps (trim, fork port) are bounded by the trim rule + "adaptations preserved" and carry before/after verification. No "TBD"/"handle edge cases".
 
-**Type consistency:** the vendored skill id `unioss-pipeline:unioss-receiving-code-review` is produced in Task 1 and referenced only there; the renamed id `codeigniter3-simplifier` is produced in Task 2 and its sole consumer (`unioss-implement`) updated in the same task; both verified by grep.
+**Type consistency:** vendored skill ids `unioss-pipeline:unioss-receiving-code-review` (Task 1), `unioss-pipeline:unioss-subagent-driven-development` + `unioss-pipeline:unioss-executing-plans` (Task 8) are each produced and referenced with the same string; the writing-plans fork's repointed references (Task 8) match those exact ids; the renamed id `codeigniter3-simplifier` (Task 2) and its sole consumer `unioss-implement` are updated together. All verified by the `grep "superpowers:"` and presence checks in Task 11.
+
+**Ordering:** Task 4 (fork text refresh) precedes Task 8 (fork reference repoint) — both touch `unioss-writing-plans/SKILL.md` but on separate concerns and separate commits. Task 9 invokes the fork only after Task 8 has repointed it. No task depends on a later task's output.
