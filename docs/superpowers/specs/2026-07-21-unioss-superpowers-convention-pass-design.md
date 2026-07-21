@@ -31,8 +31,16 @@ logic stay identical.
   dependency.
 - `unioss-mr-feedback` is based on `receiving-code-review` by **vendoring** that
   skill and having mr-feedback + the reviewer stage invoke it.
-- Team identities and secrets are **neutralized** in shipped code DEFAULTS;
-  `config.test.mjs` is updated to match — the only test change in this pass.
+- **Config identities stay as-is** — no DEFAULTS neutralization:
+  - `ship.assignee` is already `null` (auto-detects to the `GITLAB_TOKEN` owner via
+    `GET /api/v4/user`). Nothing to change.
+  - `ship.staging.reviewer` / `ship.customer.reviewer` stay **hardcoded** (fixed
+    team reviewers) — user's call; already file-overridable.
+  - `db.password` (`ProotW`) stays — a **shared local-docker** dev password, same
+    for the whole team, already env/file-overridable.
+  - Therefore **no `config.test.mjs` change** and **no test change** in this pass.
+- `unioss-plan` and `unioss-writing-plans` are **distinct, both in use** — not a
+  dedup target (recorded so neither is deleted later).
 - The typo'd skill id `codeignitor3-simplifier` is **renamed** to
   `codeigniter3-simplifier`; its one inbound reference is updated.
 - **Trim rule (explicit):** trimming a bloated skill means **only** removing
@@ -47,11 +55,15 @@ logic stay identical.
 - **No absolute-home hardcoding** in the plugin. `config.mjs` already resolves
   env > local file > default, so per-machine values (source paths, container
   names) are overridable.
-- **Residual hardcoding to fix:** `config.mjs` DEFAULTS bake team usernames
-  (`nghia.truong`, `dat.pham`, `r.yosimura`) and a DB password (`ProotW`); doctor
-  text references "the unioss3 project root".
+- **`ship.assignee` already `null`** (auto-detects to token owner); reviewers and
+  `db.password` are intentional team-shared defaults — kept, not neutralized.
+- **Residual wording to fix:** doctor/REFERENCE text references "the unioss3
+  project root" — machine-specific phrasing, made generic.
 - **Duplication to fix:** review rigor is described ad hoc in `unioss-mr-feedback`
   and `unioss-review` instead of sharing one vendored `receiving-code-review`.
+- **`unioss-plan` vs `unioss-writing-plans`:** distinct and both used —
+  `unioss-plan` is the planner stage skill; it *invokes* the vendored
+  `unioss-writing-plans` for task-structuring discipline. Neither is removed.
 
 ---
 
@@ -90,17 +102,18 @@ Wire-up (doc-only, no logic change):
 - `unioss-mr-feedback` Analyze step invokes it instead of restating rigor inline.
 - `unioss-review` references it as the reception-rigor source.
 
-### 3 — De-hardcode shipped defaults (`config.mjs` + docs)
+### 3 — De-machine-ify doc wording (docs only, no code/DEFAULTS change)
 
-- Neutralize DEFAULTS: `ship.assignee`, `ship.staging.reviewer`,
-  `ship.customer.reviewer`, and `db.password` → empty string / placeholder.
-- `runCheck` already errors when these resolve empty, so `/unioss-doctor` flags
-  them on a fresh machine — new-machine setup path already works.
-- Update `config.test.mjs` to assert the neutralized DEFAULTS (only test change).
+Config DEFAULTS are **left unchanged** (see Decisions): assignee auto-detects,
+reviewers + `db.password` are intentional team-shared defaults, all overridable
+via `.walkthrough/.config/unioss.config.json` or env.
+
 - Replace machine-specific doctor/REFERENCE phrasing ("the unioss3 project root")
   with generic wording ("your UNIOSS project root").
-- Document in `REFERENCE.md` that identities/secrets are set per-machine in
-  `.walkthrough/.config/unioss.config.json` or env.
+- Add one line in `REFERENCE.md` noting per-machine overrides live in
+  `.walkthrough/.config/unioss.config.json` / env (documents the existing path).
+
+No `config.mjs` or test change.
 
 ### 4 — Refresh the vendored forks
 
@@ -121,16 +134,13 @@ user.
 
 - No pipeline flow / gate / orchestration redesign.
 - No new features or commands.
-- No hook or script **logic** changes (only DEFAULTS values + wording in item 3).
+- No hook or script **logic** changes; no `config.mjs`/DEFAULTS changes.
 - No deletions of skills/commands/agents (none are orphaned).
-- No changes to `*.test.mjs` other than `config.test.mjs` (item 3).
+- **No `*.test.mjs` changes at all** (unless the item-5 rename touches a test ref).
 
 ## Verification
 
-- `node --test` (or the repo's test runner) passes for all `*.test.mjs`, including
-  the updated `config.test.mjs`.
-- `grep` proves no baked team identities/secrets remain in code (`nghia.truong`,
-  `dat.pham`, `r.yosimura`, `ProotW`).
+- `node --test` passes for all `*.test.mjs`, unchanged from before the pass.
 - `grep` proves no `/home/`, `/Users/`, or "unioss3 project root" strings remain
   in shipped docs/scripts.
 - Every SKILL/command/agent `description` starts `Use when`.
