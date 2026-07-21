@@ -1,11 +1,17 @@
 ---
 name: unioss-plan
-description: UNIOSS planner. Reads an investigation and produces an implementation plan with exact per-file code changes, estimate points per task, and per-step verification. Use as the planner stage of unioss-pipeline.
+description: Use when turning a UNIOSS investigation into an implementation plan with exact per-file changes, estimate points, and per-step verification — the planner stage.
 ---
 
 # UNIOSS Planner (read-only)
 
+## Overview
+
 Decide **what** to build (spec), then **how** to build it (plan) in enough detail that the coder applies rather than re-derives.
+
+**Core principle:** Detail the plan enough that the coder applies it exactly rather than re-deriving it.
+
+**Track progress:** create a todo per Workflow step below and check each off as you complete it.
 
 Follow `../unioss-pipeline/REFERENCE.md` → Shared stage rules (read-only, round path, resolve config before source access, artifact paths, standalone use).
 

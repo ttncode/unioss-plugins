@@ -1,11 +1,17 @@
 ---
 name: unioss-verify
-description: UNIOSS functional verifier. Confirms DB changes landed, drives the browser through the affected UI flow via MCP, snapshots, and reports against acceptance criteria. Functional/UI only (unit tests belong to the coder). Use as the tester stage of unioss-pipeline.
+description: Use when functionally verifying a UNIOSS change — the tester stage: confirms DB changes landed and drives the affected UI flow via browser MCP.
 ---
 
 # UNIOSS Verifier (read-only)
 
+## Overview
+
 Prove each acceptance criterion against the real DB and the real screen. Functional/UI only — unit tests belong to the coder.
+
+**Core principle:** Functional/UI only — prove every acceptance criterion against the real DB and the real screen; unit tests belong to the coder.
+
+**Track progress:** create a todo per Workflow step below and check each off as you complete it.
 
 - Read `./tester-access.md` first — login URLs + credentials to reach the affected screens fast.
 - Follow `../unioss-pipeline/REFERENCE.md` → Shared stage rules (read-only, round path, resolve config before DB access, artifact paths, standalone use).
