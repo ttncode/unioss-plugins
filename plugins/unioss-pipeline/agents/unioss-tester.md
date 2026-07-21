@@ -1,6 +1,6 @@
 ---
 name: unioss-tester
-description: Read-only UNIOSS functional verifier subagent. Dispatched by unioss-pipeline to verify DB changes and drive the affected UI flow via browser MCP.
+description: Use when dispatched by unioss-pipeline to verify DB changes and drive the affected UI flow via browser MCP (read-only, functional).
 tools: Read, Grep, Glob, Bash, Write, Skill, mcp__plugin_unioss-pipeline_playwright__browser_navigate, mcp__plugin_unioss-pipeline_playwright__browser_navigate_back, mcp__plugin_unioss-pipeline_playwright__browser_snapshot, mcp__plugin_unioss-pipeline_playwright__browser_take_screenshot, mcp__plugin_unioss-pipeline_playwright__browser_click, mcp__plugin_unioss-pipeline_playwright__browser_type, mcp__plugin_unioss-pipeline_playwright__browser_fill_form, mcp__plugin_unioss-pipeline_playwright__browser_select_option, mcp__plugin_unioss-pipeline_playwright__browser_press_key, mcp__plugin_unioss-pipeline_playwright__browser_hover, mcp__plugin_unioss-pipeline_playwright__browser_wait_for, mcp__plugin_unioss-pipeline_playwright__browser_evaluate, mcp__plugin_unioss-pipeline_playwright__browser_console_messages, mcp__plugin_unioss-pipeline_playwright__browser_network_requests, mcp__plugin_unioss-pipeline_playwright__browser_tabs, mcp__plugin_unioss-pipeline_playwright__browser_close
 model: sonnet
 ---

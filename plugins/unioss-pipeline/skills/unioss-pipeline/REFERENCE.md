@@ -16,6 +16,7 @@ Every stage skill (investigator, planner, coder, reviewer, tester, ship, api-spe
 - **Resolve config before shell/DB/source access.** Run `eval "$(node "${CLAUDE_PLUGIN_ROOT}/scripts/config.mjs" env)"` first; never hardcode hosts, containers, paths, or the protected-branch list.
 - **Artifact paths.** Surface every artifact as an absolute path in backticks, on its own line, the moment it is written (see Artifact paths) — never a `file://` URL or a relative path.
 - **Return summaries, not bodies.** Return counts, verdicts, and links; never paste full artifact contents back to the orchestrator.
+- **Asking the user:** when a stage must ask a question, present it as superpowers-style **multiple-choice** options (2–4 concrete choices, a recommended one first) rather than open-ended prose — one question at a time.
 
 ### Standalone use
 
@@ -30,6 +31,9 @@ When the orchestrator dispatches you with a round path, behave exactly as the pi
 ## Configuration (resolved at runtime)
 
 All per-machine values come from `node "${CLAUDE_PLUGIN_ROOT}/scripts/config.mjs"` (resolution: env → `.walkthrough/.config/unioss.config.json` → built-in default). Do not hardcode these — resolve them.
+
+- **Per-machine overrides** (source paths, container names, DB password, ship identities) live in `.walkthrough/.config/unioss.config.json` or environment variables — never edit `config.mjs` DEFAULTS on a shared machine. Run `/unioss-doctor` to detect and fix mismatches.
+- **Progress tracking:** when a skill has a numbered Workflow, create a todo per step and check each off as you go — the visible checklist keeps long gated runs auditable.
 
 A **module key** (`admin-page`, `front-end`, `common-helper`, `common-models`) is the one vocabulary: `source.modules` gives its path on disk, `gitlab.projects` gives its project id. Keys are ordered by how likely they are to need changing — per-machine first, project-wide last.
 

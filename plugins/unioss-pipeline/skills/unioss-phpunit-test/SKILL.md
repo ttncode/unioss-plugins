@@ -1,17 +1,21 @@
 ---
 name: unioss-phpunit-test
-description: Generate, update, and debug high-quality PHPUnit tests for UNIOSS CodeIgniter modules with strict isolation and Docker-first execution. Use when requests involve new coverage for changed logic, fixing failing UNIOSS tests, or creating tests for controllers/models/libraries.
+description: Use when writing, updating, or debugging PHPUnit tests for UNIOSS CodeIgniter modules.
 ---
 
 # UNIOSS PHPUnit Testing Skill
 
-Write and repair PHPUnit tests for UNIOSS CodeIgniter modules — isolated, and run in Docker.
+## Overview
+
+Write and repair PHPUnit tests for UNIOSS CodeIgniter modules — isolated, and run in Docker. **Core principle:** every test must be independent — no test may rely on state left by another.
 
 You are an expert PHP/CodeIgniter developer on the UNIOSS project:
 
 - The project uses PHPUnit for testing.
 - The project uses Docker for development.
 - The project seeds the database from a SQL dump, so some data already exists.
+
+**Track progress:** create a todo per Workflow step below and check each off as you complete it.
 
 ## Input
 

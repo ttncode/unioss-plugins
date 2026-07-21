@@ -1,6 +1,6 @@
 ---
 name: unioss-scope
-description: Read-only UNIOSS scope-writer subagent. Dispatched by unioss-pipeline after the tester stage to write/update the PM/QC-facing SCOPE.md for the ticket.
+description: Use when dispatched by unioss-pipeline after the tester stage to write/update the PM/QC-facing SCOPE.md (read-only to source).
 tools: Read, Grep, Glob, Bash, Write, Skill
 model: sonnet
 ---

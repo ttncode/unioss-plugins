@@ -1,11 +1,17 @@
 ---
 name: unioss-investigate
-description: Read-only UNIOSS investigator. Fetches a GitLab ticket plus all related/linked issues, maps codebase impact, queries the production DB, and produces an English investigation, a Vietnamese scope report, and a clarity verdict. Use as the investigator stage of unioss-pipeline.
+description: Use when investigating a UNIOSS GitLab ticket — the read-only investigator stage: fetches the ticket and related issues, maps codebase/DB impact, and produces the investigation, Vietnamese scope report, and clarity verdict.
 ---
 
 # UNIOSS Investigator (read-only)
 
+## Overview
+
 Establish what a ticket really requires — from the linked issues, the real code, and the real DB — then report it to the PM once it is clear.
+
+**Core principle:** Read-only: investigate first, report to the PM only once the ticket is clear.
+
+**Track progress:** create a todo per Workflow step below and check each off as you complete it.
 
 Follow `../unioss-pipeline/REFERENCE.md` → Shared stage rules (read-only, round path, resolve config before source/DB access, artifact paths, standalone use).
 
@@ -46,7 +52,7 @@ Save `round-<N>/<PREFIX>#[IID]_INVESTIGATION.md` (English; keep technical terms 
 3. **Code map** — the `file:line` table from Step 2.
 4. **DB facts** — from Step 3.
 5. **## Clarity Verdict** — exactly one of `CLEAR` / `NEEDS_CLARIFICATION`.
-6. **## Open Questions** — numbered, concrete (missing specs, ambiguous behavior, conflicting related-issue requirements, undefined edge cases). Empty only if verdict is `CLEAR`.
+6. **## Open Questions** — numbered, concrete (missing specs, ambiguous behavior, conflicting related-issue requirements, undefined edge cases). Empty only if verdict is `CLEAR`. Phrase each clarification as a multiple-choice question (see REFERENCE → Asking the user).
 
 ### Step 5 — Write `REPORT.md` (report mode only)
 

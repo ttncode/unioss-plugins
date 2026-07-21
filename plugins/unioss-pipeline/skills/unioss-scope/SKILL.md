@@ -1,13 +1,17 @@
 ---
 name: unioss-scope
-description: Writes/updates a business-level SCOPE.md for a finished UNIOSS ticket — objectives, content, and the affected features/URLs a PM or QC needs to track and retest. Use at the end of a ticket (pipeline Step 12, after the tester stage and before Finalize) or standalone via /unioss-scope, whenever a ticket needs a PM/QC-facing scope summary distinct from the coder's file-level CHANGES.md.
+description: Use when writing or updating the PM/QC-facing SCOPE.md for a finished UNIOSS ticket.
 ---
 
 # UNIOSS Scope Writer
 
+## Overview
+
 Tell a PM/QC reader what changed and what to retest — in business language, not a diff.
 
-Follow `../unioss-pipeline/REFERENCE.md` → Shared stage rules, with one deliberate exception: **this skill writes to the ticket folder `.walkthrough/<PREFIX>#[IID]/`, not into a `round-<N>/` subfolder.** `SCOPE.md` spans rounds — one file per ticket, overwritten in place every round so it always reflects the current cumulative scope. Never version it (no `_V2`).
+Follow `../unioss-pipeline/REFERENCE.md` → Shared stage rules, with one deliberate exception: **this skill writes to the ticket folder `.walkthrough/<PREFIX>#[IID]/`, not into a `round-<N>/` subfolder.** `SCOPE.md` spans rounds — one file per ticket, overwritten in place every round so it always reflects the current cumulative scope. Never version it (no `_V2`). **Core principle:** never assume a change is contained — every related area is potentially affected and belongs on the retest list.
+
+**Track progress:** create a todo per Workflow step below and check each off as you complete it.
 
 ## Philosophy
 
@@ -38,6 +42,15 @@ Follow `../unioss-pipeline/REFERENCE.md` → Shared stage rules, with one delibe
 Structure must match `./scope-template.md` exactly — read `./scope-examples.md` first, that is the gold standard for tone and level of detail; match it.
 
 Return: the backticked absolute path (workspace root + `.walkthrough/<PREFIX>#[IID]/<PREFIX>#[IID]_SCOPE.md`), whether it was created or updated, and one line noting if a common-code change forced a multi-app scope.
+
+## Common Mistakes
+
+| Mistake | Why it breaks | Instead |
+| --- | --- | --- |
+| Stopping at the file the ticket named | Misses ripple effects on other callers | Grep every changed method's callers across the whole app |
+| Missing the cross-app impact of a common-code change | `common-models`/`common-helper` consumers live in **both** AdminPage and FrontEnd — the single most common mistake | Map affected features/URLs in both apps, even if only one was tested |
+| Naming a symbol in a Content bullet | Content is business/functional language for a PM/QC reader, not a diff | Name a symbol only when the ticket itself IS a refactor of it |
+| Excluding a borderline feature/URL from Scope | This list is QA's retest checklist | Err toward including, not excluding |
 
 ## Related files
 

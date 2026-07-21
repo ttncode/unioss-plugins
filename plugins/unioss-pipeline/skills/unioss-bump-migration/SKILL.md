@@ -1,11 +1,15 @@
 ---
 name: unioss-bump-migration
-description: Bump migration timestamp, reindex files, and update migration config/tests for UNIOSS.
+description: Use when bumping a UNIOSS migration timestamp, reindexing files, and updating the migration config and tests.
 ---
 
 # UNIOSS Migration Bumper
 
-Move a set of migrations — plus their configs and tests — from an old timestamp to a new one.
+## Overview
+
+Move a set of migrations — plus their configs and tests — from an old timestamp to a new one. **Core principle:** reindex from the current active sequence, never the directory's absolute max index.
+
+**Track progress:** create a todo per Workflow step below and check each off as you complete it.
 
 ## Input
 
@@ -86,6 +90,14 @@ Verify before reporting:
 - Each config file has exactly one active `migration_version`, and it is `NEW_TS`.
 
 Then summarize: the `NEW_TS` used, the files renamed, and a config diff snippet.
+
+## Common Mistakes
+
+| Mistake | Why it breaks | Instead |
+| --- | --- | --- |
+| Using the directory's absolute maximum index | Some folders hold outlier files with very high indices (e.g. `1471`) left by much older timestamps | Sort by timestamp first, then index off the current active sequence |
+| Leaving a blank line between `migration_version` lines | Breaks the expected config format | No empty line between migration versions |
+| Leaving `MIGRATION_VERSION_DOWN` stale | Test would revert to the wrong version | Set it to the latest timestamp remaining in the migration directory |
 
 ## Related files
 

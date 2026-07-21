@@ -1,11 +1,17 @@
 ---
 name: unioss-review
-description: UNIOSS reviewer. Diff-scoped review of the coder's changes against clean-code + CI3 standards + plan adherence + security; outputs a severity-indexed report. Use as the reviewer stage of unioss-pipeline.
+description: Use when diff-reviewing the UNIOSS coder's changes against clean-code, CI3, plan-adherence, and security standards — the reviewer stage; outputs a severity-indexed report.
 ---
 
 # UNIOSS Code Review Skill
 
-You are an expert PHP/CodeIgniter reviewer. You **report only — never edit files** (see Output Format Rules). Analyze the coder's diff and flag every place the new/changed code breaks the UNIOSS standards below.
+## Overview
+
+Diff-scoped review of the coder's changes against UNIOSS clean-code, CI3, plan-adherence, and security standards, flagging every place new/changed code breaks a standard below.
+
+**Core principle:** Report only — never edit files, unless the user explicitly follows up with `fix #N`.
+
+**Track progress:** create a todo per Workflow step below and check each off as you complete it.
 
 Follow `../unioss-pipeline/REFERENCE.md` → Shared stage rules (read-only, round path, artifact paths, standalone use).
 
@@ -91,13 +97,11 @@ Structure the report as follows:
 
 ## Output
 
-1. **Diff-only scope**: never comment on code outside the `+` lines of the diff.
-2. **One index per finding**: each `[#N]` appears exactly once in the index and once as a section header.
-3. **Flag good changes** too — not everything is a problem.
-4. **Pinned code snippets**: each finding shows the exact new `+` lines being discussed, clearly marked `// NEW:`.
-5. **Concrete fix**: every 🔴 and 🟡 must include a `**Fix:**` with working code or a precise instruction.
-6. **No preemptive fixes**: this skill only reports. Do not modify files unless the user follows up with "fix #N".
-7. **Summary table**: always end with totals per file and a "Top Priority Fixes" table sorted by severity.
+1. **One index per finding**: each `[#N]` appears exactly once in the index and once as a section header.
+2. **Flag good changes** too — not everything is a problem.
+3. **Pinned code snippets**: each finding shows the exact new `+` lines being discussed, clearly marked `// NEW:`.
+4. **Concrete fix**: every 🔴 and 🟡 must include a `**Fix:**` with working code or a precise instruction.
+5. **Summary table**: always end with totals per file and a "Top Priority Fixes" table sorted by severity.
 
 ---
 
@@ -198,7 +202,7 @@ a finding.
 - [ ] Domain and installation directory must always be configurable (no hardcoding). Using CI3 config `$this->config->load(...)`
 - [ ] No municipality/user-specific hardcoded branching — use config or DB flags (on/off) to toggle features per tenant instead
 - [ ] Internal DB IDs are never exposed to the client or external systems — use aliases, codes, or slugs instead
-- [ ] PHPDoc on every public method (params, return, throws)
+- [ ] PHPDoc on every public method/class/property (params, return, throws), including `@property` for CI3 magic-loaded dependencies and code jumping
 - [ ] Type hints on all new method parameters and return values
 - [ ] No direct `$_POST` / `$_GET` access — use `$this->input->post(null, true)` / `$this->input->get(key, true)` with XSS filter enabled
 - [ ] No N+1 queries inside loops
@@ -215,23 +219,19 @@ a finding.
 - [ ] New constants follow `SCREAMING_SNAKE_CASE`
 - [ ] Unit comment present for numeric constants (seconds, days, pixels, etc.)
 - [ ] New comments explain **Why** the code exists rather than only **What** it does; comments are written in English.
-- [ ] Public classes, methods, and properties have full PHPDoc, including `@property` when needed for CI3 magic-loaded dependencies and code jumping.
 - [ ] Files stay under 1000 lines and methods remain short; split oversized files/methods into focused units.
 - [ ] Function parameters are explicit and typed where possible; avoid ambiguous array parameters for new code.
 - [ ] Do not use reference parameters for new functions unless there is a proven technical need.
 - [ ] Use existing date/time helpers where possible, such as `current_time()` and `create_time_from_format()`.
-- [ ] Use CI3 language mechanism for user-facing text.
 - [ ] Code should produce no PHP errors, warnings, or notices under development error reporting.
 
 ### PHP — Controllers (`application/controllers/`)
 
-- [ ] Extends `MY_Controller`; controller acts as a **coordinator only** — it receives input, delegates to models/libraries, and returns output; no processing logic inside
+- [ ] Extends `MY_Controller`; acts as a thin coordinator only — receives input, delegates to models/libraries, and returns/renders output. No business or validation logic in the controller; that lives in the model.
 - [ ] `My_Controller` must stay slim — only truly universal logic/loads belong there; per-request helpers/models/libraries must be loaded in each controller, not in `My_Controller`
 - [ ] No raw SQL; uses CI3 Query Builder via model calls
-- [ ] Validation logic and business logic must live in the model, not the controller — the controller only passes data through
 - [ ] `redirect()` + `return` after every error flash — execution never falls through
 - [ ] `html_escape()` on all dynamic view data passed through
-- [ ] Controller signatures are thin and only coordinate input, model/library calls, and response rendering.
 - [ ] API/AJAX controller responses use proper HTTP status codes and JSON structure.
 
 ### PHP — Models (`application/models/`)
@@ -277,15 +277,13 @@ a finding.
 - [ ] Uses `number_format()` on coins/yen — never raw integer output
 - [ ] IDs and classes follow `kebab-case`
 - [ ] Bootstrap 3 classes and ARIA attributes present where needed
-- [ ] `form_open()` / `form_close()` used for CI3 CSRF
+- [ ] `form_open()`, `set_value()`, and `form_error()` used for CI3 CSRF and validation display
 - [ ] Do not use abbreviations for class names
 - [ ] CDN links are not loaded directly in views; required assets are downloaded into source code.
-- [ ] Do not use inline CSS; keep CSS in separate files.
 - [ ] Limit `!important` usage in CSS.
 - [ ] Prefer `rem` and `1px` units where appropriate.
 - [ ] Default image URLs fall back to a placeholder image.
 - [ ] PHP variables passed to JavaScript use `json_encode()`.
-- [ ] Forms use `form_open()`, `set_value()`, and `form_error()` for CI3 CSRF and validation display.
 - [ ] Lists are paginated.
 - [ ] Views do not query the database.
 
@@ -312,9 +310,8 @@ a finding.
 - [ ] Migration includes author and purpose in comments/docblock.
 - [ ] Wrapped in `$this->db->trans_start()` / `trans_complete()`
 - [ ] No `SET`, `USING BTREE`, or non-default DB params
-- [ ] Existing columns/indexes/constraints are checked before adding, changing, or dropping them.
+- [ ] `CHECK EXISTS`: verify existing columns, indexes, and constraints before adding, changing, or dropping them
 - [ ] Japanese column comments present in DDL for every schema, table, and column (mandatory)
-- [ ] `CHECK EXISTS` before adding/dropping columns
 - [ ] Foreign key constraints created for all relationships; reference action must be `RESTRICT` only — `CASCADE`, `SET NULL`, and `NO ACTION` are forbidden
 - [ ] Indexes added for FK and frequently filtered columns
 - [ ] Table column order ends with: `delete_flg`, `created_at`, `updated_at` (omit any that are not applicable)
@@ -329,7 +326,7 @@ a finding.
 ### JAVASCRIPT
 
 - [ ] Written as a named module object (named JS module pattern per `${CLAUDE_PLUGIN_ROOT}/rules/clean-code-javascript.md`)
-- [ ] `constants: {}` block present with named constants — no magic numbers inline
+- [ ] `constants: {}` block present with named constants for all magic numbers, hardcoded values, and fallback values — no literals inline
 - [ ] `elements: {}` block caches all jQuery selectors at definition time
 - [ ] Private methods prefixed with `_` (`_bindToggle`, `_openCard`)
 - [ ] Protected methods prefixed with `__`
@@ -338,10 +335,8 @@ a finding.
 - [ ] No always-truthy guards like `if ($)` or `if (window)`
 - [ ] Event listeners use `document.addEventListener('DOMContentLoaded', ...)` not `$(function() {...})`
 - [ ] Timers created with `setInterval` must call `clearInterval` when completed
-- [ ] Avoiding hard-coding is a priority; declare it in `constants: {}`
 - [ ] PHP variables passed to JS via `json_encode`, not inline echoed values
 - [ ] `alert()` only for user-facing errors — no debug alerts
-- [ ] Fallback values extracted to `constants` block
 - [ ] If you need to access data from PHP, set data to `window.App = { ... }` at view
 - [ ] JavaScript code is modular and avoids global side effects beyond the agreed module/window data entry point.
 - [ ] Select directly on the target tag/element instead of broad document delegation unless delegation is necessary for dynamic elements.
@@ -415,4 +410,5 @@ See REFERENCE → Shared stage rules → Standalone use (e.g. `/unioss-review Re
 - `rules/clean-code-php.md`, `rules/clean-code-javascript.md` — the standards enforced here.
 - `agents/unioss-reviewer.md` — the subagent that runs this.
 - `skills/unioss-implement/SKILL.md` — applies the fixes at GATE 3; this skill never edits.
+- `skills/unioss-receiving-code-review/SKILL.md` — reception rigor for evaluating feedback (verify before implementing).
 - `skills/unioss-pipeline/REFERENCE.md` — shared stage rules.

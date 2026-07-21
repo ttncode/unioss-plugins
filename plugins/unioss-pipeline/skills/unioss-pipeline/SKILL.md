@@ -1,6 +1,6 @@
 ---
 name: unioss-pipeline
-description: UNIOSS A→Z ticket pipeline orchestrator. Given a GitLab ticket URL, drives investigator → (clarify) → spec → GATE → planner → GATE → coder → reviewer → GATE → tester → scope → branch+commit, stopping for human approval at the gates. Use when the user runs /unioss-pipeline <URL> or asks to run the full UNIOSS ticket pipeline.
+description: Use when running the full UNIOSS A→Z ticket pipeline on a GitLab ticket URL — the gated orchestrator: investigator → spec → planner → coder → reviewer → tester, stopping at human gates.
 ---
 
 # UNIOSS Pipeline Orchestrator (main thread)
@@ -8,6 +8,14 @@ description: UNIOSS A→Z ticket pipeline orchestrator. Given a GitLab ticket UR
 Drive a ticket from A to Z, stopping at every human gate.
 
 Read `REFERENCE.md` (this dir) first — its branch, protected-branch, submodule, and commit rules are binding. You run in the MAIN thread: dispatch read-only stages as subagents, run the coder yourself, own the gates.
+
+## Overview
+
+Drive a ticket from A to Z, stopping at every human gate. The pipeline requires explicit user approval at each decision point before proceeding.
+
+**Core principle:** it stops at human gates; never auto-merges.
+
+**Track progress:** create a todo per Workflow step below and check each off as you complete it.
 
 ## Input
 
@@ -68,6 +76,38 @@ Print its output per the **Output → Step 0** contract below, then **stop — a
 11. **Tester** — dispatch the `unioss-pipeline:unioss-tester` agent with the CHANGES.md path + acceptance criteria. Writes TEST_RESULTS.md; returns pass/fail. If any UI criterion is SKIPPED (no browser MCP), note it explicitly — never treat SKIPPED as a pass.
 12. **Scope** — dispatch the `unioss-pipeline:unioss-scope` agent with the CHANGES.md path + round path. Writes/updates `<PREFIX>#[IID]_SCOPE.md` in the ticket folder (a sibling of `round-<N>/`, not inside it — see REFERENCE → Artifact layout); returns its path. Runs even if the tester reported a SKIPPED UI criterion — the scope reflects the code change, not the verification outcome.
 13. **Finalize** — for every repo the coder touched, commit on its feature branch using `#[IID] - [Message]`. Per REFERENCE: app branches (AdminPage/FrontEnd) are committed locally only (no push, no MR) and exclude the submodule gitlink; submodule branches are pushed. Never touch a protected branch. Present the final summary per **Output → Step 13**, then ask Decision prompt **(b)**.
+
+### Flow diagram
+
+```dot
+digraph unioss_pipeline {
+  rankdir=TB;
+  node [shape=box];
+
+  Parse -> Investigator;
+  Investigator -> "GATE 0\n(clarify?)";
+  "GATE 0\n(clarify?)" -> Brainstorm [label="NEEDS_CLARIFICATION"];
+  Brainstorm -> Reporter;
+  "GATE 0\n(clarify?)" -> Reporter [label="CLEAR"];
+  Reporter -> "Planner (spec)";
+  "Planner (spec)" -> "GATE 1\n(spec)";
+  "GATE 1\n(spec)" -> "Planner (spec)" [label="edit"];
+  "GATE 1\n(spec)" -> "Planner (plan)" [label="approve"];
+  "Planner (plan)" -> "GATE 2\n(plan)";
+  "GATE 2\n(plan)" -> "Planner (plan)" [label="edit"];
+  "GATE 2\n(plan)" -> Coder [label="approve"];
+  Coder -> Reviewer;
+  Reviewer -> "GATE 3\n(review)";
+  "GATE 3\n(review)" -> Coder [label="fix"];
+  "GATE 3\n(review)" -> "Full PHPUnit" [label="accept"];
+  "Full PHPUnit" -> Tester;
+  Tester -> Scope;
+  Scope -> Finalize;
+  Finalize -> "Decision (b)";
+  "Decision (b)" -> Ship [label="1: push + MR"];
+  "Decision (b)" -> Stop [label="2: keep as-is"];
+}
+```
 
 ## Output
 

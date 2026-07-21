@@ -1,11 +1,17 @@
 ---
 name: unioss-plan
-description: UNIOSS planner. Reads an investigation and produces an implementation plan with exact per-file code changes, estimate points per task, and per-step verification. Use as the planner stage of unioss-pipeline.
+description: Use when turning a UNIOSS investigation into an implementation plan with exact per-file changes, estimate points, and per-step verification — the planner stage.
 ---
 
 # UNIOSS Planner (read-only)
 
+## Overview
+
 Decide **what** to build (spec), then **how** to build it (plan) in enough detail that the coder applies rather than re-derives.
+
+**Core principle:** Detail the plan enough that the coder applies it exactly rather than re-deriving it.
+
+**Track progress:** create a todo per Workflow step below and check each off as you complete it.
 
 Follow `../unioss-pipeline/REFERENCE.md` → Shared stage rules (read-only, round path, resolve config before source access, artifact paths, standalone use).
 
@@ -33,13 +39,14 @@ Write `round-<N>/<PREFIX>#[IID]_SPEC.md`. Mandatory sections:
 
 ### Plan mode — the how, exact code
 
-1. **Draft with writing-plans discipline.** Invoke `unioss-pipeline:unioss-writing-plans` to structure the plan: bite-sized tasks, exact file paths, a verification per task.
-2. **Apply the UNIOSS template.** Fill `./create-implementation-plan.md`. All sections mandatory; **zero `TBD`**:
-   - **Exact code** — every change shows the concrete before/after snippet + absolute path.
-   - **Estimate points** — set the `story_points` front-matter and a per-task estimate.
-   - **Phased steps** — Phase 1 DB migration · Phase 2 model/controller · Phase 3 views · Phase 4 tests.
-   - **Manual testing** — normal + abnormal cases, including DB verification.
-3. **Save** `round-<N>/<PREFIX>#[IID]_IMPLEMENTATION_V1.md`.
+1. **Draft and structure the plan in writing-plans format.** Invoke `unioss-pipeline:unioss-writing-plans` to structure the plan with writing-plans discipline: the plan header (Goal / Architecture / Tech Stack / Global Constraints), then `### Task N` blocks with **Files**, **Interfaces**, bite-sized steps, a verification per task, and a commit per task. Use UNIOSS-specific examples throughout — absolute PHP/CI3 paths, `docker exec -i "$US_PHP" …` commands (resolve `$US_PHP` via `eval "$(node "${CLAUDE_PLUGIN_ROOT}/scripts/config.mjs" env)"`), and migration phases — not generic pytest/JS examples.
+   Add exactly two UNIOSS sections on top of that structure:
+   - **Story points** — a `**Story points:** <N>` line in the plan header and a
+     per-task estimate on each `### Task N`.
+   - **Manual Testing** — a `## Manual Testing` section after the tasks, split
+     into **Normal Cases** and **Abnormal Cases** (validation errors,
+     unauthorized access, fallback), each with explicit DB-verification steps.
+2. **Save** `round-<N>/<PREFIX>#[IID]_IMPLEMENTATION_V1.md`.
 
 ### Versioning on a GATE edit
 
@@ -55,7 +62,7 @@ Never paste the spec or plan body.
 
 ## Related files
 
-- `./create-implementation-plan.md` — the mandatory plan template.
+- `skills/unioss-writing-plans/SKILL.md` — the plan structure this stage produces (plus Story points + Manual Testing).
 - `agents/unioss-planner.md` — the subagent that runs this.
 - `skills/unioss-implement/SKILL.md` — the coder that applies the plan.
 - `skills/unioss-pipeline/REFERENCE.md` — shared stage rules.

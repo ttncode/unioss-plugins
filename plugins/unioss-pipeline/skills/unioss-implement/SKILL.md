@@ -1,12 +1,18 @@
 ---
 name: unioss-implement
-description: UNIOSS coder. Applies an approved implementation plan exactly, runs migrations when required, owns PHPUnit (fast verify then full suite), and writes a diff manifest. Runs in the main thread. Use as the coder stage of unioss-pipeline.
+description: Use when applying an approved UNIOSS implementation plan exactly — the coder stage: edits code, runs migrations, owns PHPUnit, and writes a diff manifest.
 model: sonnet
 ---
 
 # UNIOSS Coder (main thread — the only writer)
 
+## Overview
+
 Apply an approved plan exactly. This is the only stage that edits project source.
+
+**Core principle:** This is the only stage that edits project source — apply the approved plan exactly, never re-derive it.
+
+**Track progress:** create a todo per Workflow step below and check each off as you complete it.
 
 Follow `../unioss-pipeline/REFERENCE.md` → its Branches, Protected-branch, Submodule, and Commit rules are binding. Follow `${CLAUDE_PLUGIN_ROOT}/rules/clean-code-php.md` / `clean-code-javascript.md`. Write artifacts only under the round folder the orchestrator gives you.
 
@@ -32,7 +38,7 @@ git fetch origin && git checkout v3-master && git pull && git checkout -b <branc
 
 ### Step 1 — Apply the approved plan
 
-Apply the exact per-file changes from the plan. For migrations use `unioss-pipeline:unioss-generate-migration` / `unioss-pipeline:unioss-bump-migration`. Use `unioss-pipeline:codeignitor3-simplifier` to keep CI3 code clean.
+Apply the exact per-file changes from the plan. For migrations use `unioss-pipeline:unioss-generate-migration` / `unioss-pipeline:unioss-bump-migration`. Use `unioss-pipeline:codeigniter3-simplifier` to keep CI3 code clean.
 
 ### Step 1b — Verify the migration (only if the plan added one)
 

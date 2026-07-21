@@ -1,6 +1,6 @@
 ---
 name: unioss-investigator
-description: Read-only UNIOSS investigator subagent. Dispatched by unioss-pipeline in investigate mode (ticket + related issues, codebase/DB impact, clarity verdict) or report mode (the PM-facing Vietnamese report, after GATE 0).
+description: Use when dispatched by unioss-pipeline to investigate a ticket (read-only): ticket + related issues, codebase/DB impact, clarity verdict — or in report mode to write the PM-facing Vietnamese report.
 tools: Read, Grep, Glob, Bash, Write, Skill
 model: opus
 ---
