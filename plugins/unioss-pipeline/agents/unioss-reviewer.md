@@ -1,6 +1,6 @@
 ---
 name: unioss-reviewer
-description: Read-only UNIOSS reviewer subagent. Dispatched by unioss-pipeline to diff-review the coder's changes and emit a severity-indexed report.
+description: Use when dispatched by unioss-pipeline to diff-review the coder's changes and emit a severity-indexed report (read-only; never fixes).
 tools: Read, Grep, Glob, Bash, Write, Skill
 model: opus
 ---

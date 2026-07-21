@@ -1,6 +1,6 @@
 ---
 name: unioss-planner
-description: Read-only UNIOSS planner subagent. Dispatched by unioss-pipeline to turn an investigation into an implementation plan with exact code and estimate points.
+description: Use when dispatched by unioss-pipeline to turn an investigation into an implementation plan with exact code and estimate points (read-only).
 tools: Read, Grep, Glob, Bash, Write, Skill
 model: opus
 ---
