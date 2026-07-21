@@ -39,22 +39,14 @@ Write `round-<N>/<PREFIX>#[IID]_SPEC.md`. Mandatory sections:
 
 ### Plan mode — the how, exact code
 
-1. **Draft with writing-plans discipline.** Invoke `unioss-pipeline:unioss-writing-plans` to structure the plan: bite-sized tasks, exact file paths, a verification per task.
-2. **Structure the plan in the writing-plans format.** Invoke
-   `unioss-pipeline:unioss-writing-plans` and produce the plan in its structure:
-   the plan header (Goal / Architecture / Tech Stack / Global Constraints), then
-   `### Task N` blocks with **Files**, **Interfaces**, bite-sized steps, and a
-   commit per task. Use UNIOSS-specific examples throughout — absolute PHP/CI3
-   paths, `docker exec -i "$US_PHP" …` commands (resolve `$US_PHP` via
-   `eval "$(node "${CLAUDE_PLUGIN_ROOT}/scripts/config.mjs" env)"`), and migration
-   phases — not generic pytest/JS examples.
+1. **Draft and structure the plan in writing-plans format.** Invoke `unioss-pipeline:unioss-writing-plans` to structure the plan with writing-plans discipline: the plan header (Goal / Architecture / Tech Stack / Global Constraints), then `### Task N` blocks with **Files**, **Interfaces**, bite-sized steps, a verification per task, and a commit per task. Use UNIOSS-specific examples throughout — absolute PHP/CI3 paths, `docker exec -i "$US_PHP" …` commands (resolve `$US_PHP` via `eval "$(node "${CLAUDE_PLUGIN_ROOT}/scripts/config.mjs" env)"`), and migration phases — not generic pytest/JS examples.
    Add exactly two UNIOSS sections on top of that structure:
    - **Story points** — a `**Story points:** <N>` line in the plan header and a
      per-task estimate on each `### Task N`.
    - **Manual Testing** — a `## Manual Testing` section after the tasks, split
      into **Normal Cases** and **Abnormal Cases** (validation errors,
      unauthorized access, fallback), each with explicit DB-verification steps.
-3. **Save** `round-<N>/<PREFIX>#[IID]_IMPLEMENTATION_V1.md`.
+2. **Save** `round-<N>/<PREFIX>#[IID]_IMPLEMENTATION_V1.md`.
 
 ### Versioning on a GATE edit
 
