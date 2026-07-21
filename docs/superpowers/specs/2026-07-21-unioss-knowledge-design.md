@@ -138,43 +138,46 @@ _Auto-harvested from investigations. Facts carry a source._
 |---|---|---|
 | `/unioss-knowledge-ticket <gitlab-url>` | Summarize one ticket (WWWH: What/Why/Who/How) from issue + notes. Reuses the pipeline fetcher. | no |
 | `/unioss-knowledge-today` | Summarize all tickets created today across AP + FE → WWWH, one block per ticket, none dropped → `digests/<date>-daily.md`. | facts only |
-| `/unioss-knowledge-ask "<question>" [period]` | **Free-form query.** Answers focus / praise-criticism / ticket-overview for any period. Read-only by default (dated report under `digests/`); after answering, offers a gated multi-option to fold findings into the KB. See flow below. | opt-in only |
+| `/unioss-knowledge-ask "<question>" [period]` | **Free-form query.** Answers from the most-recently-stored knowledge; if that's stale, prompts to refresh first. Writes a dated report under `digests/`. See flow below. | only if user picks Refresh (current period) |
 | `/unioss-knowledge-refresh [daily\|weekly\|monthly]` | Crawl + distill the **current** window. `daily`=new-ticket WWWH; `weekly`=praise/complaints → `sentiment/current.md` (auto) + propose rules → `rules/staged.md` (gated); `monthly`=customer focus → `GLOBAL.md` + monthly digest. | yes |
 | `/unioss-knowledge-approve` | Show `rules/staged.md`; promote approved → `rules/approved.md`, fold top into `GLOBAL.md`. | yes (rules) |
 | `/unioss-knowledge` | Status: staleness per layer, entry counts, pending staged-rule count (reads `index.json`). | no |
 
-**Ask vs. refresh:** `ask` answers questions (read-only, any period, historical safe). `refresh` feeds agents (mutates curated KB, current window only). A historical query must never overwrite the live GLOBAL/sentiment, which describe *now*.
+**Ask vs. refresh:** `ask` answers questions from stored knowledge (crawls only on an opted-in refresh). `refresh` feeds agents (mutates curated KB, current window only). A historical query must never overwrite the live GLOBAL/sentiment, which describe *now*.
+
+**Design rule — every multi-option prompt has a recommended default.** All `AskUserQuestion` prompts in this plugin (period picker, staleness gate, rule approval, staleness nudge) list the recommended option first and label it `← recommended`. No prompt leaves the user guessing the safe choice.
 
 ### `/unioss-knowledge-ask` flow
 
+`ask` answers from the **most-recently-stored knowledge** first — cheap, no crawl — and only re-crawls when the stored data is stale and the user opts to refresh.
+
 1. **Parse** the question for (a) intent — `focus` | `sentiment` | `tickets` | general — and (b) period.
-2. **Period clarification.** If the period is missing or ambiguous, present a multi-option picker before crawling:
+2. **Period clarification.** If the period is missing or ambiguous, present a multi-option picker (recommended option first):
 
    ```
    Which period?
-   1. Current month (07/2026)
+   1. Current month (07/2026)   ← recommended
    2. Previous month (06/2026)
    3. This week
    4. A specific month/year   (e.g. 2026-03)
    5. A custom date range     (e.g. 2026-06-01..2026-06-30)
    ```
 
-   Options 4–5 accept free-text entry. The picker is rendered via `AskUserQuestion` (its "Other" branch covers 4–5).
-3. **Crawl** the resolved window across AP + FE.
-4. **Answer** in the requested shape (focus bullets / praise+criticism split / WWWH ticket list).
-5. **Write** a dated read-only report → `digests/<period>-<intent>.md`. Append raw signals to `observations.jsonl` (deduped). **No** mutation of `GLOBAL.md` / `rules/` / `sentiment/current.md` yet.
-6. **Offer to update the KB** (multi-option, `AskUserQuestion`). The answer is read-only until the user opts in here — this is the sole bridge from `ask` into curated memory:
+   Options 4–5 accept free-text entry (the `AskUserQuestion` "Other" branch).
+3. **Load** the stored knowledge backing that intent/period + its last-refresh time from `index.json`.
+4. **Staleness gate.** If stored data exists but its backing layer is older than the staleness threshold (default 7 days) **and** the period overlaps the present (so new info is possible), prompt before answering:
 
    ```
-   Update the knowledge base with these findings?
-   1. No — keep report only (default)
-   2. Stage prescriptive rules for approval (→ rules/staged.md, gated)
-   3. Also refresh current sentiment + GLOBAL   [shown only when period = current]
+   Stored knowledge for this is 9 days old.
+   1. Refresh now (recommended) — re-crawl AP+FE for this period, then answer
+   2. Use stored as-is — faster, may miss the last 9 days
    ```
 
-   - Option 2 stages rules (still requires `/unioss-knowledge-approve` later — never live-writes rules).
-   - Option 3 is **hidden when the period is historical** — a June query must not overwrite July's live "now" KB. Guarded, not just conventionally discouraged.
-   - Default (no selection / option 1) leaves the store exactly as after step 5.
+   - **Refresh** re-crawls the queried period. If the period = current, it also updates the curated current-KB (a normal `refresh`); if historical, it refreshes only that period's report data (read-only — never overwrites the live "now" KB).
+   - **Use as-is** answers straight from the stored knowledge.
+   - No stored data for the period → skip the gate; crawl once (nothing to be stale).
+5. **Answer** from the (refreshed or stored) knowledge, in the requested shape (focus bullets / praise+criticism split / WWWH ticket list).
+6. **Write** a dated report → `digests/<period>-<intent>.md`. Append raw signals to `observations.jsonl` (deduped).
 
 Example phrasings → resolution:
 - `/unioss-knowledge-ask "what is the customer focusing on this month"` → intent `focus`, period current month → answer + `digests/2026-07-focus.md`.
@@ -217,7 +220,7 @@ The store must survive re-runs, partial runs, and duplicate source data. Every w
 - **Repeated `refresh daily` (same day, many times):** date-keyed digest files are **overwritten**, not appended — `digests/<date>-daily.md` is regenerated in full each run. No accumulation from re-running.
 - **`observations.jsonl` dedupe:** each observation has a stable id `sha1(project:issue_iid:note_id)` (or `sha1(project:issue_iid:'issue')` for the issue body). Appends skip ids already present. Re-crawling the same window adds nothing new.
 - **Staged-rule dedupe:** each staged rule has a fingerprint `sha1(normalized_statement)`. A rule already in `staged.md` or `approved.md` is not re-proposed. Approving is idempotent — promoting an already-approved rule is a no-op.
-- **`ask` is read-only & idempotent:** re-running the same question/period overwrites its date-keyed report; never mutates `GLOBAL.md` / `rules/` / `sentiment/current.md`. A historical query can never corrupt the live "now" KB.
+- **`ask` is idempotent:** re-running the same question/period overwrites its date-keyed report. "Use as-is" mutates nothing. "Refresh" runs a normal `refresh` (itself idempotent) for the current period, or a read-only re-crawl for a historical one — a historical query can never corrupt the live "now" KB.
 - **`GLOBAL.md` / `sentiment/current.md` are pure renders:** fully regenerated from the store each distill — running twice yields byte-identical output (idempotent), no drift.
 - **Domain-fact append dedupe:** investigate appends a fact only if its normalized line isn't already in `domain/<module>.md`.
 - **Partial/failed crawl:** GitLab 401/429/5xx or network error → abort before any write; the store is left exactly as it was (no half-written digest, no partial jsonl). Writers stage to a temp file and atomic-rename on success.
@@ -236,8 +239,9 @@ Node scripts get `*.test.mjs` (repo convention):
 - staged-rule fingerprint dedupe
 - atomic-write / abort-on-error leaves store unchanged
 - `ask` intent + period parsing (incl. `YYYY-MM`, range, and missing-period → picker path)
-- `ask` writes nothing to `GLOBAL.md` / `rules/` / `sentiment/current.md` until the user opts in
-- `ask` update-offer: option 3 hidden for historical periods; option 2 stages (never live-writes) rules
+- `ask` staleness gate: fires only when stored data exists, is past threshold, and period overlaps present; skipped when no stored data
+- `ask` "Use as-is" writes nothing to `GLOBAL.md` / `rules/` / `sentiment/current.md`; "Refresh" on a historical period does not touch the live "now" KB
+- every plugin multi-option prompt includes exactly one `← recommended` option
 
 ## Failure modes (degrade safe)
 
