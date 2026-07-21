@@ -19,6 +19,7 @@ Prove each acceptance criterion against the real DB and the real screen. Functio
 ## Input
 
 - `round-<N>/<PREFIX>#[IID]_CHANGES.md` — what changed.
+- `round-<N>/<PREFIX>#[IID]_IMPLEMENTATION_V*.md` → its `## Manual Testing` section — the planner's Normal/Abnormal cases. This is the **source** for the hand-off checklist in Output.
 - The ticket's acceptance criteria.
 - The round path.
 
@@ -54,9 +55,16 @@ Prove each acceptance criterion against the real DB and the real screen. Functio
   📸 [Description of what is shown](screenshots/step-name.png)
   ```
 
-Return: overall pass/fail, the count of failed criteria, and the backticked absolute path to `TEST_RESULTS.md`. Never paste the full report.
+- A final `## Manual Testing (run these yourself)` section — a checkbox list of every case from the plan's `## Manual Testing` that this stage did **not** auto-verify: MCP-skipped UI flows, abnormal/edge cases too fragile to drive, and any DB effect the user should re-confirm by hand. Each item keeps its plan wording (screen/URL, action, expected, DB check). Auto-verified cases are omitted here — they already have a row in the per-criterion table above. If everything was auto-verified, state `None — all planned cases auto-verified.`
 
-**`SKIPPED (MCP unavailable)` is never counted as a pass** — surface it explicitly.
+  ```markdown
+  ## Manual Testing (run these yourself)
+  - [ ] <case> — <screen/URL> → <action> → expect <result> (DB: <check>)
+  ```
+
+Return: overall pass/fail, the count of failed criteria, the count of manual cases handed off, and the backticked absolute path to `TEST_RESULTS.md`. Never paste the full report.
+
+**`SKIPPED (MCP unavailable)` is never counted as a pass** — surface it explicitly; every skipped flow becomes a Manual Testing hand-off item.
 
 ## Related files
 
