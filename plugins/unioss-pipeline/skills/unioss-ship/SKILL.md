@@ -1,13 +1,17 @@
 ---
 name: unioss-ship
-description: UNIOSS shipper. Pushes the finalized feature branch and creates GitLab merge requests (via API) into staging (v3-develop-tps) or customer staging (v3-develop), with a pre-filled-URL fallback. Never merges. Use as /unioss-ship <staging|customer>.
+description: Use when shipping a finalized UNIOSS ticket — pushes the feature branch and opens merge requests into staging or customer staging; never merges. Run as /unioss-ship.
 ---
 
 # UNIOSS Shipper (main thread)
 
-Push the finalized branches and open one MR per touched repo. **Never merges** — that stays a human action.
+## Overview
+
+Push the finalized branches and open one MR per touched repo. **Core principle:** never merges — that stays a human action.
 
 Follow `../unioss-pipeline/REFERENCE.md` → its Branches, Protected-branch, and Submodule rules are binding.
+
+**Track progress:** create a todo per Workflow step below and check each off as you complete it.
 
 ## Input
 
@@ -88,6 +92,15 @@ A plain "proceed"/"yes"/"go ahead" (no skip mentioned) runs every listed step as
 - Pushing the feature branch and creating the MR (`ship.mjs create`) are the two permitted GitLab writes — perform them. The push is required; if the environment blocks it, tell the user and retry rather than skipping.
 - **Never merge**, never write any other GitLab endpoint, never touch a protected branch except as an MR **target**.
 - All config (targets, reviewers, assignee, label, merge options) comes from `ship.*` in config — never hardcode.
+
+## Common Mistakes
+
+| Mistake | Why it breaks | Instead |
+| --- | --- | --- |
+| Shipping a protected branch | It can't be safely force-updated as a feature branch | Abort — verify every branch is `feature/v3/…` first |
+| Continuing after a sync conflict (customer mode) | Silent resolution can drop or duplicate changes | Stop, tell the user to resolve manually |
+| Inventing or hardcoding the MR title | `ship.mjs` already derives it from mode + branch | Never pass or invent one |
+| Merging the MR | That stays a human action | This skill only pushes and opens the MR — never merges |
 
 ## Related files
 

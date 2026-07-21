@@ -1,11 +1,15 @@
 ---
 name: unioss-generate-migration
-description: 'Use when the user asks to generate migration files for UNIOSS project.'
+description: Use when the user asks to generate migration files for the UNIOSS project.
 ---
 
 # CI3 Migration Generator For UNIOSS Project
 
-You are working in a CodeIgniter 3 repository with timestamp-based migrations.
+## Overview
+
+You are working in a CodeIgniter 3 repository with timestamp-based migrations. **Core principle:** keep diffs minimal — generate only the target migration set, touch nothing unrelated.
+
+**Track progress:** create a todo per Workflow step below and check each off as you complete it.
 
 ## Input
 

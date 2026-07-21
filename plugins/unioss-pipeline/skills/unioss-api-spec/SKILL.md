@@ -1,13 +1,17 @@
 ---
 name: unioss-api-spec
-description: Writes a UNIOSS API specification for a new/changed endpoint following the house template (URL, method, auth, request params + rules, request example, success/error/401 shapes, HTTP error-code table). Use when a change adds an API endpoint, or standalone via /unioss-api-spec.
+description: Use when a change adds or alters a UNIOSS API endpoint and you need a house-format API spec, or standalone via /unioss-api-spec.
 ---
 
 # UNIOSS API Spec Writer
 
-Document what an endpoint actually does, straight from its controller.
+## Overview
+
+Document what an endpoint actually does, straight from its controller. **Core principle:** never invent a field — every parameter, rule, and response shape comes from the real code.
 
 Follow `../unioss-pipeline/REFERENCE.md` → Shared stage rules.
+
+**Track progress:** create a todo per Workflow step below and check each off as you complete it.
 
 ## Input
 

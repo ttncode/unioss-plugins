@@ -1,13 +1,17 @@
 ---
 name: unioss-gitlab-issue-context
-description: Fetch or re-fetch a GitLab ticket's latest data. Writes RAW_TICKET_DATA.json and TICKET_SUMMARY.md to .walkthrough/.pipeline/<PREFIX>#[IID]/. Use standalone to refresh context mid-session, or as the ticket-fetch step of unioss-investigate.
+description: Use when you need to fetch or refresh a GitLab ticket's data (writes RAW_TICKET_DATA.json + TICKET_SUMMARY.md) — standalone or as the investigator's ticket-fetch step.
 ---
 
 # UNIOSS GitLab Issue Context (read-only)
 
-Pull a ticket's current state from GitLab, and say what changed since last time.
+## Overview
 
-Read-only: never edit project source. Writes only to `.walkthrough/.pipeline/<PREFIX>#[IID]/` (hidden tracking files).
+Pull a ticket's current state from GitLab, and say what changed since last time. **Core principle:** read-only — never edit project source, only refresh the cached ticket data.
+
+Writes only to `.walkthrough/.pipeline/<PREFIX>#[IID]/` (hidden tracking files).
+
+**Track progress:** create a todo per Workflow step below and check each off as you complete it.
 
 ## Input
 

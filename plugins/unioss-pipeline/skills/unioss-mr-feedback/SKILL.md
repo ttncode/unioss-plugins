@@ -1,13 +1,17 @@
 ---
 name: unioss-mr-feedback
-description: Analyze open review comments on a GitLab merge request, verify each against the current code, and — on approval — apply the fixes, run the full test suite, commit, and push. Use as /unioss-mr-feedback <mr-url> [mr-url...] when a ticket's merge request(s) received feedback from another developer.
+description: Use when a ticket's GitLab merge request(s) received review comments — verify each against current code, then on approval apply fixes, run the suite, commit, and push. Run as /unioss-mr-feedback <mr-url>.
 ---
 
 # UNIOSS MR Feedback (main thread — writer)
 
+## Overview
+
 Turn another developer's merge-request review comments into verified, tested, pushed fixes. Standalone: no ticket, no round, no gates, no `.walkthrough/` artifacts.
 
-Follow `../unioss-pipeline/REFERENCE.md` — its Branches, Protected-branch, Submodule, and Commit-message rules are binding. This skill is the second (and only other) place GitLab writes are permitted — see REFERENCE → GitLab: it may `git push` a feature branch; it must never create or merge an MR.
+Follow `../unioss-pipeline/REFERENCE.md` — its Branches, Protected-branch, Submodule, and Commit-message rules are binding. This skill is the second (and only other) place GitLab writes are permitted — see REFERENCE → GitLab: it may `git push` a feature branch; it must never create or merge an MR. **Core principle:** verify every comment against the code as it stands now — a reviewer's suggestion is not gospel just because someone else wrote it.
+
+**Track progress:** create a todo per Workflow step below and check each off as you complete it.
 
 ## Input
 
@@ -76,6 +80,31 @@ git push -u origin <branch>
 ```
 
 No MR is created, nothing is merged — that stays `/unioss-ship`'s job.
+
+### Flow diagram
+
+```dot
+digraph unioss_mr_feedback {
+  rankdir=TB;
+  node [shape=box];
+
+  Fetch -> "Resolve identity";
+  "Resolve identity" -> "Get on branch";
+  "Get on branch" -> "Analyze threads";
+  "Analyze threads" -> Classify;
+  Classify -> Skip [label="resolved / invalid / unclear"];
+  Classify -> Sweep [label="valid"];
+  Sweep -> "Summarize + confirm";
+  "Summarize + confirm" -> "Analyze threads" [label="correction"];
+  "Summarize + confirm" -> Apply [label="looks right"];
+  Skip -> "Nothing to apply" [label="all threads skipped"];
+  Apply -> "admin-page touched?";
+  "admin-page touched?" -> "Run PHPUnit" [label="yes"];
+  "admin-page touched?" -> "Commit + push" [label="no"];
+  "Run PHPUnit" -> "Commit + push" [label="pass"];
+  "Run PHPUnit" -> "Stop — show failure" [label="fail"];
+}
+```
 
 ## Multiple URLs
 

@@ -1,12 +1,16 @@
 ---
 name: codeigniter3-simplifier
-description: Simplifies and refines PHP/CodeIgniter 3 code for clarity, consistency, and maintainability while preserving all functionality. Focuses on recently modified code unless instructed otherwise.
+description: Use when refining recently-changed PHP/CodeIgniter 3 code for clarity and consistency without changing behavior.
 model: opus
 ---
 
 # CodeIgniter 3 Simplifier
 
-Make recently-changed CI3 code clearer without changing what it does. Prefer readable and explicit over clever and compact.
+## Overview
+
+Make recently-changed CI3 code clearer without changing what it does. Prefer readable and explicit over clever and compact. **Core principle:** preserve functionality — change only how the code reads, never what it does.
+
+**Track progress:** create a todo per Workflow step below and check each off as you complete it.
 
 ## Input
 
