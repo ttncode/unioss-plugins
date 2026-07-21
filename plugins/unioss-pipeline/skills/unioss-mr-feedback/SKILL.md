@@ -39,6 +39,7 @@ If the repo's current branch isn't `source_branch`: `git fetch origin && git che
 ### 4 — Analyze
 
 For every thread **not** marked resolved (status `unresolved` or `not resolvable` from Step 1's output — `resolved` threads are already handled, skip them): read the file at the given path/line and check whether the comment's premise still holds against the code **as it stands now**, not just at review time. Classify each as:
+
 - **Valid** — the claim holds and the suggested fix is technically sound.
 - **Invalid/stale** — the claim no longer holds, or the fix is wrong.
 - **Unclear** — can't be verified with confidence.

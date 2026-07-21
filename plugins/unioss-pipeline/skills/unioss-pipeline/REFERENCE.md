@@ -37,21 +37,21 @@ All per-machine values come from `node "${CLAUDE_PLUGIN_ROOT}/scripts/config.mjs
 
 A **module key** (`admin-page`, `front-end`, `common-helper`, `common-models`) is the one vocabulary: `source.modules` gives its path on disk, `gitlab.projects` gives its project id. Keys are ordered by how likely they are to need changing — per-machine first, project-wide last.
 
-| Key                                        | Default                                                  | Used for                                  |
-| ------------------------------------------ | -------------------------------------------------------- | ----------------------------------------- |
-| `source.root`                              | current workspace (cwd)                                  | host root that holds the module checkouts |
-| `source.modules.<key>`                     | `AdminPage`, `FrontEnd`, `common-helper`, `common-models` | **the** on-disk path per module           |
-| `docker.mysql` / `docker.php`              | `mysql-unioss3` / `php-unioss3`                          | container names                           |
-| `db.name` / `db.user` / `db.password`      | `_unioss` / `root` / `ProotW`                            | DB access                                 |
-| `ship.assignee`                            | `null` → auto (the `GITLAB_TOKEN` owner)                 | MR assignee (both modes); set a username to override |
-| `ship.label`                               | `UNIOSS 3`                                               | MR label if it exists on the project      |
-| `ship.staging.targetBranch` / `.reviewer`  | `v3-develop-tps` / `dat.pham`                            | internal-staging MR target + reviewer     |
-| `ship.customer.targetBranch` / `.reviewer` | `v3-develop` / `r.yosimura`                              | customer-staging MR target + reviewer     |
-| `gitlab.host`                              | `gitlab.unioss.jp`                                       | API + image URLs                          |
-| `gitlab.projects.<key>`                    | `32`, `31`, `18`, `19`                                   | GitLab project id per module              |
-| `gitlab.baseBranch`                        | `v3-master`                                              | base for feature branches                 |
-| `gitlab.protected`                         | `master, v3-master, develop, v3-develop, v3-develop-tps` | never-write list (enforced by a hook)     |
-| `artifactRoot`                             | `.walkthrough`                                           | output dir                                |
+| Key                                        | Default                                                   | Used for                                             |
+| ------------------------------------------ | --------------------------------------------------------- | ---------------------------------------------------- |
+| `source.root`                              | current workspace (cwd)                                   | host root that holds the module checkouts            |
+| `source.modules.<key>`                     | `AdminPage`, `FrontEnd`, `common-helper`, `common-models` | **the** on-disk path per module                      |
+| `docker.mysql` / `docker.php`              | `mysql-unioss3` / `php-unioss3`                           | container names                                      |
+| `db.name` / `db.user` / `db.password`      | `_unioss` / `root` / `ProotW`                             | DB access                                            |
+| `ship.assignee`                            | `null` → auto (the `GITLAB_TOKEN` owner)                  | MR assignee (both modes); set a username to override |
+| `ship.label`                               | `UNIOSS 3`                                                | MR label if it exists on the project                 |
+| `ship.staging.targetBranch` / `.reviewer`  | `v3-develop-tps` / `dat.pham`                             | internal-staging MR target + reviewer                |
+| `ship.customer.targetBranch` / `.reviewer` | `v3-develop` / `r.yosimura`                               | customer-staging MR target + reviewer                |
+| `gitlab.host`                              | `gitlab.unioss.jp`                                        | API + image URLs                                     |
+| `gitlab.projects.<key>`                    | `32`, `31`, `18`, `19`                                    | GitLab project id per module                         |
+| `gitlab.baseBranch`                        | `v3-master`                                               | base for feature branches                            |
+| `gitlab.protected`                         | `master, v3-master, develop, v3-develop, v3-develop-tps`  | never-write list (enforced by a hook)                |
+| `artifactRoot`                             | `.walkthrough`                                            | output dir                                           |
 
 - **Secrets:** `GITLAB_TOKEN` is env-only (required). `db.password` resolves env `DB_PASSWORD` → file → default.
 - `testing_DB` is a fixed codebase constant — not configurable.
@@ -97,7 +97,7 @@ Hidden tracking, under `.walkthrough/.pipeline/<PREFIX>#[IID]/`: `RAW_TICKET_DAT
 
       📄 `/home/me/unioss/.walkthrough/AP#1583/round-1/AP#1583_REVIEW.md`
 
-- **Use the ABSOLUTE path** — prefix the workspace-relative path with the workspace root (the dir that holds `.walkthrough/`; run `pwd` once if unsure). An absolute path opens directly in the IDE. A *relative* path the IDE cannot resolve falls back to fuzzy file-search, which strips the `#` in `AP#1583` (→ `AP:1583`) and fails to open — that is the click-to-open bug.
+- **Use the ABSOLUTE path** — prefix the workspace-relative path with the workspace root (the dir that holds `.walkthrough/`; run `pwd` once if unsure). An absolute path opens directly in the IDE. A _relative_ path the IDE cannot resolve falls back to fuzzy file-search, which strips the `#` in `AP#1583` (→ `AP:1583`) and fails to open — that is the click-to-open bug.
 - **One file per line, each on its own line, wrapped in backticks.** Never wrap the path in a `file://` URL, a markdown link, or a table cell, and never percent-encode — those break the terminal's linkifier. The `#` stays literal; the absolute path resolves it correctly.
 
 ## GitLab (read-only except ship + mr-feedback)
@@ -140,7 +140,7 @@ grep -rn "some_symbol" "$US_SRC_ADMIN_PAGE/application"
 
 ## Branches, base & protected
 
-- **Base branch:** always cut feature branches from `gitlab.baseBranch` (`v3-master`). Fetch first: `git fetch origin && git checkout v3-master && git pull` — checkout/fetch/pull on the base branch are fine; it is *writes* that are forbidden.
+- **Base branch:** always cut feature branches from `gitlab.baseBranch` (`v3-master`). Fetch first: `git fetch origin && git checkout v3-master && git pull` — checkout/fetch/pull on the base branch are fine; it is _writes_ that are forbidden.
 - **⛔ Protected — NEVER commit, push, force-push, rebase, reset, revert, cherry-pick, or merge into (local or remote):** every branch in `gitlab.protected` — `master`, `v3-master`, `develop`, `v3-develop`, `v3-develop-tps`. Before any write, verify the current branch is NOT one of these — abort if it is.
 - This is **enforced**, not merely documented: the `guard-protected-branch` PreToolUse hook blocks any such `git` command and exits non-zero. Resolve the list with `US_PROTECTED` (from `config.mjs env`); never hardcode it. Protected branches are legal only as an MR **target**.
 - **Naming.** The _origin repo_ is the repo the ticket URL belongs to (`AdminPage` or `FrontEnd`).
@@ -172,8 +172,8 @@ grep -rn "some_symbol" "$US_SRC_ADMIN_PAGE/application"
 
 ## Submodules (common-models / common-helper)
 
-| Submodule     | Canonical source (EDIT HERE) | Consumed in apps (do NOT edit here)                                          |
-| ------------- | ---------------------------- | ---------------------------------------------------------------------------- |
+| Submodule     | Canonical source (EDIT HERE) | Consumed in apps (do NOT edit here)                                           |
+| ------------- | ---------------------------- | ----------------------------------------------------------------------------- |
 | common-models | `submodules/common-models/`  | `AdminPage/application/models/common`, `FrontEnd/application/models/common`   |
 | common-helper | `submodules/common-helper/`  | `AdminPage/application/helpers/common`, `FrontEnd/application/helpers/common` |
 

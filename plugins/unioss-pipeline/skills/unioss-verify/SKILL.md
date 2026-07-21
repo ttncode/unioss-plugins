@@ -43,7 +43,7 @@ Prove each acceptance criterion against the real DB and the real screen. Functio
    - Capture a screenshot at **each** moment per UI flow (mandatory): (1) after navigation, (2) after the ticket action, (3) after asserting the result → `round-<N>/screenshots/<step-name>.png`.
 
 4. **Gate on console + network** (per flow, right after the action — before moving on).
-   - **Console** (`browser_console_messages`): an `error` triggered by the action **fails** that criterion even if the screen looks right; `warning`s are reported, never silently dropped. An error clearly present on load *before* the action is noted as pre-existing, not counted against the criterion.
+   - **Console** (`browser_console_messages`): an `error` triggered by the action **fails** that criterion even if the screen looks right; `warning`s are reported, never silently dropped. An error clearly present on load _before_ the action is noted as pre-existing, not counted against the criterion.
    - **Network** (`browser_network_requests`): the request(s) backing the action must fire and return the expected status. An unexpected `4xx`/`5xx`, or a request that never fired, **fails** the criterion. Record method · URL · status. A failed status hidden behind a normal-looking screen is exactly what this catches.
    - A criterion is a **pass** only when the on-screen result matches **and** the console is error-free **and** the network status is expected.
 
@@ -65,6 +65,7 @@ Prove each acceptance criterion against the real DB and the real screen. Functio
 
   ```markdown
   ## Manual Testing (run these yourself)
+
   - [ ] <case> — <screen/URL> → <action> → expect <result> (DB: <check>)
   ```
 

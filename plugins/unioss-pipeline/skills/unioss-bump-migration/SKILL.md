@@ -93,11 +93,11 @@ Then summarize: the `NEW_TS` used, the files renamed, and a config diff snippet.
 
 ## Common Mistakes
 
-| Mistake | Why it breaks | Instead |
-| --- | --- | --- |
-| Using the directory's absolute maximum index | Some folders hold outlier files with very high indices (e.g. `1471`) left by much older timestamps | Sort by timestamp first, then index off the current active sequence |
-| Leaving a blank line between `migration_version` lines | Breaks the expected config format | No empty line between migration versions |
-| Leaving `MIGRATION_VERSION_DOWN` stale | Test would revert to the wrong version | Set it to the latest timestamp remaining in the migration directory |
+| Mistake                                                | Why it breaks                                                                                      | Instead                                                             |
+| ------------------------------------------------------ | -------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------- |
+| Using the directory's absolute maximum index           | Some folders hold outlier files with very high indices (e.g. `1471`) left by much older timestamps | Sort by timestamp first, then index off the current active sequence |
+| Leaving a blank line between `migration_version` lines | Breaks the expected config format                                                                  | No empty line between migration versions                            |
+| Leaving `MIGRATION_VERSION_DOWN` stale                 | Test would revert to the wrong version                                                             | Set it to the latest timestamp remaining in the migration directory |
 
 ## Related files
 

@@ -95,12 +95,12 @@ A plain "proceed"/"yes"/"go ahead" (no skip mentioned) runs every listed step as
 
 ## Common Mistakes
 
-| Mistake | Why it breaks | Instead |
-| --- | --- | --- |
-| Shipping a protected branch | It can't be safely force-updated as a feature branch | Abort — verify every branch is `feature/v3/…` first |
-| Continuing after a sync conflict (customer mode) | Silent resolution can drop or duplicate changes | Stop, tell the user to resolve manually |
-| Inventing or hardcoding the MR title | `ship.mjs` already derives it from mode + branch | Never pass or invent one |
-| Merging the MR | That stays a human action | This skill only pushes and opens the MR — never merges |
+| Mistake                                          | Why it breaks                                        | Instead                                                |
+| ------------------------------------------------ | ---------------------------------------------------- | ------------------------------------------------------ |
+| Shipping a protected branch                      | It can't be safely force-updated as a feature branch | Abort — verify every branch is `feature/v3/…` first    |
+| Continuing after a sync conflict (customer mode) | Silent resolution can drop or duplicate changes      | Stop, tell the user to resolve manually                |
+| Inventing or hardcoding the MR title             | `ship.mjs` already derives it from mode + branch     | Never pass or invent one                               |
+| Merging the MR                                   | That stays a human action                            | This skill only pushes and opens the MR — never merges |
 
 ## Related files
 

@@ -45,12 +45,12 @@ Return: the backticked absolute path (workspace root + `.walkthrough/<PREFIX>#[I
 
 ## Common Mistakes
 
-| Mistake | Why it breaks | Instead |
-| --- | --- | --- |
-| Stopping at the file the ticket named | Misses ripple effects on other callers | Grep every changed method's callers across the whole app |
+| Mistake                                              | Why it breaks                                                                                                      | Instead                                                              |
+| ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------- |
+| Stopping at the file the ticket named                | Misses ripple effects on other callers                                                                             | Grep every changed method's callers across the whole app             |
 | Missing the cross-app impact of a common-code change | `common-models`/`common-helper` consumers live in **both** AdminPage and FrontEnd — the single most common mistake | Map affected features/URLs in both apps, even if only one was tested |
-| Naming a symbol in a Content bullet | Content is business/functional language for a PM/QC reader, not a diff | Name a symbol only when the ticket itself IS a refactor of it |
-| Excluding a borderline feature/URL from Scope | This list is QA's retest checklist | Err toward including, not excluding |
+| Naming a symbol in a Content bullet                  | Content is business/functional language for a PM/QC reader, not a diff                                             | Name a symbol only when the ticket itself IS a refactor of it        |
+| Excluding a borderline feature/URL from Scope        | This list is QA's retest checklist                                                                                 | Err toward including, not excluding                                  |
 
 ## Related files
 
