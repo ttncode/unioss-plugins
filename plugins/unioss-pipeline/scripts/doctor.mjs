@@ -45,8 +45,8 @@ const checks = [
   { name: 'node', ok: has('node'), fix: installCmd('node'), light: true },
   { name: 'jq', ok: has('jq'), fix: installCmd('jq'), light: true },
   { name: 'docker', ok: dockerOk, fix: 'Install Docker: https://docs.docker.com/get-docker/' },
-  { name: `container ${mysqlName}`, ok: new RegExp(`(^|\\n)${mysqlName}(\\r?\\n|$)`).test(runningNames), fix: `Container \`${mysqlName}\` is not running. Start the stack: docker compose up -d (from the unioss3 project root)` },
-  { name: `container ${phpName}`, ok: new RegExp(`(^|\\n)${phpName}(\\r?\\n|$)`).test(runningNames), fix: `Container \`${phpName}\` is not running. Start the stack: docker compose up -d (from the unioss3 project root)` },
+  { name: `container ${mysqlName}`, ok: new RegExp(`(^|\\n)${mysqlName}(\\r?\\n|$)`).test(runningNames), fix: `Container \`${mysqlName}\` is not running. Start the stack: docker compose up -d (from your UNIOSS project root)` },
+  { name: `container ${phpName}`, ok: new RegExp(`(^|\\n)${phpName}(\\r?\\n|$)`).test(runningNames), fix: `Container \`${phpName}\` is not running. Start the stack: docker compose up -d (from your UNIOSS project root)` },
   { name: 'GITLAB_TOKEN', ok: !!process.env.GITLAB_TOKEN, fix: (isWin ? 'setx GITLAB_TOKEN <your-token>' : 'export GITLAB_TOKEN=<your-token>  (add to your shell profile)') + '  — needs `api` scope for /unioss-ship MR creation' },
   { name: 'Chrome (tester browser)', ok: chromeOk, fix: 'Playwright Chrome not found — the tester cannot verify UI. Run in a real terminal (needs a TTY for sudo):  ! npx playwright install --with-deps chrome' },
 ];

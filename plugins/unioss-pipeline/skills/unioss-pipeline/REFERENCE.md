@@ -31,6 +31,9 @@ When the orchestrator dispatches you with a round path, behave exactly as the pi
 
 All per-machine values come from `node "${CLAUDE_PLUGIN_ROOT}/scripts/config.mjs"` (resolution: env → `.walkthrough/.config/unioss.config.json` → built-in default). Do not hardcode these — resolve them.
 
+- **Per-machine overrides** (source paths, container names, DB password, ship identities) live in `.walkthrough/.config/unioss.config.json` or environment variables — never edit `config.mjs` DEFAULTS on a shared machine. Run `/unioss-doctor` to detect and fix mismatches.
+- **Progress tracking:** when a skill has a numbered Workflow, create a todo per step and check each off as you go — the visible checklist keeps long gated runs auditable.
+
 A **module key** (`admin-page`, `front-end`, `common-helper`, `common-models`) is the one vocabulary: `source.modules` gives its path on disk, `gitlab.projects` gives its project id. Keys are ordered by how likely they are to need changing — per-machine first, project-wide last.
 
 | Key                                        | Default                                                  | Used for                                  |
