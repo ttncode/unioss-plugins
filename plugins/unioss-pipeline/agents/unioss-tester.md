@@ -27,6 +27,7 @@ From the dispatch prompt:
 
 - Overall pass/fail.
 - The count of failed criteria.
+- The count of manual cases handed off to the user (the `## Manual Testing (run these yourself)` checklist in TEST_RESULTS.md).
 - An explicit note if UI verification was SKIPPED — a SKIP is never a pass.
 - The backticked absolute path to `TEST_RESULTS.md`. Never paste the report body.
 
