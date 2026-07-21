@@ -145,32 +145,50 @@ _Auto-harvested from investigations. Facts carry a source._
 
 **Ask vs. refresh:** `ask` answers questions from stored knowledge (crawls only on an opted-in refresh). `refresh` feeds agents (mutates curated KB, current window only). A historical query must never overwrite the live GLOBAL/sentiment, which describe *now*.
 
-**Design rule — every multi-option prompt has a recommended default.** All `AskUserQuestion` prompts in this plugin (period picker, staleness gate, rule approval, staleness nudge) list the recommended option first and label it `← recommended`. No prompt leaves the user guessing the safe choice.
+**Design rule — fixed multi-option prompt format.** Every multi-option prompt in this plugin uses one plain-text shape (same style as the pipeline gates), rendered inline — not the `AskUserQuestion` tool — so the user just types a number:
+
+```
+<context sentence>. What would you like to do?
+
+1. <recommended option>   ← recommended
+2. <next option>
+3. <next option>
+
+Which option?
+```
+
+Rules: a header sentence ending in a question; a blank line; numbered options with the **recommended option first**, labelled `← recommended`; a blank line; the closer `Which option?`. Exactly one option carries `← recommended`. Applies to the period picker, staleness gate, rule approval, and the SessionStart nudge follow-up.
 
 ### `/unioss-knowledge-ask` flow
 
 `ask` answers from the **most-recently-stored knowledge** first — cheap, no crawl — and only re-crawls when the stored data is stale and the user opts to refresh.
 
 1. **Parse** the question for (a) intent — `focus` | `sentiment` | `tickets` | general — and (b) period.
-2. **Period clarification.** If the period is missing or ambiguous, present a multi-option picker (recommended option first):
+2. **Period clarification.** If the period is missing or ambiguous, present the fixed-format picker:
 
    ```
-   Which period?
+   No period given — which period should I use?
+
    1. Current month (07/2026)   ← recommended
    2. Previous month (06/2026)
    3. This week
-   4. A specific month/year   (e.g. 2026-03)
-   5. A custom date range     (e.g. 2026-06-01..2026-06-30)
+   4. A specific month/year (e.g. 2026-03)
+   5. A custom date range (e.g. 2026-06-01..2026-06-30)
+
+   Which option?
    ```
 
-   Options 4–5 accept free-text entry (the `AskUserQuestion` "Other" branch).
+   Options 4–5 accept a typed value after selection.
 3. **Load** the stored knowledge backing that intent/period + its last-refresh time from `index.json`.
 4. **Staleness gate.** If stored data exists but its backing layer is older than the staleness threshold (default 7 days) **and** the period overlaps the present (so new info is possible), prompt before answering:
 
    ```
-   Stored knowledge for this is 9 days old.
-   1. Refresh now (recommended) — re-crawl AP+FE for this period, then answer
-   2. Use stored as-is — faster, may miss the last 9 days
+   Stored knowledge for this is 9 days old. What would you like to do?
+
+   1. Refresh now — re-crawl AP+FE for this period, then answer   ← recommended
+   2. Use stored as-is (faster, may miss the last 9 days)
+
+   Which option?
    ```
 
    - **Refresh** re-crawls the queried period. If the period = current, it also updates the curated current-KB (a normal `refresh`); if historical, it refreshes only that period's report data (read-only — never overwrites the live "now" KB).
