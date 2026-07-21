@@ -16,6 +16,7 @@ Every stage skill (investigator, planner, coder, reviewer, tester, ship, api-spe
 - **Resolve config before shell/DB/source access.** Run `eval "$(node "${CLAUDE_PLUGIN_ROOT}/scripts/config.mjs" env)"` first; never hardcode hosts, containers, paths, or the protected-branch list.
 - **Artifact paths.** Surface every artifact as an absolute path in backticks, on its own line, the moment it is written (see Artifact paths) — never a `file://` URL or a relative path.
 - **Return summaries, not bodies.** Return counts, verdicts, and links; never paste full artifact contents back to the orchestrator.
+- **Asking the user:** when a stage must ask a question, present it as superpowers-style **multiple-choice** options (2–4 concrete choices, a recommended one first) rather than open-ended prose — one question at a time.
 
 ### Standalone use
 

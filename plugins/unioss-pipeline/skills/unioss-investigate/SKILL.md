@@ -52,7 +52,7 @@ Save `round-<N>/<PREFIX>#[IID]_INVESTIGATION.md` (English; keep technical terms 
 3. **Code map** — the `file:line` table from Step 2.
 4. **DB facts** — from Step 3.
 5. **## Clarity Verdict** — exactly one of `CLEAR` / `NEEDS_CLARIFICATION`.
-6. **## Open Questions** — numbered, concrete (missing specs, ambiguous behavior, conflicting related-issue requirements, undefined edge cases). Empty only if verdict is `CLEAR`.
+6. **## Open Questions** — numbered, concrete (missing specs, ambiguous behavior, conflicting related-issue requirements, undefined edge cases). Empty only if verdict is `CLEAR`. Phrase each clarification as a multiple-choice question (see REFERENCE → Asking the user).
 
 ### Step 5 — Write `REPORT.md` (report mode only)
 

@@ -15,7 +15,7 @@ Follow `../unioss-pipeline/REFERENCE.md` — its Branches, Protected-branch, Sub
 
 ## Input
 
-- One or more GitLab merge-request URLs (`https://<host>/<namespace>/<repo>/-/merge_requests/<iid>`), extracted from the user's message. **Zero URLs found → ask the user for at least one before doing anything else.**
+- One or more GitLab merge-request URLs (`https://<host>/<namespace>/<repo>/-/merge_requests/<iid>`), extracted from the user's message. **Zero URLs found → ask the user for at least one before doing anything else.** Offer the ask as a short multiple-choice prompt where practical.
 
 ## Workflow (per MR URL)
 
