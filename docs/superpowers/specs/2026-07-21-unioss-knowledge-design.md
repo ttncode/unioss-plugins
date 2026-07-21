@@ -150,14 +150,14 @@ _Auto-harvested from investigations. Facts carry a source._
 ```
 <context sentence>. What would you like to do?
 
-1. <recommended option>   ← recommended
+1. <recommended option> (recommended)
 2. <next option>
 3. <next option>
 
 Which option?
 ```
 
-Rules: a header sentence ending in a question; a blank line; numbered options with the **recommended option first**, labelled `← recommended`; a blank line; the closer `Which option?`. Exactly one option carries `← recommended`. Applies to the period picker, staleness gate, rule approval, and the SessionStart nudge follow-up.
+Rules: a header sentence ending in a question; a blank line; numbered options; a blank line; the closer `Which option?`. When a safe default exists, put it first and suffix it `(recommended)` — exactly one option. A **neutral selector** where the user is only choosing scope (e.g. the period picker) marks nothing. Applies to the staleness gate, rule approval, and the SessionStart nudge follow-up.
 
 ### `/unioss-knowledge-ask` flow
 
@@ -169,24 +169,24 @@ Rules: a header sentence ending in a question; a blank line; numbered options wi
    ```
    No period given — which period should I use?
 
-   1. Current month (07/2026)   ← recommended
-   2. Previous month (06/2026)
-   3. This week
-   4. A specific month/year (e.g. 2026-03)
-   5. A custom date range (e.g. 2026-06-01..2026-06-30)
+   1. This week
+   2. This month
+   3. This year
+   4. A specific month (e.g. 2026-03)
+   5. A custom date range (e.g. 2026-06-01 to 2026-06-30)
 
    Which option?
    ```
 
-   Options 4–5 accept a typed value after selection.
+   Options 4–5 accept a typed value after selection. (Neutral selector — no default; the user is choosing scope, so no option is marked recommended.)
 3. **Load** the stored knowledge backing that intent/period + its last-refresh time from `index.json`.
 4. **Staleness gate.** If stored data exists but its backing layer is older than the staleness threshold (default 7 days) **and** the period overlaps the present (so new info is possible), prompt before answering:
 
    ```
-   Stored knowledge for this is 9 days old. What would you like to do?
+   The knowledge was saved 9 days ago. What would you like to do?
 
-   1. Refresh now — re-crawl AP+FE for this period, then answer   ← recommended
-   2. Use stored as-is (faster, may miss the last 9 days)
+   1. Refresh now — then answer (recommended)
+   2. Use stored as-is (faster, may miss the knowledge)
 
    Which option?
    ```
@@ -259,7 +259,7 @@ Node scripts get `*.test.mjs` (repo convention):
 - `ask` intent + period parsing (incl. `YYYY-MM`, range, and missing-period → picker path)
 - `ask` staleness gate: fires only when stored data exists, is past threshold, and period overlaps present; skipped when no stored data
 - `ask` "Use as-is" writes nothing to `GLOBAL.md` / `rules/` / `sentiment/current.md`; "Refresh" on a historical period does not touch the live "now" KB
-- every plugin multi-option prompt includes exactly one `← recommended` option
+- decision prompts carry exactly one `(recommended)` option; the neutral period picker carries none
 
 ## Failure modes (degrade safe)
 
