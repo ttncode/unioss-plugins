@@ -28,6 +28,9 @@ Every task's requirements implicitly include this section.
   - **Commands** — keep concise imperative slash-menu hints (NOT "Use when"); `argument-hint` preserved.
 - **Body skeleton for every skill:** `# Title` → `## Overview` (1–2 lines + a bold `**Core principle:**` line) → existing numbered `## Workflow` kept intact → `## Common Mistakes` table ONLY where it adds value → `## Related files`.
 - **`dot` flowcharts** only where a real branch/decision exists: `unioss-pipeline`, `unioss-mr-feedback`. Nowhere else.
+- **Progress-tracking directive:** every procedural skill (one with a numbered `## Workflow`) gets a one-line directive in its Overview telling the agent to create a todo per Workflow step and check off as it goes — the superpowers "todo per checklist item" behavior. Exact line to insert:
+  `**Track progress:** create a todo per Workflow step below and check each off as you complete it.`
+  The `unioss-brainstorming` / `unioss-writing-plans` forks already carry their own task-per-item wording — leave theirs as-is.
 - **Commit after every task.** Branch: `feat/unioss-superpowers-convention-pass` (already checked out).
 
 ---
@@ -181,6 +184,7 @@ In `skills/unioss-pipeline/REFERENCE.md`, in the Configuration section, add one 
 
 ```markdown
 - **Per-machine overrides** (source paths, container names, DB password, ship identities) live in `.walkthrough/.config/unioss.config.json` or environment variables — never edit `config.mjs` DEFAULTS on a shared machine. Run `/unioss-doctor` to detect and fix mismatches.
+- **Progress tracking:** when a skill has a numbered Workflow, create a todo per step and check each off as you go — the visible checklist keeps long gated runs auditable.
 ```
 
 - [ ] **Step 5: Verify no machine-specific phrasing remains in docs**
@@ -267,6 +271,14 @@ For any of the five missing a `## Overview` with a bold `**Core principle:**` li
 
 Confirm/normalize a `## Related files` section at the end listing the REFERENCE and any sibling skills/scripts it names.
 
+- [ ] **Step 3b: Insert the progress-tracking directive**
+
+At the end of each skill's `## Overview`, add the verbatim line:
+
+```markdown
+**Track progress:** create a todo per Workflow step below and check each off as you complete it.
+```
+
 - [ ] **Step 4: Trim `unioss-review` per the trim rule**
 
 In `skills/unioss-review/SKILL.md` (418 lines): find passages that state the same rule twice, near-identical checklist bullets, or over-long explanations, and dedupe/combine/shorten them. Before editing, list the distinct rules present; after editing, confirm each still appears exactly once. Do NOT remove any distinct check (security, CSRF, XSS, escaping, authorization, prepared statements, clean-code, plan-adherence, severity scale).
@@ -325,7 +337,7 @@ codeigniter3-simplifier:    Use when refining recently-changed PHP/CodeIgniter 3
 
 - [ ] **Step 2: Apply the body skeleton to each**
 
-Ensure each has `## Overview` + `**Core principle:**`, the intact `## Workflow`, and `## Related files`. Add `## Common Mistakes` only where the skill already implies failure modes worth tabulating (e.g. mr-feedback, ship). Do not fabricate.
+Ensure each has `## Overview` + `**Core principle:**`, the intact `## Workflow`, and `## Related files`. Add `## Common Mistakes` only where the skill already implies failure modes worth tabulating (e.g. mr-feedback, ship). Do not fabricate. Append the progress-tracking directive line (verbatim, from Global Constraints) to the end of each skill's `## Overview`. Skip the two forks (they keep their own task-per-item wording).
 
 - [ ] **Step 3: Add `dot` flowcharts to the two branching skills**
 
@@ -427,6 +439,19 @@ echo "sweep done"
 ```
 Expected: no matches before `sweep done`.
 
+- [ ] **Step 3b: Progress-tracking directive present in every procedural skill**
+
+```bash
+cd plugins/unioss-pipeline
+for f in skills/*/SKILL.md; do
+  grep -q "^## Workflow" "$f" || continue
+  case "$f" in *unioss-brainstorming*|*unioss-writing-plans*) continue;; esac
+  grep -q "\*\*Track progress:\*\*" "$f" || echo "MISSING directive: $f"
+done
+echo "directive audit done"
+```
+Expected: only `directive audit done` (every Workflow skill except the two forks carries the line).
+
 - [ ] **Step 4: Confirm no logic files changed beyond doctor strings**
 
 Run: `git diff main --stat -- plugins/unioss-pipeline/scripts plugins/unioss-pipeline/hooks`
@@ -453,6 +478,7 @@ Invoke `superpowers:finishing-a-development-branch` to present merge/PR options.
 
 **Spec coverage:**
 - Item 1 (house-style) → Tasks 5, 6, 7 (+ Global Constraints skeleton).
+- Progress-tracking checklist behavior (superpowers "todo per item") → Global Constraints directive + Tasks 3/5/6 insertion + Task 8 audit.
 - Item 2 (vendor receiving-code-review) → Task 1.
 - Item 3 (de-machine-ify wording, no config/test change) → Task 3.
 - Item 4 (refresh forks) → Task 4.
