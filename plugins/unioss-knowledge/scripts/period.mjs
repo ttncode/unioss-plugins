@@ -3,13 +3,13 @@ const pad2 = (n) => String(n).padStart(2, '0');
 
 function startOfWeek(now) {
   const d = new Date(now);
-  const day = (d.getDay() + 6) % 7; // Monday = 0
-  d.setHours(0, 0, 0, 0);
-  d.setDate(d.getDate() - day);
+  const day = (d.getUTCDay() + 6) % 7; // Monday = 0
+  d.setUTCHours(0, 0, 0, 0);
+  d.setUTCDate(d.getUTCDate() - day);
   return d;
 }
 function isoWeek(now) {
-  const d = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()));
+  const d = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
   const day = (d.getUTCDay() + 6) % 7;
   d.setUTCDate(d.getUTCDate() - day + 3);
   const firstThursday = new Date(Date.UTC(d.getUTCFullYear(), 0, 4));
@@ -57,5 +57,5 @@ export function detectPeriod(question, now = new Date()) {
 
 export function periodOverlapsPresent(period, now = new Date()) {
   if (!period) return false;
-  return period.to >= now || (now >= period.from && now <= period.to);
+  return now >= period.from && now <= period.to;
 }

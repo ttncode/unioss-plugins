@@ -44,3 +44,14 @@ test('periodOverlapsPresent true for current month, false for past', () => {
   assert.equal(periodOverlapsPresent(parsePeriod('month', NOW), NOW), true);
   assert.equal(periodOverlapsPresent(parsePeriod('2026-03', NOW), NOW), false);
 });
+
+test('periodOverlapsPresent false for a future month', () => {
+  assert.equal(periodOverlapsPresent(parsePeriod('2026-12', NOW), NOW), false);
+});
+
+test('week period.from is timezone-independent', () => {
+  const a = parsePeriod('week', NOW).from.toISOString();
+  assert.equal(a, parsePeriod('week', NOW).from.toISOString());
+  // Monday-anchored, UTC: for NOW=2026-07-21T10:00:00Z (a Tuesday), week starts Mon 2026-07-20T00:00:00Z
+  assert.equal(a, '2026-07-20T00:00:00.000Z');
+});
