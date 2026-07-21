@@ -39,7 +39,7 @@ For every thread **not** marked resolved (status `unresolved` or `not resolvable
 - **Invalid/stale** — the claim no longer holds, or the fix is wrong.
 - **Unclear** — can't be verified with confidence.
 
-Apply the same rigor as `superpowers:receiving-code-review` — verify, don't rubber-stamp a reviewer's suggestion just because another developer left it.
+Invoke `unioss-pipeline:unioss-receiving-code-review` and apply it to every thread — verify against current code, don't rubber-stamp a reviewer's suggestion just because another developer left it.
 
 ### 5 — Sweep
 

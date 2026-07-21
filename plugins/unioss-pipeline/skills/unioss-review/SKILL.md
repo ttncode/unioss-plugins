@@ -415,4 +415,5 @@ See REFERENCE → Shared stage rules → Standalone use (e.g. `/unioss-review Re
 - `rules/clean-code-php.md`, `rules/clean-code-javascript.md` — the standards enforced here.
 - `agents/unioss-reviewer.md` — the subagent that runs this.
 - `skills/unioss-implement/SKILL.md` — applies the fixes at GATE 3; this skill never edits.
+- `skills/unioss-receiving-code-review/SKILL.md` — reception rigor for evaluating feedback (verify before implementing).
 - `skills/unioss-pipeline/REFERENCE.md` — shared stage rules.
