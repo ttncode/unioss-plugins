@@ -64,7 +64,7 @@ digraph process {
 
     "Read plan, note context and global constraints, create todos" [shape=box];
     "More tasks remain?" [shape=diamond];
-    "Dispatch final code reviewer subagent (../requesting-code-review/code-reviewer.md)" [shape=box];
+    "Dispatch final code reviewer subagent (../unioss-requesting-code-review/code-reviewer.md)" [shape=box];
     "Run /unioss-ship" [shape=box style=filled fillcolor=lightgreen];
 
     "Read plan, note context and global constraints, create todos" -> "Dispatch implementer subagent (./implementer-prompt.md)";
@@ -79,8 +79,8 @@ digraph process {
     "Task reviewer reports spec ✅ and quality approved?" -> "Mark task complete in todo list and progress ledger" [label="yes"];
     "Mark task complete in todo list and progress ledger" -> "More tasks remain?";
     "More tasks remain?" -> "Dispatch implementer subagent (./implementer-prompt.md)" [label="yes"];
-    "More tasks remain?" -> "Dispatch final code reviewer subagent (../requesting-code-review/code-reviewer.md)" [label="no"];
-    "Dispatch final code reviewer subagent (../requesting-code-review/code-reviewer.md)" -> "Run /unioss-ship";
+    "More tasks remain?" -> "Dispatch final code reviewer subagent (../unioss-requesting-code-review/code-reviewer.md)" [label="no"];
+    "Dispatch final code reviewer subagent (../unioss-requesting-code-review/code-reviewer.md)" -> "Run /unioss-ship";
 }
 ```
 
@@ -269,7 +269,7 @@ a ledger file, not only in todos.
 
 - [implementer-prompt.md](implementer-prompt.md) - Dispatch implementer subagent
 - [task-reviewer-prompt.md](task-reviewer-prompt.md) - Dispatch task reviewer subagent (spec compliance + code quality)
-- Final whole-branch review: use the requesting-code-review pattern's [code-reviewer.md](../requesting-code-review/code-reviewer.md)
+- Final whole-branch review: use the unioss-pipeline:unioss-requesting-code-review pattern's [code-reviewer.md](../unioss-requesting-code-review/code-reviewer.md)
 
 ## Example Workflow
 
@@ -410,7 +410,7 @@ Done!
 **Required workflow skills:**
 - **Isolated workspace** - Ensure one exists (git worktree created or verified) before dispatching the first task
 - **unioss-pipeline:unioss-writing-plans** - Creates the plan this skill executes
-- **Code review template** - The requesting-code-review pattern's template for the final whole-branch review
+- **unioss-pipeline:unioss-requesting-code-review** - Code review template for the final whole-branch review
 - **Run `/unioss-ship`** - Complete development after all tasks
 
 **Subagents should use:**
