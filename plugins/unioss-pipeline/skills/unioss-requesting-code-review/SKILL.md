@@ -5,8 +5,6 @@ description: Use when completing tasks, implementing major features, or before m
 
 # Requesting Code Review
 
-*Vendored from superpowers (6.1.1), adapted for the UNIOSS pipeline.*
-
 Dispatch a code reviewer subagent to catch issues before they cascade. The reviewer gets precisely crafted context for evaluation — never your session's history. This keeps the reviewer focused on the work product, not your thought process, and preserves your own context for continued work.
 
 **Core principle:** Review early, review often.

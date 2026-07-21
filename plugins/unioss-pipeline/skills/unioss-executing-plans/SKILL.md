@@ -5,8 +5,6 @@ description: Use when you have a written implementation plan to execute in a sep
 
 # Executing Plans
 
-*Vendored from superpowers (6.1.1), adapted for the UNIOSS pipeline.*
-
 ## Overview
 
 Load plan, review critically, execute all tasks, report when complete.

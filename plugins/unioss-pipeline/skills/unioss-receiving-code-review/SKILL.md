@@ -5,8 +5,6 @@ description: Use when receiving code review feedback, before implementing sugges
 
 # Code Review Reception
 
-*Vendored from superpowers `receiving-code-review` (6.1.1), adapted for UNIOSS GitLab.*
-
 ## Overview
 
 Code review requires technical evaluation, not emotional performance.
