@@ -9,6 +9,7 @@ test('renderWwwh includes prefix, title, and all four Ws', () => {
   const md = renderWwwh(issue());
   assert.match(md, /### AP#10 — Fix ledger/);
   assert.match(md, /\*\*What:\*\* Ledger totals wrong/);
+  assert.match(md, /\*\*Why:\*\*/);
   assert.match(md, /\*\*Who:\*\* Sato/);
   assert.match(md, /\*\*How:\*\* https:\/\/g/);
 });
@@ -22,4 +23,8 @@ test('renderDailyDigest one block per issue, count in header', () => {
 test('renderDailyDigest empty-safe', () => {
   const md = renderDailyDigest([], '2026-07-21');
   assert.match(md, /No new tickets/);
+});
+
+test('renderDailyDigest does not throw for valid issues', () => {
+  assert.doesNotThrow(() => renderDailyDigest([issue(), issue({ iid: 12 })], '2026-07-21'));
 });

@@ -25,7 +25,9 @@ export function renderWwwh(issue) {
 
 export function renderDailyDigest(issues, date) {
   const blocks = issues.map(renderWwwh);
-  if (blocks.length !== issues.length) throw new Error('WWWH count mismatch');
+  if (blocks.some((block) => !block || !block.trim())) {
+    throw new Error('WWWH renderer produced an empty block — a ticket would be dropped');
+  }
   const header = `# New UNIOSS 3 tickets — ${date}\n_${issues.length} ticket(s)_\n\n`;
   return header + (blocks.length ? blocks.join('\n') : '_No new tickets._\n');
 }
