@@ -27,7 +27,8 @@
 | Curation | Tiered — observational **facts auto-write**; prescriptive **rules gated** behind human approval. |
 | Trigger | Manual commands + SessionStart staleness nudge. No cron. |
 | Lesson sources | Customer signal (GitLab comments) + domain/codebase facts. |
-| Language | Both digests and KB in English. |
+| Language | Both digests and KB in English. Clear, concise, agent-optimized — no rambling prose. |
+| Ticket source | The dashboard label filter, not per-project crawl: `labels=UNIOSS 3 · state=opened · sort=created_date`, spanning all projects that carry the label. Label configurable (`gitlab.workLabel`, default `UNIOSS 3`). |
 
 ## Architecture
 
@@ -36,8 +37,8 @@ New plugin `plugins/unioss-knowledge/`, added to `.claude-plugin/marketplace.jso
 ```
                  ┌─────────────────────────────────────────┐
    GitLab  ──▶   │  CRAWL (shared)   crawl.mjs              │
-  AP + FE        │  window + project ids → issues + notes    │
-  comments       │  reuses token/host resolution + config    │
+  label          │  window + label filter → issues + notes   │
+  UNIOSS 3       │  reuses token/host resolution + config    │
                  └───────────────┬───────────────────────────┘
                                  │ raw JSON
            ┌─────────────────────┴──────────────────────┐
@@ -64,7 +65,7 @@ New plugin `plugins/unioss-knowledge/`, added to `.claude-plugin/marketplace.jso
              + staleness nudge                          rules/approved.md
 ```
 
-- **Crawl** = one shared `crawl.mjs`. Given a date window + the two project ids, pulls issues + notes across AP + FE. Reuses `fetch-ticket.js`'s token/host logic and pipeline config (project ids, gitlab host).
+- **Crawl** = one shared `crawl.mjs`. Given a date window, lists issues via the dashboard label filter (`GET /api/v4/issues?labels=<workLabel>&state=…&created_after=…`, paginated) across every project carrying the label, then pulls each issue's notes. Reuses `fetch-ticket.js`'s token/host logic and pipeline config. Reference (human view): `https://gitlab.unioss.jp/dashboard/issues?sort=created_date&state=opened&label_name[]=UNIOSS+3`.
 - **Digest renderer** and **KB distiller** both consume crawl output — no duplicated ingestion.
 - **Store** is progressive-disclosure (below).
 - **Injection** is layered: hook = tiny always-on `GLOBAL.md`; pipeline = deep ticket-scoped read.
@@ -137,7 +138,7 @@ _Auto-harvested from investigations. Facts carry a source._
 | Command | Does | Mutates KB? |
 |---|---|---|
 | `/unioss-knowledge-ticket <gitlab-url>` | Summarize one ticket (WWWH: What/Why/Who/How) from issue + notes. Reuses the pipeline fetcher. | no |
-| `/unioss-knowledge-today` | Summarize all tickets created today across AP + FE → WWWH, one block per ticket, none dropped → `digests/<date>-daily.md`. | facts only |
+| `/unioss-knowledge-today` | Summarize all `UNIOSS 3` tickets created today → WWWH, one block per ticket, none dropped → `digests/<date>-daily.md`. | facts only |
 | `/unioss-knowledge-ask "<question>" [period]` | **Free-form query.** Answers from the most-recently-stored knowledge; if that's stale, prompts to refresh first. Writes a dated report under `digests/`. See flow below. | only if user picks Refresh (current period) |
 | `/unioss-knowledge-refresh [daily\|weekly\|monthly]` | Crawl + distill the **current** window. `daily`=new-ticket WWWH; `weekly`=praise/complaints → `sentiment/current.md` (auto) + propose rules → `rules/staged.md` (gated); `monthly`=customer focus → `GLOBAL.md` + monthly digest. | yes |
 | `/unioss-knowledge-approve` | Show `rules/staged.md`; promote approved → `rules/approved.md`, fold top into `GLOBAL.md`. | yes (rules) |
@@ -158,6 +159,8 @@ Which option?
 ```
 
 Rules: a header sentence ending in a question; a blank line; numbered options; a blank line; the closer `Which option?`. When a safe default exists, put it first and suffix it `(recommended)` — exactly one option. A **neutral selector** where the user is only choosing scope (e.g. the period picker) marks nothing. Applies to the staleness gate, rule approval, and the SessionStart nudge follow-up.
+
+**Writing principle (all skill/command/hook text).** Clear, concise, agent-optimized. Imperative and scannable — short lines, lists over paragraphs, no rambling explanations or filler. Every sentence earns its tokens; the reader is an agent under a budget.
 
 ### `/unioss-knowledge-ask` flow
 
@@ -204,7 +207,7 @@ Example phrasings → resolution:
 
 ### `/unioss-knowledge-today` flow (human sees all new tickets)
 
-1. `crawl.mjs --created-after=<today 00:00 local> --projects=ap,fe` → issues + notes.
+1. `crawl.mjs --created-after=<today 00:00 local> --label="UNIOSS 3"` → issues + notes.
 2. Render a WWWH block per issue (What changed / Why / Who asked / How to approach).
 3. Assert count-in == count-out (every new ticket has a block).
 4. Write `digests/<date>-daily.md`; append raw signals to `observations.jsonl`; update `index.json`.
