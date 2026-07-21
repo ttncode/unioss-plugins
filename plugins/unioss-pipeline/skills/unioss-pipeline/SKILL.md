@@ -9,6 +9,14 @@ Drive a ticket from A to Z, stopping at every human gate.
 
 Read `REFERENCE.md` (this dir) first — its branch, protected-branch, submodule, and commit rules are binding. You run in the MAIN thread: dispatch read-only stages as subagents, run the coder yourself, own the gates.
 
+## Overview
+
+Drive a ticket from A to Z, stopping at every human gate. The pipeline requires explicit user approval at each decision point before proceeding.
+
+**Core principle:** it stops at human gates; never auto-merges.
+
+**Track progress:** create a todo per Workflow step below and check each off as you complete it.
+
 ## Input
 
 Three entry modes. All share the same gates, rounds, and stages; they differ only in what starts the run and which early steps are skipped.
