@@ -58,9 +58,12 @@ export function stalenessDays(index, layer, now = new Date()) {
 export function acquireLock(dir) {
   ensureDir(dir);
   const lock = join(dir, '.lock');
-  if (existsSync(lock)) return false;
-  writeFileSync(lock, String(process.pid));
-  return true;
+  try {
+    writeFileSync(lock, String(process.pid), { flag: 'wx' });
+    return true;
+  } catch {
+    return false;
+  }
 }
 export function releaseLock(dir) {
   const lock = join(dir, '.lock');
