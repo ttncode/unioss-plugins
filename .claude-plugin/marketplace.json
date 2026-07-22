@@ -8,6 +8,11 @@
       "name": "unioss-pipeline",
       "source": "./plugins/unioss-pipeline",
       "description": "UNIOSS A→Z ticket pipeline: investigator → planner → coder → reviewer → tester, gated, with PHPUnit + Playwright verification."
+    },
+    {
+      "name": "unioss-knowledge",
+      "source": "./plugins/unioss-knowledge",
+      "description": "UNIOSS knowledge base + digests: UNIOSS 3 ticket/comment intelligence and an agent knowledge base read before every ticket."
     }
   ]
 }

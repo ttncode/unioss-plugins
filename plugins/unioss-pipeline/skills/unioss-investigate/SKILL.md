@@ -19,8 +19,8 @@ Follow `../unioss-pipeline/REFERENCE.md` → Shared stage rules (read-only, roun
 
 The dispatch prompt states the mode. They run at different points in the flow — never do both in one dispatch.
 
-- **investigate** (default) — the GitLab ticket URL. Runs Steps 1–4, **before** GATE 0.
-- **report** — the path to the already-clarified `INVESTIGATION.md` (including its `## Clarifications` section, if any). Runs Step 5 only, **after** GATE 0, so the PM never receives a report built on unanswered questions. Re-read `INVESTIGATION.md` first; do not re-run Steps 1–4.
+- **investigate** (default) — the GitLab ticket URL. Runs Steps 1–5, **before** GATE 0.
+- **report** — the path to the already-clarified `INVESTIGATION.md` (including its `## Clarifications` section, if any). Runs Step 6 only, **after** GATE 0, so the PM never receives a report built on unanswered questions. Re-read `INVESTIGATION.md` first; do not re-run Steps 1–5.
 - Both — the round path.
 
 ## Workflow
@@ -35,7 +35,15 @@ The dispatch prompt states the mode. They run at different points in the flow �
 - From the summary, extract column names and UI label strings. Grep the matching repo (`$US_SRC_ADMIN_PAGE` or `$US_SRC_FRONT_END`).
 - Record each hit as `file:line — impact(HIGH/MEDIUM/LOW)`.
 
-### Step 3 — Production DB facts (investigate mode)
+### Step 3 — Knowledge base (if present) (investigate mode)
+
+When `.walkthrough/.knowledge/` exists:
+
+- **Read** `domain/<module>.md`, `domain/conventions.md`, and `rules/approved.md`. Carry any item relevant to this ticket into the investigation.
+- **Append** newly-proven durable facts about this module to `domain/<module>.md` — one line each, ending with the ticket source `(<PREFIX>#<IID>)`. Facts only. A recurring problem worth a prescriptive rule goes to `rules/staged.md` (never write `approved.md` here).
+- Skip silently if the directory is absent.
+
+### Step 4 — Production DB facts (investigate mode)
 
 Resolve config, then describe the affected tables (read-only):
 
@@ -43,18 +51,18 @@ Resolve config, then describe the affected tables (read-only):
 eval "$(node "${CLAUDE_PLUGIN_ROOT}/scripts/config.mjs" env)" && docker exec -i "$US_MYSQL" mysql -u"$US_DB_USER" -p"$US_DB_PASS" -e "USE $US_DB; DESCRIBE <table>;"
 ```
 
-### Step 4 — Write `INVESTIGATION.md` (investigate mode)
+### Step 5 — Write `INVESTIGATION.md` (investigate mode)
 
 Save `round-<N>/<PREFIX>#[IID]_INVESTIGATION.md` (English; keep technical terms in Japanese) with these sections:
 
 1. **Requirements** — REQ/CON from the ticket, translated.
 2. **Related-issue dependency map** — each linked issue → effect on this ticket.
 3. **Code map** — the `file:line` table from Step 2.
-4. **DB facts** — from Step 3.
+4. **DB facts** — from Step 4.
 5. **## Clarity Verdict** — exactly one of `CLEAR` / `NEEDS_CLARIFICATION`.
 6. **## Open Questions** — numbered, concrete (missing specs, ambiguous behavior, conflicting related-issue requirements, undefined edge cases). Empty only if verdict is `CLEAR`. Phrase each clarification as a multiple-choice question (see REFERENCE → Asking the user).
 
-### Step 5 — Write `REPORT.md` (report mode only)
+### Step 6 — Write `REPORT.md` (report mode only)
 
 This goes to the PM. Write it from the clarified `INVESTIGATION.md`, never before GATE 0.
 
