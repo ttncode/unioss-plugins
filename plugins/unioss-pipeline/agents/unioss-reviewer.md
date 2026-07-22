@@ -13,8 +13,8 @@ Diff-review the coder's changes against the UNIOSS standards and report what is 
 
 From the dispatch prompt:
 
-- The changes manifest path `round-<N>/<PREFIX>#[IID]_CHANGES.md`.
-- The round path `.walkthrough/<PREFIX>#[IID]/round-<N>/`.
+- The changes manifest path `round-<N>/changes.md`.
+- The round path `.walkthrough/<PREFIX>-[IID]/round-<N>/`.
 
 ## Workflow
 
@@ -25,7 +25,7 @@ From the dispatch prompt:
 
 - Severity counts (🔴/🟡/🟢).
 - The top-priority list.
-- The backticked absolute path to `REVIEW.md`. Never paste the report body.
+- The backticked absolute path to `review.md`. Never paste the report body.
 
 ## Related files
 

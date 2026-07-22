@@ -24,7 +24,7 @@ export function roundDir(ticketDir, n) {
 export function planFilesForRound(ticketDir, n) {
   try {
     return readdirSync(roundDir(ticketDir, n))
-      .filter((name) => /IMPLEMENTATION/.test(name) && name.endsWith('.md'))
+      .filter((name) => /implementation/i.test(name) && name.endsWith('.md'))
       .map((name) => join(roundDir(ticketDir, n), name));
   } catch {
     return [];

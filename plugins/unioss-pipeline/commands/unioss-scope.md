@@ -1,5 +1,5 @@
 ---
-description: Write or update the PM/QC-facing SCOPE.md for a finished UNIOSS ticket.
+description: Write or update the PM/QC-facing scope.md for a finished UNIOSS ticket.
 argument-hint: [ticket-number]
 ---
 
@@ -14,11 +14,11 @@ Write the business-level scope summary a PM/QC reads to know what changed and wh
 ## Workflow
 
 1. Use the `unioss-pipeline:unioss-scope` skill and follow it exactly.
-2. If a pipeline round exists for this ticket, use its `CHANGES.md` as the starting diff; otherwise derive the change set from `git diff`/`git log` against the base branch.
+2. If a pipeline round exists for this ticket, use its `changes.md` as the starting diff; otherwise derive the change set from `git diff`/`git log` against the base branch.
 
 ## Output
 
-Per the skill: `.walkthrough/<PREFIX>#[IID]/<PREFIX>#[IID]_SCOPE.md` (ticket folder, not a `round-<N>/` subfolder), created or updated in place (never versioned).
+Per the skill: `.walkthrough/<PREFIX>-[IID]/scope.md` (ticket folder, not a `round-<N>/` subfolder), created or updated in place (never versioned).
 
 ## Related files
 

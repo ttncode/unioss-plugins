@@ -161,7 +161,7 @@ The pipeline imports a SQL dump into the DB on every full run — slow and unnec
 2. Run the whole suite and save the report:
    ```bash
    eval "$(node "${CLAUDE_PLUGIN_ROOT}/scripts/config.mjs" env)"
-   docker exec -i "$US_PHP" sh -lc "cd /var/www/html/AdminPage && ./vendor/phpunit/phpunit/phpunit -c application/tests/phpunit.xml --testdox" > .walkthrough/<PREFIX>#[IID]/round-<N>/UT_#[IID]_[YYYYMMDD]_V1.txt
+   docker exec -i "$US_PHP" sh -lc "cd /var/www/html/AdminPage && ./vendor/phpunit/phpunit/phpunit -c application/tests/phpunit.xml --testdox" > .walkthrough/<PREFIX>-[IID]/round-<N>/UT_#[IID]_[YYYYMMDD]_V1.txt
    ```
 3. Restore the repo when finished: `node "${CLAUDE_PLUGIN_ROOT}/scripts/phpunit-config.mjs" restore`.
 

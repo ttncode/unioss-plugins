@@ -108,11 +108,11 @@ if (userNotes.length) {
 summary += `## Open Questions\n\nTBD\n\n## Developer Notes\n\nTBD\n`;
 
 // ── Output paths ───────────────────────────────────────────────────────────
-const pipelineDir = path.join(process.cwd(), '.walkthrough', '.pipeline', `${prefix}#${iid}`);
+const pipelineDir = path.join(process.cwd(), '.walkthrough', '.pipeline', `${prefix}-${iid}`);
 if (!fs.existsSync(pipelineDir)) fs.mkdirSync(pipelineDir, { recursive: true });
 
-const rawPath = path.join(pipelineDir, 'RAW_TICKET_DATA.json');
-const summaryPath = path.join(pipelineDir, 'TICKET_SUMMARY.md');
+const rawPath = path.join(pipelineDir, 'raw-ticket-data.json');
+const summaryPath = path.join(pipelineDir, 'ticket-summary.md');
 
 // ── Write files ────────────────────────────────────────────────────────────
 fs.writeFileSync(rawPath, JSON.stringify({ fetched_at: new Date().toISOString(), issue, notes, links }, null, 2));

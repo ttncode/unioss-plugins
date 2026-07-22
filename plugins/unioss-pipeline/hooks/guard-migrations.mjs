@@ -23,7 +23,7 @@ export function activeTicketDir(root) {
 function planFilesIn(dir) {
   try {
     return readdirSync(dir)
-      .filter((n) => /IMPLEMENTATION/.test(n) && n.endsWith('.md'))
+      .filter((n) => /implementation/i.test(n) && n.endsWith('.md'))
       .map((n) => join(dir, n));
   } catch { return []; }
 }

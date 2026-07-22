@@ -18,7 +18,7 @@ Follow `../unioss-pipeline/REFERENCE.md` → its Branches, Protected-branch, Sub
 
 ## Input
 
-- The approved `round-<N>/<PREFIX>#[IID]_IMPLEMENTATION_V{n}.md`.
+- The approved `round-<N>/implementation.v{n}.md`.
 - The round path.
 - **On GATE 3 fix:** the orchestrator's list of fixes to apply.
 - **On GATE 3 accept:** the instruction to run the full suite.
@@ -50,10 +50,10 @@ Verify per `./migration-verify.md`: on `development` by default, run up → down
 
 Write/modify tests for the changed logic, then run **fast mode** from `unioss-phpunit-test` → Run Commands: `phpunit-config.mjs apply --skip-import`, run only the new/modified tests until green, then `phpunit-config.mjs restore`. FrontEnd: skip — no unit tests.
 
-### Step 3 — Write `CHANGES.md`, and the API spec if needed
+### Step 3 — Write `changes.md`, and the API spec if needed
 
-- Save `round-<N>/<PREFIX>#[IID]_CHANGES.md`.
-- If the change adds a new API endpoint, invoke `unioss-pipeline:unioss-api-spec` → `round-<N>/<PREFIX>#[IID]_API_SPEC.md`.
+- Save `round-<N>/changes.md`.
+- If the change adds a new API endpoint, invoke `unioss-pipeline:unioss-api-spec` → `round-<N>/api-spec.md`.
 
 ### Step 4 — On GATE 3 fix
 
@@ -65,8 +65,8 @@ Switch to **full mode**: `phpunit-config.mjs apply --import` (fresh DB), run the
 
 ## Output
 
-- `CHANGES.md` — a per-file diff manifest (path · change type · one-line summary) plus the fast-test result.
-- `API_SPEC.md` — only when a new endpoint was added.
+- `changes.md` — a per-file diff manifest (path · change type · one-line summary) plus the fast-test result.
+- `api-spec.md` — only when a new endpoint was added.
 - `UT_#[IID]_[YYYYMMDD]_V{n}.txt` — only on GATE 3 accept.
 - Return the backticked absolute path to each file written, the branch per repo, and the test result.
 

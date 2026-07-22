@@ -19,7 +19,7 @@ Follow `../unioss-pipeline/REFERENCE.md` → Shared stage rules (read-only, roun
 
 ## Input
 
-- The changes manifest `round-<N>/<PREFIX>#[IID]_CHANGES.md` — the authoritative list of what changed.
+- The changes manifest `round-<N>/changes.md` — the authoritative list of what changed.
 - The round path.
 - **Standalone:** the file(s) named in the request, with no round path.
 
@@ -29,7 +29,7 @@ Scope is the **diff only**. Never comment on code outside the `+` lines.
 
 ### Step 1 — Scope from the pipeline
 
-Read `.walkthrough/<PREFIX>#[IID]/round-<N>/<PREFIX>#[IID]_CHANGES.md` to get the changed files and repo. `cd` into that repo (`AdminPage` or `FrontEnd`).
+Read `.walkthrough/<PREFIX>-[IID]/round-<N>/changes.md` to get the changed files and repo. `cd` into that repo (`AdminPage` or `FrontEnd`).
 
 ### Step 2 — Read the diff
 
@@ -58,7 +58,7 @@ reset per file.
 
 ### Step 5 — Output the Report
 
-Write the report to `.walkthrough/<PREFIX>#[IID]/round-<N>/<PREFIX>#[IID]_REVIEW.md` and return the severity counts (🔴/🟡/🟢), the top-priority list, and the backticked absolute path to `REVIEW.md` (REFERENCE → Artifact paths) — do not paste the full report body.
+Write the report to `.walkthrough/<PREFIX>-[IID]/round-<N>/review.md` and return the severity counts (🔴/🟡/🟢), the top-priority list, and the backticked absolute path to `review.md` (REFERENCE → Artifact paths) — do not paste the full report body.
 
 Structure the report as follows:
 

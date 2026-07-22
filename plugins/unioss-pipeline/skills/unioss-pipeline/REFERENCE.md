@@ -12,7 +12,7 @@ Every stage skill (investigator, planner, coder, reviewer, tester, ship, api-spe
 
 - **Read this file first.** Its Branch, Protected-branch, Submodule, and Commit rules are binding.
 - **Read-only by default.** Never edit project source. `Write` only under `.walkthrough/`. The only writers are the coder (`unioss-pipeline:unioss-implement`), ship (push + MR), and the standalone `unioss-mr-feedback` (edit + push, never MR — see GitLab below).
-- **Round path.** The orchestrator passes the round folder `.walkthrough/<PREFIX>#[IID]/round-<N>/` in your prompt. Write all artifacts there — never into a different round.
+- **Round path.** The orchestrator passes the round folder `.walkthrough/<PREFIX>-[IID]/round-<N>/` in your prompt. Write all artifacts there — never into a different round.
 - **Resolve config before shell/DB/source access.** Run `eval "$(node "${CLAUDE_PLUGIN_ROOT}/scripts/config.mjs" env)"` first; never hardcode hosts, containers, paths, or the protected-branch list.
 - **Artifact paths.** Surface every artifact as an absolute path in backticks, on its own line, the moment it is written (see Artifact paths) — never a `file://` URL or a relative path.
 - **Return summaries, not bodies.** Return counts, verdicts, and links; never paste full artifact contents back to the orchestrator.
@@ -69,36 +69,49 @@ A **module key** (`admin-page`, `front-end`, `common-helper`, `common-models`) i
 
 Paths are **not** listed here — they are per-machine and live only in `source.modules.<key>` (run `/unioss-doctor` to see the resolved value, or `config.mjs scan --write` to repair them).
 
-The two apps are CodeIgniter 3 / PHP 8.1. Only divergence: FrontEnd skips PHPUnit unit tests. `<PREFIX>` (`AP`/`FE`) is decided from the ticket URL — the submodules never own a ticket, but they do get their own MR when changed (`/unioss-ship`).
+The two apps are CodeIgniter 3 / PHP 8.1. Only divergence: FrontEnd skips PHPUnit unit tests. `<PREFIX>` (`AP`/`FE`) is decided from the ticket URL — the submodules never own a ticket, but they do get their own MR when changed (`/unioss-ship`). The `AP#[IID]`/`FE#[IID]` form is the **display label**; the on-disk artifact folder swaps `#` for `-` (`AP-[IID]`), while branches and commit messages keep the `#` (git/GitLab convention).
 
 ## Artifact layout (project root `.walkthrough/`)
 
 - **Invariant:** artifacts always live in `<cwd>/.walkthrough/` — the workspace you opened Claude in — never under the plugin install dir.
+- **On-disk ticket folder uses a hyphen: `<PREFIX>-[IID]/` (e.g. `AP-1583`, `FE-347`) — never `#`.** `<PREFIX>#[IID]` is the display label only (reports, banners, GitLab refs); a `#` in a path breaks the shell, breaks URLs, and breaks the IDE's click-to-open. Branch names and commit messages keep their `#` — that is git/GitLab convention, not an artifact path.
+- **Filenames are lower-kebab and carry no ticket prefix.** The path already identifies the ticket, so the file states only its role: `changes.md`, never `AP-1583_CHANGES.md`.
 - Each run is a **round**. `round-1` is the initial run; each re-run opens the next round and never modifies a prior one.
 
-Visible artifacts (the human reads these), under `.walkthrough/<PREFIX>#[IID]/round-<N>/`:
+**Deliverables** — the human reads these. Ticket root, span rounds, overwritten in place every round (never versioned), under `.walkthrough/<PREFIX>-[IID]/`:
 
-- `ROUND_BRIEF.md` (round 2+: what this round must do)
-- `<PREFIX>#[IID]_INVESTIGATION.md`, `<PREFIX>#[IID]_REPORT.md` (vi)
-- `<PREFIX>#[IID]_SPEC.md` (what/why; `_SPEC_V{n}` on edits)
-- `<PREFIX>#[IID]_IMPLEMENTATION_V{n}.md`
-- `<PREFIX>#[IID]_CHANGES.md`, `_REVIEW.md`, `_TEST_RESULTS.md`
-- `<PREFIX>#[IID]_API_SPEC.md` (only when a new endpoint is added)
+- `report.md` (vi; PM-facing — the current rolled-up findings, latest round wins)
+- `scope.md` (PM/QC-facing scope summary)
+
+**Work + evidence** — the engineering trail; immutable once a round is sealed, under `.walkthrough/<PREFIX>-[IID]/round-<N>/`:
+
+- `round-brief.md` (round 2+: what this round must do)
+- `investigation.md` (detailed findings; feeds the `report.md` rollup)
+- `spec.md` (what/why; `spec.v{n}.md` on an in-round revision)
+- `implementation.v{n}.md`
+- `changes.md`, `review.md`, `test-results.md`
+- `api-spec.md` (only when a new endpoint is added)
 - `UT_#[IID]_[YYYYMMDD]_V{n}.txt` (full PHPUnit run, AdminPage only)
-- `screenshots/` (tester UI screenshots)
+- `screenshots/` (tester UI screenshots, `NN-*.png`, numbered for order)
 
-Ticket-level (spans rounds — a sibling of `round-<N>/`, not inside one), under `.walkthrough/<PREFIX>#[IID]/`: `<PREFIX>#[IID]_SCOPE.md` (PM/QC-facing scope summary; overwritten in place every round, never versioned).
+**Versioning has exactly two axes:**
 
-Hidden tracking, under `.walkthrough/.pipeline/<PREFIX>#[IID]/`: `RAW_TICKET_DATA.json`, `TICKET_SUMMARY.md`, `pipeline-state.json` (holds `current_round`).
+- `round-<N>` — one full pipeline re-run per ticket delta; prior rounds are frozen.
+- `.v{n}` — the same `spec`/`implementation` re-issued _within_ a round on a gate reject (`spec.md` → `spec.v2.md`; `implementation.v1.md` → `implementation.v2.md`). Everything else overwrites in place; the round folder is the version boundary.
+
+Hidden tracking + input, under `.walkthrough/.pipeline/<PREFIX>-[IID]/`:
+
+- `raw-ticket-data.json`, `ticket-summary.md` (immutable ticket input)
+- `pipeline-state.json` — the machine-readable **source of truth** for task state, current round, artifact map, and result. Agents read state here rather than inferring it from filenames (schema: orchestrator SKILL → State file).
 
 ## Artifact paths
 
 - **Announce every file the moment its stage writes it — never wait for the final summary.** The instant a stage (investigator, reporter, spec, plan, coder, reviewer, tester, scope) finishes a file, print one standalone line per file so the human gets a clickable link immediately:
 
-      📄 `/home/me/unioss/.walkthrough/AP#1583/round-1/AP#1583_REVIEW.md`
+      📄 `/home/me/unioss/.walkthrough/AP-1583/round-1/review.md`
 
-- **Use the ABSOLUTE path** — prefix the workspace-relative path with the workspace root (the dir that holds `.walkthrough/`; run `pwd` once if unsure). An absolute path opens directly in the IDE. A _relative_ path the IDE cannot resolve falls back to fuzzy file-search, which strips the `#` in `AP#1583` (→ `AP:1583`) and fails to open — that is the click-to-open bug.
-- **One file per line, each on its own line, wrapped in backticks.** Never wrap the path in a `file://` URL, a markdown link, or a table cell, and never percent-encode — those break the terminal's linkifier. The `#` stays literal; the absolute path resolves it correctly.
+- **Use the ABSOLUTE path** — prefix the workspace-relative path with the workspace root (the dir that holds `.walkthrough/`; run `pwd` once if unsure). An absolute path opens directly in the IDE.
+- **One file per line, each on its own line, wrapped in backticks.** Never wrap the path in a `file://` URL, a markdown link, or a table cell — those break the terminal's linkifier. On-disk paths are `#`-free (hyphenated ticket folder, lower-kebab files), so they resolve cleanly with no special handling.
 
 ## GitLab (read-only except ship + mr-feedback)
 

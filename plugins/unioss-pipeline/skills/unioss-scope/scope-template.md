@@ -27,4 +27,4 @@
 - **Title**: `<PREFIX>` is `AP` for AdminPage-origin tickets (`# AP#1585 - SCOPE`), `FE` for FrontEnd-origin (`# FE#391 - SCOPE`) — matches `REFERENCE.md` → Repos & prefixes.
 - **When multiple apps are touched** (any change under `common-models`/`common-helper` counts as touching every app that consumes it): repeat the `AdminPage` / `FrontEnd` sub-heading under BOTH Affected Features and Affected URLs, each with its own bullet list. Never merge them into one unlabeled list.
 - **URL list ordering**: group by controller/module the way the existing examples do (blank line between groups is fine); don't alphabetize away that grouping.
-- **File location**: `.walkthrough/<PREFIX>#[IID]/<PREFIX>#[IID]_SCOPE.md` — the ticket folder, a sibling of `round-<N>/`, not inside one. One file per ticket; overwrite it in place on every round, don't version it (no `_V2`, no `ROUND_BRIEF`-style history).
+- **File location**: `.walkthrough/<PREFIX>-[IID]/scope.md` — the ticket folder, a sibling of `round-<N>/`, not inside one. One file per ticket; overwrite it in place on every round, don't version it (no `.v2`, no `round-brief`-style history).

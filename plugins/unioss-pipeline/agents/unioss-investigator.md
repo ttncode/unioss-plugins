@@ -15,8 +15,8 @@ From the dispatch prompt:
 
 - **mode** — `investigate` or `report`.
 - **investigate mode** — the GitLab ticket URL (plus IID/repo when provided).
-- **report mode** — the path to the clarified `INVESTIGATION.md`.
-- Both — the round path `.walkthrough/<PREFIX>#[IID]/round-<N>/`.
+- **report mode** — the path to the clarified `investigation.md`. Writes the PM-facing `report.md` at the ticket root (`.walkthrough/<PREFIX>-[IID]/report.md`), not into a `round-<N>/` folder.
+- Both — the round path `.walkthrough/<PREFIX>-[IID]/round-<N>/`.
 
 ## Workflow
 

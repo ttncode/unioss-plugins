@@ -19,8 +19,8 @@ Follow `../unioss-pipeline/REFERENCE.md` → Shared stage rules (read-only, roun
 
 The dispatch prompt states the mode. A standalone invocation has no mode.
 
-- **spec mode** — `round-<N>/<PREFIX>#[IID]_INVESTIGATION.md`, including any `## Clarifications`.
-- **plan mode** — the **approved** `<PREFIX>#[IID]_SPEC.md`, plus the investigation.
+- **spec mode** — `round-<N>/investigation.md`, including any `## Clarifications`.
+- **plan mode** — the **approved** `spec.md`, plus the investigation.
 - Both — the round path.
 - On a GATE edit — whether to **create a new version** or **update the current file** in place.
 
@@ -28,7 +28,7 @@ The dispatch prompt states the mode. A standalone invocation has no mode.
 
 ### Spec mode — the what/why, no code
 
-Write `round-<N>/<PREFIX>#[IID]_SPEC.md`. Mandatory sections:
+Write `round-<N>/spec.md`. Mandatory sections:
 
 - **Goal** — one paragraph.
 - **Scope** — In-Scope / Out-of-Scope bullets.
@@ -46,11 +46,11 @@ Write `round-<N>/<PREFIX>#[IID]_SPEC.md`. Mandatory sections:
    - **Manual Testing** — a `## Manual Testing` section after the tasks, split
      into **Normal Cases** and **Abnormal Cases** (validation errors,
      unauthorized access, fallback), each with explicit DB-verification steps.
-2. **Save** `round-<N>/<PREFIX>#[IID]_IMPLEMENTATION_V1.md`.
+2. **Save** `round-<N>/implementation.v1.md`.
 
 ### Versioning on a GATE edit
 
-- **new version** → increment `_SPEC_V2` / `_V2`, `_V3`, …
+- **new version** → write the next `spec.v{n}.md` / `implementation.v{n}.md` (same round).
 - **update current** → edit the existing file in place. No new file, no version bump.
 
 ## Output

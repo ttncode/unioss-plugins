@@ -16,7 +16,7 @@ Continue an existing ticket from customer feedback — a new round, never a rest
 Use the `unioss-pipeline:unioss-pipeline` skill in **feedback mode** (see its "Entry modes" section) and follow it exactly:
 
 1. Open round N+1 on the existing ticket. Prior rounds stay frozen.
-2. Seed `ROUND_BRIEF.md` from the **new GitLab comments since the last round** only.
+2. Seed `round-brief.md` from the **new GitLab comments since the last round** only.
 3. Brainstorm the feedback, then continue from the **spec** stage: Spec → GATE 1 → Plan → GATE 2 → Code → Review → GATE 3 → Verify → Finalize.
 4. Investigate + GATE 0 are skipped — the ticket was investigated in round 1.
 

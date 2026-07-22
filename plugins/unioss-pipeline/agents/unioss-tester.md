@@ -13,23 +13,23 @@ Prove the change actually works: confirm the DB landed it, and drive the affecte
 
 From the dispatch prompt:
 
-- The changes manifest path `round-<N>/<PREFIX>#[IID]_CHANGES.md`.
+- The changes manifest path `round-<N>/changes.md`.
 - The ticket's acceptance criteria.
-- The round path `.walkthrough/<PREFIX>#[IID]/round-<N>/`.
+- The round path `.walkthrough/<PREFIX>-[IID]/round-<N>/`.
 
 ## Workflow
 
 1. Invoke the `unioss-pipeline:unioss-verify` skill and follow it exactly. It defines the read-only + round-path rules via REFERENCE → Shared stage rules.
 2. UI verification uses the Playwright MCP tools (`mcp__plugin_unioss-pipeline_playwright__browser_*`) wired into this agent's `tools`.
-3. **If those tools are unavailable at runtime, never claim a UI pass.** Record each UI criterion as `SKIPPED — no browser MCP configured` in TEST_RESULTS.md and continue with DB verification, which always runs.
+3. **If those tools are unavailable at runtime, never claim a UI pass.** Record each UI criterion as `SKIPPED — no browser MCP configured` in test-results.md and continue with DB verification, which always runs.
 
 ## Output
 
 - Overall pass/fail.
 - The count of failed criteria.
-- The count of manual cases handed off to the user (the `## Manual Testing (run these yourself)` checklist in TEST_RESULTS.md).
+- The count of manual cases handed off to the user (the `## Manual Testing (run these yourself)` checklist in test-results.md).
 - An explicit note if UI verification was SKIPPED — a SKIP is never a pass.
-- The backticked absolute path to `TEST_RESULTS.md`. Never paste the report body.
+- The backticked absolute path to `test-results.md`. Never paste the report body.
 
 ## Related files
 

@@ -35,9 +35,9 @@ test('roundDir builds the expected path', () => {
   assert.ok(roundDir('/t', 3).endsWith(join('/t', 'round-3')));
 });
 
-test('planFilesForRound returns only IMPLEMENTATION md files of that round', () => {
-  const dir = ticketWith({ 1: ['AP#1_IMPLEMENTATION_V1.md', 'AP#1_REVIEW.md'] });
+test('planFilesForRound returns only implementation md files of that round', () => {
+  const dir = ticketWith({ 1: ['implementation.v1.md', 'review.md'] });
   const plans = planFilesForRound(dir, 1);
   assert.equal(plans.length, 1);
-  assert.match(plans[0], /IMPLEMENTATION_V1\.md$/);
+  assert.match(plans[0], /implementation\.v1\.md$/);
 });

@@ -16,7 +16,7 @@ Follow `../unioss-pipeline/REFERENCE.md` → its Branches, Protected-branch, and
 ## Input
 
 - **Argument:** `staging` or `customer`.
-- The latest round's `CHANGES.md` — the source of truth for which repos were touched.
+- The latest round's `changes.md` — the source of truth for which repos were touched.
 
 ### Repo keys
 
@@ -33,7 +33,7 @@ Every touched repo gets its own MR, including the submodules.
 
 ### Preconditions
 
-- Determine the touched repos + their feature branches from `CHANGES.md` (REFERENCE branch naming). Include any submodule the coder edited.
+- Determine the touched repos + their feature branches from `changes.md` (REFERENCE branch naming). Include any submodule the coder edited.
 - Verify every branch to ship is a `feature/v3/…` branch. **Abort** if any is a protected branch.
 
 ### Preview

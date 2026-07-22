@@ -16,7 +16,7 @@ From the dispatch prompt:
 - **mode** — `spec` or `plan`.
 - **spec mode** — the investigation path, including any `## Clarifications`.
 - **plan mode** — the path to the **approved** SPEC.
-- Both — the round path `.walkthrough/<PREFIX>#[IID]/round-<N>/`.
+- Both — the round path `.walkthrough/<PREFIX>-[IID]/round-<N>/`.
 - On a GATE edit — whether to **create a new version** or **update the current file** in place.
 
 ## Workflow

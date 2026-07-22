@@ -19,8 +19,8 @@ Prove each acceptance criterion against the real DB and the real screen. Functio
 
 ## Input
 
-- `round-<N>/<PREFIX>#[IID]_CHANGES.md` — what changed.
-- `round-<N>/<PREFIX>#[IID]_IMPLEMENTATION_V*.md` → its `## Manual Testing` section — the planner's Normal/Abnormal cases. This is the **source** for the hand-off checklist in Output.
+- `round-<N>/changes.md` — what changed.
+- `round-<N>/implementation.v*.md` → its `## Manual Testing` section — the planner's Normal/Abnormal cases. This is the **source** for the hand-off checklist in Output.
 - The ticket's acceptance criteria.
 - The round path.
 
@@ -47,11 +47,11 @@ Prove each acceptance criterion against the real DB and the real screen. Functio
    - **Network** (`browser_network_requests`): the request(s) backing the action must fire and return the expected status. An unexpected `4xx`/`5xx`, or a request that never fired, **fails** the criterion. Record method · URL · status. A failed status hidden behind a normal-looking screen is exactly what this catches.
    - A criterion is a **pass** only when the on-screen result matches **and** the console is error-free **and** the network status is expected.
 
-5. **Write the report** to `round-<N>/<PREFIX>#[IID]_TEST_RESULTS.md`.
+5. **Write the report** to `round-<N>/test-results.md`.
 
 ## Output
 
-`TEST_RESULTS.md` contains:
+`test-results.md` contains:
 
 - DB verification results.
 - A per-criterion table — Criterion · Screen · Action · Expected · Result · Console · Network · Screenshot. **Every** Step 1 criterion gets a row. `Console` = `clean` or the error/warning text; `Network` = the action's method·URL·status (or `n/a` for a non-network action). A criterion whose `Console` shows an action-triggered error or whose `Network` shows an unexpected status is marked failed in `Result`, and counts toward the failed-criteria total.
@@ -69,7 +69,7 @@ Prove each acceptance criterion against the real DB and the real screen. Functio
   - [ ] <case> — <screen/URL> → <action> → expect <result> (DB: <check>)
   ```
 
-Return: overall pass/fail, the count of failed criteria, the count of manual cases handed off, and the backticked absolute path to `TEST_RESULTS.md`. Never paste the full report.
+Return: overall pass/fail, the count of failed criteria, the count of manual cases handed off, and the backticked absolute path to `test-results.md`. Never paste the full report.
 
 **`SKIPPED (MCP unavailable)` is never counted as a pass** — surface it explicitly; every skipped flow becomes a Manual Testing hand-off item.
 

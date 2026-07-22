@@ -1,6 +1,6 @@
-# SCOPE.md — accepted examples
+# scope.md — accepted examples
 
-These are real, accepted output. Match their structure, level of detail, and tone exactly — **except the title/filename prefix**: these were written before this skill lived in the pipeline, into a flat `_plan/` folder, so their `#[IID]` titles have no `AP`/`FE` prefix. Now that `SCOPE.md` lives in `.walkthrough/<PREFIX>#[IID]/`, use the full prefix in both filename and `# <PREFIX>#[IID] - SCOPE` title, matching every other artifact in that tree (e.g. `# AP#1584 - SCOPE`).
+These are real, accepted output. Match their structure, level of detail, and tone exactly — **except the title/filename prefix**: these were written before this skill lived in the pipeline, into a flat `_plan/` folder, so their `#[IID]` titles have no `AP`/`FE` prefix. Now that `scope.md` lives in `.walkthrough/<PREFIX>-[IID]/`, the filename carries no ticket prefix — the path already identifies the ticket — but the H1 title keeps the display label `# <PREFIX>#[IID] - SCOPE` (e.g. `# AP#1584 - SCOPE`), matching every other artifact's title in that tree.
 
 ## Multi-app, per-app grouping (#1584)
 
@@ -138,7 +138,7 @@ AdminPage
 
 Content bullets describe the change **for a PM/QC reader**, not for the next coder. Symbol/file names are only acceptable when the ticket IS the refactor (the reader needs to know a name moved) — never as a substitute for describing the business effect.
 
-❌ Too implementation-level (this is what belongs in `CHANGES.md`, not `SCOPE.md`):
+❌ Too implementation-level (this is what belongs in `changes.md`, not `scope.md`):
 
 ```
 - Add `Users_model::get_site_admin_emails()` in `common-models`, using `admins` instead of `administrators` and shared for both apps.

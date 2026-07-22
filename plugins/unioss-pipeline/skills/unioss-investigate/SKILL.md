@@ -20,14 +20,14 @@ Follow `../unioss-pipeline/REFERENCE.md` → Shared stage rules (read-only, roun
 The dispatch prompt states the mode. They run at different points in the flow — never do both in one dispatch.
 
 - **investigate** (default) — the GitLab ticket URL. Runs Steps 1–5, **before** GATE 0.
-- **report** — the path to the already-clarified `INVESTIGATION.md` (including its `## Clarifications` section, if any). Runs Step 6 only, **after** GATE 0, so the PM never receives a report built on unanswered questions. Re-read `INVESTIGATION.md` first; do not re-run Steps 1–5.
+- **report** — the path to the already-clarified `investigation.md` (including its `## Clarifications` section, if any). Runs Step 6 only, **after** GATE 0, so the PM never receives a report built on unanswered questions. Re-read `investigation.md` first; do not re-run Steps 1–5.
 - Both — the round path.
 
 ## Workflow
 
 ### Step 1 — Fetch ticket + related issues (investigate mode)
 
-- Invoke `unioss-pipeline:unioss-gitlab-issue-context` with the ticket URL. It writes `RAW_TICKET_DATA.json` + `TICKET_SUMMARY.md` under `.walkthrough/.pipeline/<PREFIX>#[IID]/`.
+- Invoke `unioss-pipeline:unioss-gitlab-issue-context` with the ticket URL. It writes `raw-ticket-data.json` + `ticket-summary.md` under `.walkthrough/.pipeline/<PREFIX>-[IID]/`.
 - For **every** entry from the `/links` endpoint, fetch that related issue too and summarize how it constrains scope. Related issues are first-class — a change is not understood until its linked issues are read.
 
 ### Step 2 — Codebase impact analysis (investigate mode)
@@ -51,9 +51,9 @@ Resolve config, then describe the affected tables (read-only):
 eval "$(node "${CLAUDE_PLUGIN_ROOT}/scripts/config.mjs" env)" && docker exec -i "$US_MYSQL" mysql -u"$US_DB_USER" -p"$US_DB_PASS" -e "USE $US_DB; DESCRIBE <table>;"
 ```
 
-### Step 5 — Write `INVESTIGATION.md` (investigate mode)
+### Step 5 — Write `investigation.md` (investigate mode)
 
-Save `round-<N>/<PREFIX>#[IID]_INVESTIGATION.md` (English; keep technical terms in Japanese) with these sections:
+Save `round-<N>/investigation.md` (English; keep technical terms in Japanese) with these sections:
 
 1. **Requirements** — REQ/CON from the ticket, translated.
 2. **Related-issue dependency map** — each linked issue → effect on this ticket.
@@ -62,28 +62,28 @@ Save `round-<N>/<PREFIX>#[IID]_INVESTIGATION.md` (English; keep technical terms 
 5. **## Clarity Verdict** — exactly one of `CLEAR` / `NEEDS_CLARIFICATION`.
 6. **## Open Questions** — numbered, concrete (missing specs, ambiguous behavior, conflicting related-issue requirements, undefined edge cases). Empty only if verdict is `CLEAR`. Phrase each clarification as a multiple-choice question (see REFERENCE → Asking the user).
 
-### Step 6 — Write `REPORT.md` (report mode only)
+### Step 6 — Write `report.md` (report mode only)
 
-This goes to the PM. Write it from the clarified `INVESTIGATION.md`, never before GATE 0.
+This goes to the PM. Write it from the clarified `investigation.md`, never before GATE 0.
 
 **Read `./report-example.md` first — that is the gold standard for length and tone. Match it.**
 
-Save `round-<N>/<PREFIX>#[IID]_REPORT.md`. Vietnamese only — column names and Japanese screen names stay as-is. List only ECSite user-facing screens in section 3; verify URLs against `./ecsite-screens.md`.
+Save `report.md` at the **ticket root** `.walkthrough/<PREFIX>-[IID]/report.md` (the parent of `round-<N>/`) — it is a deliverable that spans rounds, overwritten in place each round, never inside a `round-<N>/` folder. Vietnamese only — column names and Japanese screen names stay as-is. List only ECSite user-facing screens in section 3; verify URLs against `./ecsite-screens.md`.
 
 ## Output
 
-### `INVESTIGATION.md` — investigate mode
+### `investigation.md` — investigate mode
 
 The six sections above. Return: prefix+IID, repo, clarity verdict, count of open questions, and the backticked absolute path. Never paste file bodies.
 
-### `REPORT.md` — report mode
+### `report.md` — report mode
 
 Hard caps — a PM reads this in under a minute:
 
 - **Whole file ≤ 40 lines.** If it is longer, cut, don't reformat.
 - One line per bullet. No sub-bullets, no tables, no code blocks.
 - §1 ≤ 2 bullets · §2 one bullet per field/area investigated · §4 ≤ 3 bullets.
-- No implementation detail — no file names, no `file:line`, no SQL, no class/method names. Those live in `INVESTIGATION.md`.
+- No implementation detail — no file names, no `file:line`, no SQL, no class/method names. Those live in `investigation.md`.
 - State the conclusion plainly (可能/不可能, 影響あり/なし). No hedging, no next-step padding.
 
 Fill verbatim:
@@ -118,7 +118,7 @@ Return: the report's line count (must be ≤ 40) and the backticked absolute pat
 
 ## Related files
 
-- `./report-example.md` — the gold standard for `REPORT.md` length and tone.
+- `./report-example.md` — the gold standard for `report.md` length and tone.
 - `./ecsite-screens.md` — ECSite screens tree; verify user-facing URLs against it.
 - `skills/unioss-gitlab-issue-context/SKILL.md` — the Step 1 fetcher.
 - `agents/unioss-investigator.md` — the subagent that runs this.

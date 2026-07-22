@@ -33,7 +33,7 @@ Read the controller action plus its validation and model, and fill every section
 
 Structure must match `./api-spec-template.md` exactly.
 
-- **Coder-integrated (pipeline):** the coder invokes this skill when the approved change adds an endpoint → write `round-<N>/<PREFIX>#[IID]_API_SPEC.md`, return its backticked absolute path.
+- **Coder-integrated (pipeline):** the coder invokes this skill when the approved change adds an endpoint → write `round-<N>/api-spec.md`, return its backticked absolute path.
 - **Standalone** (`/unioss-api-spec <endpoint|controller>`): print the spec. Write nothing under `.walkthrough/` unless the user asks for a file (REFERENCE → Standalone use).
 
 ## Related files
