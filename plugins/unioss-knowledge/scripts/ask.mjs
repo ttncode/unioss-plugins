@@ -42,3 +42,20 @@ export async function runAsk({ intent, period, mutate = false }, cwd = process.c
   }
   return { path, markdown };
 }
+
+// appended to plugins/unioss-knowledge/scripts/ask.mjs
+import { pathToFileURL } from 'node:url';
+import { parsePeriod } from './period.mjs';
+
+const isMain = process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href;
+if (isMain) {
+  const args = Object.fromEntries(process.argv.slice(2).map((a) => {
+    const m = a.match(/^--([^=]+)(?:=(.*))?$/);
+    return m ? [m[1], m[2] ?? true] : [a, true];
+  }));
+  const period = parsePeriod(args.period);
+  if (!period) { console.error('Invalid --period'); process.exit(1); }
+  runAsk({ intent: args.intent || 'general', period, mutate: Boolean(args.refresh) })
+    .then((r) => console.log(`${r.path}\n\n${r.markdown}`))
+    .catch((e) => { console.error(e.message); process.exit(1); });
+}
