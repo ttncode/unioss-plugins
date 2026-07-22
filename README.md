@@ -92,10 +92,28 @@ Grouped by pipeline stage. Each stage skill also runs standalone (`/skill-name <
 | Ship        | `unioss-ship`                                  | Open an MR per touched repo (apps + submodules). Never merges.      |
 | Clarify     | `unioss-brainstorming`, `unioss-writing-plans` | GATE-0 clarify + plan structuring (superpowers-style).              |
 
+## Companion plugin — unioss-knowledge
+
+The marketplace also ships **`unioss-knowledge`**: human digests + an agent knowledge base for `UNIOSS 3` tickets. It crawls tickets and comments (across all projects carrying the label), renders WWWH / focus / sentiment reports for any period, and maintains a tiered, token-budgeted knowledge base injected before every ticket.
+
+| Command | Does |
+| ------------------------------------------------ | ------------------------------------------------------------ |
+| `/unioss-knowledge-today` | Summarize today's new `UNIOSS 3` tickets (WWWH). |
+| `/unioss-knowledge-ticket <url>` | Summarize one ticket (WWWH). |
+| `/unioss-knowledge-ask "<question>" [period]` | Free-form query for any period; refreshes only when stale. |
+| `/unioss-knowledge-refresh [daily\|weekly\|monthly]` | Crawl + distill the current window into the KB. |
+| `/unioss-knowledge-approve` | Promote staged rules into the live KB. |
+| `/unioss-knowledge` | Status + staleness. |
+
+- **Store:** `.walkthrough/.knowledge/` — `GLOBAL.md` (injected each session, ≤1200 tokens), `domain/`, `rules/` (staged→approved), `sentiment/`, `digests/`.
+- **Injection:** a SessionStart hook injects `GLOBAL.md` + a staleness nudge; the pipeline's investigate stage reads `domain/<module>.md` + `rules/approved.md` per ticket and appends new facts.
+- **Curation:** observational facts auto-write; prescriptive rules stage for your approval.
+- Shares `.walkthrough/.config/unioss.config.json` (`gitlab.workLabel`, falls back to `ship.label`, default `UNIOSS 3`). Read-only against GitLab.
+
 ## Install
 
 - `/plugin marketplace add https://github.com/ttncode/ttnplugins`
-- `/plugin install unioss-pipeline`
+- `/plugin install unioss-pipeline` · `/plugin install unioss-knowledge`
 - `/unioss-doctor` — verify the environment.
 
 ## Usage
