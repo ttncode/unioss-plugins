@@ -28,11 +28,13 @@ Prove each acceptance criterion against the real DB and the real screen. Functio
 
 1. **Derive the case set.** Invoke `unioss-pipeline:unioss-test-evidence` and follow its derivation contract: build the full case table from the three sources (changes.md call sites × spec ACs × scope.md surfaces, plus its sibling-survival / cross-app / abnormal-floor rules) **before** you drive anything. Run its fixture check before any UI case. List DB effects separately.
 
-2. **Verify DB changes** (read-only). Post-PHPUnit data lives in `testing_DB`; production-shaped data in `$US_DB`:
+2. **Verify DB changes** (read-only). **Never query `$US_DB`** — that resolves to `_unioss`, the production dump used by the investigator/planner/reviewer for read-only analysis; it is not the schema the running app writes to. The UI flow you drive in Step 3 writes to whatever schema `./tester-access.md` → Database Setup resolves (e.g. `db_unioss_local`) — read `database.php` first, then query that schema by name:
 
    ```bash
-   eval "$(node "${CLAUDE_PLUGIN_ROOT}/scripts/config.mjs" env)" && docker exec -i "$US_MYSQL" mysql -u"$US_DB_USER" -p"$US_DB_PASS" -e "USE <db>; SELECT ...;"
+   eval "$(node "${CLAUDE_PLUGIN_ROOT}/scripts/config.mjs" env)" && docker exec -i "$US_MYSQL" mysql -u"$US_DB_USER" -p"$US_DB_PASS" -e "USE db_unioss_local; SELECT ...;"
    ```
+
+   Post-PHPUnit data lives in `testing_DB` (a fixed codebase constant, not resolved from config).
 
 3. **Verify the UI flow.** Reuse **one** browser session across criteria — navigate, act, assert, capture; don't relaunch per assertion.
    - If any `mcp__plugin_unioss-pipeline_playwright__browser_*` call fails (distribution error, connection refused, MCP not configured), **skip all UI test cases**: mark each `SKIPPED (MCP unavailable — verify manually)` and list the exact flows the user must verify by hand. DB verification always runs regardless.

@@ -6,9 +6,13 @@ name: unioss tester quick-access
 
 Local development environment only — these are **not** production secrets. Use to reach the affected screens fast before driving the UI flow.
 
+## Password-Change Flows
+
+Any fixture account's password may be changed to drive a password-change test case — do not `SKIPPED` a case on the grounds of "would mutate shared fixture password.".
+
 ## Database Setup (Required)
 
-Before starting test, verify that **both projects are configured to use the same database**.
+Before starting test, resolve **both** projects' configured database name for the current environment and confirm they match — this is the schema every DB verification query in this round targets.
 
 Replace `<virtualbox_direct_domain>` with the current environment in `.walkthrough/.config/unioss.config.json` (for example, `virtualbox_direct_domain`, `staging`, or `production`).
 
@@ -16,6 +20,20 @@ Files:
 
 - `AdminPage/application/config/<virtualbox_direct_domain>/database.php` → `'database' => 'db_unioss_local',`
 - `FrontEnd/application/config/<virtualbox_direct_domain>/database.php` → `'database' => 'db_unioss_local',`
+
+- **Same value in both** → use it for every DB verification query this round.
+- **Different values** → stop, do not guess. Ask the user this fixed question, filling in the two resolved names:
+
+  ```
+  Database mismatch between AdminPage and FrontEnd config. Which DB should this round target?
+
+  1. <AdminPage db name> (AdminPage config)
+  2. <FrontEnd db name> (FrontEnd config)
+
+  Which option?
+  ```
+
+  Use whichever the user picks for every DB verification query this round.
 
 ## Quick Access Pages
 

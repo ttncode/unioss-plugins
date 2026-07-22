@@ -42,7 +42,7 @@ A **module key** (`admin-page`, `front-end`, `common-helper`, `common-models`) i
 | `source.root`                              | current workspace (cwd)                                   | host root that holds the module checkouts            |
 | `source.modules.<key>`                     | `AdminPage`, `FrontEnd`, `common-helper`, `common-models` | **the** on-disk path per module                      |
 | `docker.mysql` / `docker.php`              | `mysql-unioss3` / `php-unioss3`                           | container names                                      |
-| `db.name` / `db.user` / `db.password`      | `_unioss` / `root` / `ProotW`                             | DB access                                            |
+| `db.name` / `db.user` / `db.password`      | `_unioss` / `root` / `ProotW`                             | DB access for investigation/read-only stages (production dump) — tester queries the app's own configured schema instead, see `unioss-verify/tester-access.md` |
 | `ship.assignee`                            | `null` → auto (the `GITLAB_TOKEN` owner)                  | MR assignee (both modes); set a username to override |
 | `ship.label`                               | `UNIOSS 3`                                                | MR label if it exists on the project                 |
 | `ship.staging.targetBranch` / `.reviewer`  | `v3-develop-tps` / `dat.pham`                             | internal-staging MR target + reviewer                |
