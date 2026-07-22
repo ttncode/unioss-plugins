@@ -34,5 +34,5 @@ From the dispatch prompt:
 ## Related files
 
 - `skills/unioss-plan/SKILL.md` — spec mode and plan mode.
-- `skills/unioss-writing-plans/SKILL.md` — the plan structure this stage produces (plus Story points + Manual Testing).
+- `skills/unioss-writing-plans/SKILL.md` — the plan structure this stage produces (plus Story points).
 - `skills/unioss-pipeline/REFERENCE.md` — shared stage rules.

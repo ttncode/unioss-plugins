@@ -19,17 +19,14 @@ Prove each acceptance criterion against the real DB and the real screen. Functio
 
 ## Input
 
-- `round-<N>/changes.md` — what changed.
-- `round-<N>/implementation.v*.md` → its `## Manual Testing` section — the planner's Normal/Abnormal cases. This is the **source** for the hand-off checklist in Output.
-- The ticket's acceptance criteria.
+- `round-<N>/changes.md` — what changed (per-call-site case source).
+- The ticket's acceptance criteria (spec) — per-AC case source.
+- The ticket-root `scope.md` — affected features/URLs (per-surface case source; written by the scope stage right before this one).
 - The round path.
 
 ## Workflow
 
-1. **Identify what to verify.** Build a checklist — one row per acceptance criterion. Every criterion maps to a concrete screen + action **before** you drive anything. List DB effects separately.
-
-   | Criterion | Screen (URL) | Action to perform | Expected on-screen result |
-   | --------- | ------------ | ----------------- | ------------------------- |
+1. **Derive the case set.** Invoke `unioss-pipeline:unioss-test-evidence` and follow its derivation contract: build the full case table from the three sources (changes.md call sites × spec ACs × scope.md surfaces, plus its sibling-survival / cross-app / abnormal-floor rules) **before** you drive anything. Run its fixture check before any UI case. List DB effects separately.
 
 2. **Verify DB changes** (read-only). Post-PHPUnit data lives in `testing_DB`; production-shaped data in `$US_DB`:
 
@@ -54,27 +51,28 @@ Prove each acceptance criterion against the real DB and the real screen. Functio
 `test-results.md` contains:
 
 - DB verification results.
-- A per-criterion table — Criterion · Screen · Action · Expected · Result · Console · Network · Screenshot. **Every** Step 1 criterion gets a row. `Console` = `clean` or the error/warning text; `Network` = the action's method·URL·status (or `n/a` for a non-network action). A criterion whose `Console` shows an action-triggered error or whose `Network` shows an unexpected status is marked failed in `Result`, and counts toward the failed-criteria total.
-- Each screenshot linked right after the step it documents:
+- The **full derived case table** per the `unioss-test-evidence` schema — ID · Category · Source · Precondition · Steps · Expected · Actual · Status (`RAN-PASS`/`RAN-FAIL`/`SKIPPED`+reason) · Evidence. **Every** derived case gets a row — none dropped, none re-framed. A case whose console shows an action-triggered error or whose network shows an unexpected status is `RAN-FAIL` even if the screen looks right.
+- Each screenshot linked right after the case it documents, named `NN-<case-id>-<slug>.png`:
 
   ```markdown
-  📸 [Description of what is shown](screenshots/step-name.png)
+  📸 [Description of what is shown](screenshots/01-test001-login-page.png)
   ```
 
-- A final `## Manual Testing (run these yourself)` section — a checkbox list of every case from the plan's `## Manual Testing` that this stage did **not** auto-verify: MCP-skipped UI flows, abnormal/edge cases too fragile to drive, and any DB effect the user should re-confirm by hand. Each item keeps its plan wording (screen/URL, action, expected, DB check). Auto-verified cases are omitted here — they already have a row in the per-criterion table above. If everything was auto-verified, state `None — all planned cases auto-verified.`
+- A final `## Manual Testing (run these yourself)` section — a checkbox list of every **derived** case this stage did not run (`SKIPPED` rows): MCP-skipped UI flows, flows the browser can't reach, cross-app regression cases, and any DB effect the user should re-confirm by hand. One item per skipped case, with its screen/URL, action, expected result, and DB check. If everything ran, state `None — all derived cases auto-verified.`
 
   ```markdown
   ## Manual Testing (run these yourself)
 
-  - [ ] <case> — <screen/URL> → <action> → expect <result> (DB: <check>)
+  - [ ] <case-id> — <screen/URL> → <action> → expect <result> (DB: <check>)
   ```
 
-Return: overall pass/fail, the count of failed criteria, the count of manual cases handed off, and the backticked absolute path to `test-results.md`. Never paste the full report.
+Return: the **verdict** per the `unioss-test-evidence` rules (`PASS` all RAN-PASS · `PARTIAL` any SKIPPED · `FAIL` any RAN-FAIL), the counts of failed and skipped cases, the skipped-case list (for the orchestrator's `open_issues`/`carry_over`), and the backticked absolute path to `test-results.md`. Never paste the full report.
 
-**`SKIPPED (MCP unavailable)` is never counted as a pass** — surface it explicitly; every skipped flow becomes a Manual Testing hand-off item.
+**A SKIPPED case is never counted as a pass** — surface it explicitly; every skipped case becomes a Manual Testing hand-off item, and any skip caps the verdict at `PARTIAL`.
 
 ## Related files
 
-- `./tester-access.md` — login URLs + credentials.
+- `../unioss-test-evidence/SKILL.md` — case-derivation + evidence contract (Step 1).
+- `./tester-access.md` — login URLs + credentials (validated by the fixture check).
 - `agents/unioss-tester.md` — the subagent that runs this.
 - `skills/unioss-pipeline/REFERENCE.md` — shared stage rules, DB access, MCP naming.

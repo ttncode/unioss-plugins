@@ -88,8 +88,8 @@ Print its output per the **Output → Step 0** contract below, then **stop — a
 10. **GATE 3 — Review fix/accept.** Present findings by severity.
     - **fix** → invoke `unioss-pipeline:unioss-implement` to apply fixes + re-run filtered tests → ask "re-review or proceed?"; if re-review, go to step 9.
     - **accept** → (AdminPage) invoke `unioss-pipeline:unioss-implement` full mode: full suite with a fresh DB (`phpunit-config apply --import`) → `round-<current_round>/UT_#[IID]_[YYYYMMDD]_V1.txt`.
-11. **Tester** — dispatch the `unioss-pipeline:unioss-tester` agent with the `changes.md` path + acceptance criteria. Writes `test-results.md`; returns pass/fail. If any UI criterion is SKIPPED (no browser MCP), note it explicitly — never treat SKIPPED as a pass. If the tester returns a non-zero manual-hand-off count, tell the user their `## Manual Testing (run these yourself)` checklist awaits in `test-results.md`.
-12. **Scope** — dispatch the `unioss-pipeline:unioss-scope` agent with the `changes.md` path + round path. Writes/updates `scope.md` at the ticket root (a sibling of `round-<N>/`, not inside it — see REFERENCE → Artifact layout); returns its path. Runs even if the tester reported a SKIPPED UI criterion — the scope reflects the code change, not the verification outcome.
+11. **Scope** — dispatch the `unioss-pipeline:unioss-scope` agent with the `changes.md` path + round path. Writes/updates `scope.md` at the ticket root (a sibling of `round-<N>/`, not inside it — see REFERENCE → Artifact layout); returns its path. Runs right after GATE 3 accept — the diff is final, and the scope reflects the code change, not the verification outcome. It runs **before** the tester so the tester consumes its affected features/URLs as a coverage source.
+12. **Tester** — dispatch the `unioss-pipeline:unioss-tester` agent with the `changes.md` path + acceptance criteria + the ticket-root `scope.md` path. The tester derives its case set per `unioss-pipeline:unioss-test-evidence` (changes call sites × spec ACs × scope surfaces). Writes `test-results.md`; returns a `PASS`/`PARTIAL`/`FAIL` verdict plus the skipped-case list — record skips into the round's `open_issues`/`carry_over`. Never treat SKIPPED as a pass. If the tester returns a non-zero manual-hand-off count, tell the user their `## Manual Testing (run these yourself)` checklist awaits in `test-results.md`.
 13. **Finalize** — for every repo the coder touched, commit on its feature branch using `#[IID] - [Message]`. Per REFERENCE: app branches (AdminPage/FrontEnd) are committed locally only (no push, no MR) and exclude the submodule gitlink; submodule branches are pushed. Never touch a protected branch. Present the final summary per **Output → Step 13**, then ask Decision prompt **(b)**.
 
 ### Flow diagram
@@ -115,9 +115,9 @@ digraph unioss_pipeline {
   Reviewer -> "GATE 3\n(review)";
   "GATE 3\n(review)" -> Coder [label="fix"];
   "GATE 3\n(review)" -> "Full PHPUnit" [label="accept"];
-  "Full PHPUnit" -> Tester;
-  Tester -> Scope;
-  Scope -> Finalize;
+  "Full PHPUnit" -> Scope;
+  Scope -> Tester;
+  Tester -> Finalize;
   Finalize -> "Decision (b)";
   "Decision (b)" -> Ship [label="1: push + MR"];
   "Decision (b)" -> Stop [label="2: keep as-is"];
@@ -128,7 +128,7 @@ digraph unioss_pipeline {
 
 ### After every stage — announce its artifacts
 
-The instant a stage returns, print the absolute path to each file it wrote, one per line, per REFERENCE → Artifact paths — **do not wait for Step 13.** This is mandatory for the gate-less stages the human would otherwise never see a link for: investigator (`investigation.md`), reporter (`report.md`), coder (`changes.md`, `api-spec.md`), tester (`test-results.md`), and scope (`scope.md`). Subagents return absolute paths; relay them verbatim — never downgrade to a relative path.
+The instant a stage returns, print the absolute path to each file it wrote, one per line, per REFERENCE → Artifact paths — **do not wait for Step 13.** This is mandatory for the gate-less stages the human would otherwise never see a link for: investigator (`investigation.md`), reporter (`report.md`), coder (`changes.md`, `api-spec.md`), scope (`scope.md`), and tester (`test-results.md`). Subagents return absolute paths; relay them verbatim — never downgrade to a relative path.
 
 ```
 📄 `/abs/workspace/.walkthrough/AP-1583/round-1/investigation.md`
@@ -200,5 +200,5 @@ Which option?
 - `scripts/plan-table.mjs` — renders the Step 0 table.
 - `agents/unioss-investigator.md`, `unioss-planner.md`, `unioss-reviewer.md`, `unioss-tester.md`, `unioss-scope.md` — the dispatched subagents.
 - `skills/unioss-implement/SKILL.md` — the coder (main thread).
-- `skills/unioss-scope/SKILL.md` — the Step 12 scope writer.
+- `skills/unioss-scope/SKILL.md` — the Step 11 scope writer (runs before the tester).
 - `skills/unioss-ship/SKILL.md` — invoked by Decision prompt (b).

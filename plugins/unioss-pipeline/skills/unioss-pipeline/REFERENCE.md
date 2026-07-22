@@ -106,7 +106,7 @@ Hidden tracking + input, under `.walkthrough/.pipeline/<PREFIX>-[IID]/`:
 
 ## Artifact paths
 
-- **Announce every file the moment its stage writes it — never wait for the final summary.** The instant a stage (investigator, reporter, spec, plan, coder, reviewer, tester, scope) finishes a file, print one standalone line per file so the human gets a clickable link immediately:
+- **Announce every file the moment its stage writes it — never wait for the final summary.** The instant a stage (investigator, reporter, spec, plan, coder, reviewer, scope, tester) finishes a file, print one standalone line per file so the human gets a clickable link immediately:
 
       📄 `/home/me/unioss/.walkthrough/AP-1583/round-1/review.md`
 

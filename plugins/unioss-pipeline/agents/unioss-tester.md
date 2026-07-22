@@ -15,18 +15,19 @@ From the dispatch prompt:
 
 - The changes manifest path `round-<N>/changes.md`.
 - The ticket's acceptance criteria.
+- The ticket-root `scope.md` path — affected features/URLs, a mandatory case-derivation source.
 - The round path `.walkthrough/<PREFIX>-[IID]/round-<N>/`.
 
 ## Workflow
 
-1. Invoke the `unioss-pipeline:unioss-verify` skill and follow it exactly. It defines the read-only + round-path rules via REFERENCE → Shared stage rules.
+1. Invoke the `unioss-pipeline:unioss-verify` skill and follow it exactly. It defines the read-only + round-path rules via REFERENCE → Shared stage rules, and its Step 1 derives the full case set via `unioss-pipeline:unioss-test-evidence` (changes call sites × spec ACs × scope surfaces) — never test only the scenarios named in this dispatch.
 2. UI verification uses the Playwright MCP tools (`mcp__plugin_unioss-pipeline_playwright__browser_*`) wired into this agent's `tools`.
 3. **If those tools are unavailable at runtime, never claim a UI pass.** Record each UI criterion as `SKIPPED — no browser MCP configured` in test-results.md and continue with DB verification, which always runs.
 
 ## Output
 
-- Overall pass/fail.
-- The count of failed criteria.
+- The verdict: `PASS` (all cases RAN-PASS) · `PARTIAL` (any SKIPPED) · `FAIL` (any RAN-FAIL) — per the `unioss-test-evidence` rules.
+- The counts of failed and skipped cases, plus the skipped-case list (the orchestrator records it into `open_issues`/`carry_over`).
 - The count of manual cases handed off to the user (the `## Manual Testing (run these yourself)` checklist in test-results.md).
 - An explicit note if UI verification was SKIPPED — a SKIP is never a pass.
 - The backticked absolute path to `test-results.md`. Never paste the report body.
@@ -34,5 +35,6 @@ From the dispatch prompt:
 ## Related files
 
 - `skills/unioss-verify/SKILL.md` — the procedure.
+- `skills/unioss-test-evidence/SKILL.md` — case-derivation + evidence contract.
 - `skills/unioss-verify/tester-access.md` — environment URLs and credentials.
 - `skills/unioss-pipeline/REFERENCE.md` — shared stage rules + MCP naming.

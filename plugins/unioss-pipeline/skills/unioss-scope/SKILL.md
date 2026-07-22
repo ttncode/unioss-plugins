@@ -21,7 +21,7 @@ Follow `../unioss-pipeline/REFERENCE.md` → Shared stage rules, with one delibe
 
 ## Input
 
-- **Pipeline:** invoked at Step 12 of `unioss-pipeline`, right after the tester stage and before Finalize (Step 13) — the diff is final by then (GATE 3 already accepted). Reads the round's `changes.md` (+ `api-spec.md` if present) as the starting source of truth, plus every repo the coder touched.
+- **Pipeline:** invoked at Step 11 of `unioss-pipeline`, right after GATE 3 accept and **before** the tester (Step 12) — the diff is final by then (GATE 3 already accepted), and the tester consumes this file's affected features/URLs as a coverage source. Reads the round's `changes.md` (+ `api-spec.md` if present) as the starting source of truth, plus every repo the coder touched.
 - **Standalone** (`/unioss-scope [ticket-number]`): if no round context exists, derive the change set from `git diff` / `git log` against the base branch (`gitlab.baseBranch`, see REFERENCE → Configuration) in whichever repo(s) the current branch touches.
 - Both: the ticket `<PREFIX>#[IID]` (`AP` for AdminPage, `FE` for FrontEnd — see REFERENCE → Repos & prefixes).
 
@@ -57,5 +57,5 @@ Return: the backticked absolute path (workspace root + `.walkthrough/<PREFIX>-[I
 - `./scope-template.md` — the required structure + fill-in rules.
 - `./scope-examples.md` — three accepted real examples (multi-app, single-app, brand-new-feature) plus the Content-bullet good/bad comparison.
 - `skills/unioss-implement/SKILL.md` — writes `changes.md`, this skill's primary input.
-- `skills/unioss-pipeline/SKILL.md` — Step 12 is where this runs in the full pipeline, right before Finalize (Step 13).
+- `skills/unioss-pipeline/SKILL.md` — Step 11 is where this runs in the full pipeline, right before the tester (Step 12).
 - `skills/unioss-pipeline/REFERENCE.md` — shared stage rules, repo prefixes, base branch.

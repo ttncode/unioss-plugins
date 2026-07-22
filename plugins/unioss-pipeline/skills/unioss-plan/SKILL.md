@@ -40,12 +40,14 @@ Write `round-<N>/spec.md`. Mandatory sections:
 ### Plan mode — the how, exact code
 
 1. **Draft and structure the plan in writing-plans format.** Invoke `unioss-pipeline:unioss-writing-plans` to structure the plan with writing-plans discipline: the plan header (Goal / Architecture / Tech Stack / Global Constraints), then `### Task N` blocks with **Files**, **Interfaces**, bite-sized steps, a verification per task, and a commit per task. Use UNIOSS-specific examples throughout — absolute PHP/CI3 paths, `docker exec -i "$US_PHP" …` commands (resolve `$US_PHP` via `eval "$(node "${CLAUDE_PLUGIN_ROOT}/scripts/config.mjs" env)"`), and migration phases — not generic pytest/JS examples.
-   Add exactly two UNIOSS sections on top of that structure:
+   Add exactly one UNIOSS section on top of that structure:
    - **Story points** — a `**Story points:** <N>` line in the plan header and a
      per-task estimate on each `### Task N`.
-   - **Manual Testing** — a `## Manual Testing` section after the tasks, split
-     into **Normal Cases** and **Abnormal Cases** (validation errors,
-     unauthorized access, fallback), each with explicit DB-verification steps.
+
+   No `## Manual Testing` section — test-case coverage is derived at the tester
+   stage by `unioss-pipeline:unioss-test-evidence` (changes call sites × spec
+   ACs × scope surfaces); the human's manual checklist is the tester's
+   `## Manual Testing (run these yourself)` hand-off in `test-results.md`.
 2. **Save** `round-<N>/implementation.v1.md`.
 
 ### Versioning on a GATE edit
@@ -62,7 +64,7 @@ Never paste the spec or plan body.
 
 ## Related files
 
-- `skills/unioss-writing-plans/SKILL.md` — the plan structure this stage produces (plus Story points + Manual Testing).
+- `skills/unioss-writing-plans/SKILL.md` — the plan structure this stage produces (plus Story points).
 - `agents/unioss-planner.md` — the subagent that runs this.
 - `skills/unioss-implement/SKILL.md` — the coder that applies the plan.
 - `skills/unioss-pipeline/REFERENCE.md` — shared stage rules.
