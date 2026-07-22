@@ -1,4 +1,5 @@
 import { pathToFileURL } from 'node:url';
+import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { resolveConfig } from './config.mjs';
 import { getToken as realGetToken } from './gitlab.mjs';
@@ -46,7 +47,15 @@ export async function runRefresh(kind, cwd = process.cwd(), now = new Date(), de
       const age = stalenessDays(readIndex(dir), 'sentiment', now) ?? 0;
       const focus = crawled.map((c) => `${c.issue.title} (${c.issue.web_url})`).slice(0, 5);
       const friction = sentiment.criticism.slice(0, 5).map((c) => `${c.body} (${c.source})`);
-      atomicWrite(gp, renderGlobal({ focus, rules: [], friction, updated: now.toISOString().slice(0, 10), sentimentAgeDays: age }));
+      const approvedPath = join(dir, 'rules', 'approved.md');
+      const rules = existsSync(approvedPath)
+        ? readFileSync(approvedPath, 'utf8')
+            .split('\n')
+            .filter((line) => line.startsWith('- '))
+            .map((line) => line.slice(2).trim())
+            .slice(0, 5)
+        : [];
+      atomicWrite(gp, renderGlobal({ focus, rules, friction, updated: now.toISOString().slice(0, 10), sentimentAgeDays: age }));
       written.push(gp);
     }
     touchLayer(dir, kind, now);
