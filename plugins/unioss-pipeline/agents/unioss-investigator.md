@@ -21,7 +21,7 @@ From the dispatch prompt:
 ## Workflow
 
 1. Invoke the `unioss-pipeline:unioss-investigate` skill and follow it exactly. It defines the read-only + round-path rules via REFERENCE → Shared stage rules.
-2. Run only the steps for your mode — investigate is Steps 1–4, report is Step 5. Never do both in one dispatch.
+2. Run only the steps for your mode — investigate is Steps 1–5, report is Step 6. Never do both in one dispatch.
 
 ## Output
 
