@@ -12,7 +12,7 @@ import {
 import { renderDailyDigest } from './wwwh.mjs';
 import { splitSentiment, renderSentiment, renderGlobal } from './distill.mjs';
 
-const WINDOW = { daily: 'today', weekly: 'week', monthly: 'month' };
+const WINDOW = { daily: 'today', weekly: 'week', monthly: 'month', yearly: 'year' };
 
 export async function runRefresh(kind, cwd = process.cwd(), now = new Date(), deps = {}) {
   const getToken = deps.getToken ?? realGetToken;
@@ -27,7 +27,7 @@ export async function runRefresh(kind, cwd = process.cwd(), now = new Date(), de
   const written = [];
   try {
     const period = parsePeriod(WINDOW[kind], now);
-    // daily digest = tickets that arrived today; weekly/monthly = any ticket active in the window.
+    // daily digest = tickets that arrived today; weekly/monthly/yearly = any ticket active in the window.
     const dateField = kind === 'daily' ? 'created' : 'updated';
     const crawled = await crawl({ host: cfg.host, token, label: cfg.workLabel, from: period.from, to: period.to, dateField });
     appendObservations(dir, toObservations(crawled));
@@ -38,7 +38,7 @@ export async function runRefresh(kind, cwd = process.cwd(), now = new Date(), de
       atomicWrite(p, renderDailyDigest(crawled.map((c) => c.issue), period.key));
       written.push(p);
     }
-    if (kind === 'weekly' || kind === 'monthly') {
+    if (kind !== 'daily') {
       ensureDir(join(dir, 'sentiment'));
       const sentiment = splitSentiment(toObservations(crawled));
       const cp = join(dir, 'sentiment', 'current.md');
