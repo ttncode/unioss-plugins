@@ -104,7 +104,7 @@ Artifacts land in `.walkthrough/<PREFIX>#<IID>/round-<N>/`, surfaced as Ctrl+Cli
 ### Claude Code
 
 ```bash
-/plugin marketplace add https://github.com/ttncode/ttnplugins
+/plugin marketplace add https://github.com/ttncode/unioss-plugins
 /plugin install unioss-pipeline
 /plugin install unioss-knowledge
 ```
@@ -112,13 +112,13 @@ Artifacts land in `.walkthrough/<PREFIX>#<IID>/round-<N>/`, surfaced as Ctrl+Cli
 ### Antigravity
 
 ```bash
-agy plugin install https://github.com/ttncode/ttnplugins
+agy plugin install https://github.com/ttncode/unioss-plugins
 ```
 
 ### Codex
 
 ```bash
-codex marketplace add https://github.com/ttncode/ttnplugins
+codex marketplace add https://github.com/ttncode/unioss-plugins
 codex plugin install unioss-pipeline
 codex plugin install unioss-knowledge
 ```
