@@ -1,11 +1,11 @@
 <div align="center">
-  <h1>🛠️ unioss-pipeline</h1>
+  <h1>🛠️ UNIOSS Plugin</h1>
   <p>
     <strong>An A→Z, human-gated ticket pipeline for the UNIOSS team.</strong><br>
     A GitLab ticket in — an investigated, planned, coded, reviewed, tested, ship-ready change out.
   </p>
 
-[![version](https://img.shields.io/badge/version-1.9.0-blue)](./plugins/unioss-pipeline/.claude-plugin/plugin.json)
+[![version](https://img.shields.io/badge/version-1.11.1-blue)](./plugins/unioss-pipeline/.claude-plugin/plugin.json)
 [![tests](https://img.shields.io/badge/tests-94%20passing-brightgreen)](#)
 [![PHP](https://img.shields.io/badge/PHP-8.1-777bb4)](#)
 [![CodeIgniter](https://img.shields.io/badge/CodeIgniter-3.x-ee4323)](#)
@@ -22,15 +22,15 @@
 
 **⚡ Fast setup**
 
-- Two commands to install; `/unioss-doctor` checks deps, containers, token, and browser.
-- **Zero config** on a standard UNIOSS box — defaults for containers, GitLab host, project IDs, module paths, branches, and DB.
-- Every setting in one gitignored file; `config.mjs scan` repairs module paths that differ on your box.
+- Two commands to install; `/unioss-doctor` checks deps.
+- **Zero config** on a standard UNIOSS environment.
+- Every setting in one file `config.mjs`.
 
 **🤖 Automation (A→Z)**
 
-- Reads the GitLab ticket **+ linked issues**, the production DB, and real module source.
-- Runs every stage for you: Investigate → Spec → Plan → Code → Review → Verify → Ship.
-- **Rounds** — customer feedback continues on the same ticket; prior work stays frozen.
+- Reads the GitLab ticket **+ linked issues**, analyzes the dumped production DB and codebase.
+- Runs all the stages automatically: **Investigate → Spec → Plan → Code → Review → Verify → Ship**.
+- **Rounds** — customer feedback continues with new rounds on the same ticket.
 - **One command** opens the staging / customer MRs with the right branch, reviewers, and options.
 
 **✅ Quality & safety**
@@ -39,6 +39,12 @@
 - Review enforces the UNIOSS **CI3 + PHP 8.1 clean-code + security** checklist.
 - **Real tests** — PHPUnit in Docker; UI driven in a real browser (Playwright) with screenshots.
 - Never commits or pushes a **protected branch** — a hook blocks it, not just a rule in a doc.
+
+**🧠 Team knowledge**
+
+- Every ticket auto-summarized (WWWH) — ask what happened today, this week, or on any past ticket without digging through GitLab.
+- Ask free-form questions like "what did customers complain about this week?" and get an answer, not a search.
+- Facts and rules learned from past tickets carry forward automatically into new investigations, so the pipeline gets sharper over time.
 
 ## Pipeline
 
@@ -67,48 +73,29 @@ Artifacts land in `.walkthrough/<PREFIX>#<IID>/round-<N>/`, surfaced as Ctrl+Cli
 
 ## Commands
 
-| Command                                   | Use it when                                                              |
-| ----------------------------------------- | ------------------------------------------------------------------------ |
-| `/unioss-pipeline <gitlab-url>`           | A **new ticket** — run the full A→Z pipeline.                            |
-| `/unioss-feedback <gitlab-url>`           | **Customer feedback** — continue in a new round, not a restart.          |
-| `/unioss-task <description>`              | An **ad-hoc task** with no GitLab ticket.                                |
-| `/unioss-ship staging \| customer`        | **Ship** — open the MR into `v3-develop-tps` / `v3-develop`.             |
-| `/unioss-api-spec <endpoint\|controller>` | **API spec** — write the house-template spec for a new/changed endpoint. |
-| `/unioss-doctor`                          | **Check** deps, containers, token, browser.                              |
+**Pipeline** (`unioss-pipeline` plugin)
 
-## Skills
+| Command                                   | What                                                                                                      |
+| ----------------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| `/unioss-pipeline <gitlab-url>`           | New ticket — e.g. `/unioss-pipeline https://gitlab.unioss.jp/unioss/AdminPage/-/work_items/1834`          |
+| `/unioss-feedback <gitlab-url>`           | Customer feedback — continues in a new round, not a restart                                               |
+| `/unioss-task "<description>"`            | No ticket — e.g. `/unioss-task "Add a CSV export button to the sales-ledger screen"`                      |
+| `/unioss-mr-feedback <mr-url> [...]`      | Verifies and applies another developer's review comments — standalone, not part of the A→Z pipeline       |
+| `/unioss-ship staging`                    | MR into `v3-develop-tps` — previews the plan and waits for "Proceed?" first                               |
+| `/unioss-ship customer`                   | MR into `v3-develop` — syncs `v3-master`, re-runs tests, previews the plan and waits for "Proceed?" first |
+| `/unioss-api-spec <endpoint\|controller>` | Write the house-template API spec for a new/changed endpoint                                              |
+| `/unioss-doctor`                          | Check deps, containers, token, browser                                                                    |
 
-Grouped by pipeline stage. Each stage skill also runs standalone (`/skill-name <args>`).
+**Knowledge** (`unioss-knowledge` plugin)
 
-| Stage       | Skill                                          | Does                                                                |
-| ----------- | ---------------------------------------------- | ------------------------------------------------------------------- |
-| Orchestrate | `unioss-pipeline`                              | Proceed a ticket from A to Z (6 stages + 3 gates).                  |
-| Fetch       | `unioss-gitlab-issue-context`                  | Fetch GitLab ticket + linked issues into `.walkthrough/.pipeline/`. |
-| Investigate | `unioss-investigate`                           | Investigate ticket + linked issues                                  |
-| Plan        | `unioss-plan`                                  | Plan mode (exact per-file code + points).                           |
-| Code        | `unioss-implement`                             | Implement code changes                                              |
-| Review      | `unioss-review`                                | Review code changes against the CI3 + PHP 8.1 + security checklist. |
-| Verify      | `unioss-verify`                                | DB checks + browser-driven UI verification with screenshots.        |
-| Ship        | `unioss-ship`                                  | Open an MR per touched repo (apps + submodules). Never merges.      |
-| Clarify     | `unioss-brainstorming`, `unioss-writing-plans` | GATE-0 clarify + plan structuring (superpowers-style).              |
-
-## Companion plugin — unioss-knowledge
-
-The marketplace also ships **`unioss-knowledge`**: human digests + an agent knowledge base for `UNIOSS 3` tickets. It crawls tickets and comments (across all projects carrying the label), renders WWWH / focus / sentiment reports for any period, and maintains a tiered, token-budgeted knowledge base injected before every ticket.
-
-| Command | Does |
-| ------------------------------------------------ | ------------------------------------------------------------ |
-| `/unioss-knowledge-today` | Summarize today's new `UNIOSS 3` tickets (WWWH). |
-| `/unioss-knowledge-ticket <url>` | Summarize one ticket (WWWH). |
-| `/unioss-knowledge-ask "<question>" [period]` | Free-form query for any period; refreshes only when stale. |
-| `/unioss-knowledge-refresh [daily\|weekly\|monthly]` | Crawl + distill the current window into the KB. |
-| `/unioss-knowledge-approve` | Promote staged rules into the live KB. |
-| `/unioss-knowledge` | Status + staleness. |
-
-- **Store:** `.walkthrough/.knowledge/` — `GLOBAL.md` (injected each session, ≤1200 tokens), `domain/`, `rules/` (staged→approved), `sentiment/`, `digests/`.
-- **Injection:** a SessionStart hook injects `GLOBAL.md` + a staleness nudge; the pipeline's investigate stage reads `domain/<module>.md` + `rules/approved.md` per ticket and appends new facts.
-- **Curation:** observational facts auto-write; prescriptive rules stage for your approval.
-- Shares `.walkthrough/.config/unioss.config.json` (`gitlab.workLabel`, falls back to `ship.label`, default `UNIOSS 3`). Read-only against GitLab.
+| Command                                              | What                                                                                       |
+| ---------------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| `/unioss-knowledge-today`                            | Today's new tickets, summarized (WWWH)                                                     |
+| `/unioss-knowledge-ticket <gitlab-url>`              | Summarize one ticket                                                                       |
+| `/unioss-knowledge-ask "<question>" [period]`        | Ask anything — e.g. `/unioss-knowledge-ask "What did customers complain about this week?"` |
+| `/unioss-knowledge-refresh [daily\|weekly\|monthly]` | Refresh from tickets — run `/unioss-knowledge-approve` after                               |
+| `/unioss-knowledge-approve`                          | Approve staged rules — only then injected into the agents' brain                           |
+| `/unioss-knowledge`                                  | Status — freshness of the knowledge base                                                   |
 
 ## Install
 
@@ -118,15 +105,36 @@ The marketplace also ships **`unioss-knowledge`**: human digests + an agent know
 
 ## Usage
 
-- New ticket — `/unioss-pipeline https://gitlab.unioss.jp/unioss/AdminPage/-/work_items/1834`
-- Feedback (new round) — `/unioss-feedback <gitlab-url>`
-- No ticket — `/unioss-task "Add a CSV export button to the sales-ledger screen"`
-- MR review feedback — `/unioss-mr-feedback <mr-url> [mr-url...]` — verifies and applies another developer's review comments, standalone (not part of the A→Z pipeline)
-- Ship — `/unioss-ship staging` → `v3-develop-tps`; `/unioss-ship customer` (syncs `v3-master`, re-runs tests) → `v3-develop`; both preview the plan and wait for "Proceed?" first
+Typical working combos:
+
+**A ticket, start to ship**
+
+1. `/unioss-knowledge-ticket <gitlab-url>` — quick WWWH read before committing to it _(optional)_
+2. `/unioss-pipeline <gitlab-url>` — full A→Z run, approve at each gate
+3. `/unioss-ship staging` — open the staging MR
+
+**Customer feedback on a shipped ticket**
+
+1. `/unioss-feedback <gitlab-url>` — new round on the same ticket
+2. `/unioss-ship staging` — re-ship
+3. `/unioss-ship customer` — when staging is confirmed OK
+
+**Morning catch-up**
+
+1. `/unioss-knowledge-today` — what came in today, WWWH per ticket
+2. `/unioss-knowledge-ask "What did customers complain about this week?"` — dig into anything
+
+**Weekly knowledge upkeep** (keeps agents sharp)
+
+1. `/unioss-knowledge-refresh weekly` — distill sentiment, rebuild the global brief, stage rules
+2. `/unioss-knowledge-approve` — review staged rules; approved ones are injected into every agent session
+3. `/unioss-knowledge` — confirm freshness
+
+**Something broke?** — `/unioss-doctor` first.
 
 ## Configuration
 
-One file holds everything: `.walkthrough/.config/unioss.config.json` (gitignored). `/unioss-doctor` creates it for you.
+One file holds everything: `.walkthrough/.config/unioss.config.json` (gitignored, shared by both plugins). `/unioss-doctor` creates it for you.
 
 - **Scaffold:** `node "${CLAUDE_PLUGIN_ROOT}/scripts/config.mjs" init` — writes every key, grouped per-machine → per-team → project-wide.
 - **Resolution:** env → file → default, deep-merged.
