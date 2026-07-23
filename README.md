@@ -93,7 +93,7 @@ Artifacts land in `.walkthrough/<PREFIX>#<IID>/round-<N>/`, surfaced as Ctrl+Cli
 | `/unioss-knowledge-today`                            | Today's new tickets, summarized (WWWH)                                                     |
 | `/unioss-knowledge-ticket <gitlab-url>`              | Summarize one ticket                                                                       |
 | `/unioss-knowledge-ask "<question>" [period]`        | Ask anything — e.g. `/unioss-knowledge-ask "What did customers complain about this week?"` |
-| `/unioss-knowledge-refresh [daily\|weekly\|monthly]` | Refresh from tickets — run `/unioss-knowledge-approve` after                               |
+| `/unioss-knowledge-refresh [daily\|weekly\|monthly\|yearly]` | Refresh from tickets — run `/unioss-knowledge-approve` after                       |
 | `/unioss-knowledge-approve`                          | Approve staged rules — only then injected into the agents' brain                           |
 | `/unioss-knowledge`                                  | Status — freshness of the knowledge base                                                   |
 
