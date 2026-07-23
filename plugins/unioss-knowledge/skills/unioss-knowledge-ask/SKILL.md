@@ -53,13 +53,39 @@ Answer from the most-recently-stored knowledge. Crawl only on an opted-in refres
    - Option 1 → pass `--refresh` in the next step.
    - Option 2, or `stale=fresh`, or `stale=none` → no `--refresh`.
 
-4. **Answer.** Run (add `--refresh` only when the user chose to refresh a current period):
+4. **Answer.**
+
+   **intent ≠ sentiment** — run (add `--refresh` only when the user chose to refresh a current period):
 
    ```bash
    node "${CLAUDE_PLUGIN_ROOT}/scripts/ask.mjs" --intent=<intent> --period=<PERIOD_TOKEN> [--refresh]
    ```
 
    Read the printed report path and relay the answer.
+
+   **intent = sentiment** — two steps:
+
+   a. Run:
+
+   ```bash
+   node "${CLAUDE_PLUGIN_ROOT}/scripts/ask.mjs" --intent=sentiment --period=<PERIOD_TOKEN>
+   ```
+
+   It prints an evidence path (`sentiment/evidence-<period>.json`) — no digest yet.
+
+   b. Classify: read the evidence and extract **customer voice only** — ignore developer chatter, code, logs, test output; read Japanese natively; one concise English line + source URL per item; ≤20 per list; ≤200 chars per body; empty arrays are fine. Write `sentiment/classified-<period>.json`:
+
+   ```json
+   { "praise": [{ "body": "...", "source": "..." }], "criticism": [{ "body": "...", "source": "..." }] }
+   ```
+
+   Then run (keep `--refresh` only if chosen at the staleness gate):
+
+   ```bash
+   node "${CLAUDE_PLUGIN_ROOT}/scripts/ask.mjs" --intent=sentiment --period=<PERIOD_TOKEN> --classified=<classified-path> [--refresh]
+   ```
+
+   Relay the digest.
 
 ## Output
 
