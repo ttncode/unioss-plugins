@@ -32,12 +32,26 @@ test('detectIntent classifies sentiment and focus', () => {
 });
 
 test('detectPeriod reads a named month + year', () => {
-  const p = detectPeriod('what did customers praise in June 2026', NOW);
-  assert.equal(p.key, '2026-06');
+  assert.equal(detectPeriod('what did customers praise in June 2026', NOW), '2026-06');
 });
 
 test('detectPeriod returns null when absent', () => {
   assert.equal(detectPeriod('customer focus', NOW), null);
+});
+
+test('detectPeriod tokens round-trip through parsePeriod', () => {
+  const questions = [
+    'complaints this week',
+    'complaints this month',
+    'What did customers complain about this year?',
+    'praise in June 2026',
+    'praise in 2026-03',
+  ];
+  for (const q of questions) {
+    const token = detectPeriod(q, NOW);
+    assert.ok(token, `no token for: ${q}`);
+    assert.ok(parsePeriod(token, NOW), `token not parseable: ${token} (from: ${q})`);
+  }
 });
 
 test('periodOverlapsPresent true for current month, false for past', () => {

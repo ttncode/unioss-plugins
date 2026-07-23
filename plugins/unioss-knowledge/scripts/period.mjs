@@ -43,15 +43,18 @@ export function detectIntent(question) {
   return 'general';
 }
 
-export function detectPeriod(question, now = new Date()) {
+// Returns a parsePeriod-compatible token (not a period object) so the printed
+// value can be passed straight back as --period. Keys like '2026' or '2026-W30'
+// are file/display identifiers and do NOT round-trip through parsePeriod.
+export function detectPeriod(question) {
   const q = String(question || '').toLowerCase();
   const ym = q.match(/\b(20\d{2})-(\d{2})\b/);
-  if (ym) return parsePeriod(`${ym[1]}-${ym[2]}`, now);
+  if (ym) return `${ym[1]}-${ym[2]}`;
   const named = q.match(/\b(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\s+(20\d{2})\b/);
-  if (named) { const mo = MONTHS.indexOf(named[1].slice(0, 3)); return parsePeriod(`${named[2]}-${pad2(mo + 1)}`, now); }
-  if (/this week/.test(q)) return parsePeriod('week', now);
-  if (/this month/.test(q)) return parsePeriod('month', now);
-  if (/this year/.test(q)) return parsePeriod('year', now);
+  if (named) { const mo = MONTHS.indexOf(named[1].slice(0, 3)); return `${named[2]}-${pad2(mo + 1)}`; }
+  if (/this week/.test(q)) return 'week';
+  if (/this month/.test(q)) return 'month';
+  if (/this year/.test(q)) return 'year';
   return null;
 }
 
