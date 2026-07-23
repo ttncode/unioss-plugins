@@ -1,5 +1,5 @@
 ---
-description: Crawl + distill the current window (daily|weekly|monthly) into the knowledge base.
+description: Crawl + distill the current window (daily|weekly|monthly|yearly) into the knowledge base.
 ---
 
 # UNIOSS Knowledge — Refresh

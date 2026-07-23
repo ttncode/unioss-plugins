@@ -50,3 +50,13 @@ test('daily refresh crawls by created window; weekly by updated', async () => {
   await runRefresh('weekly', mkdtempSync(join(tmpdir(), 'krefresh-')), new Date('2026-07-21T00:00:00Z'), spyDeps);
   assert.deepEqual(fields, ['created', 'updated']);
 });
+
+test('yearly refresh writes sentiment + GLOBAL and crawls by updated window', async () => {
+  let captured;
+  const spyCrawl = async (opts) => { captured = opts; return crawlStub(); };
+  const cwd = mkdtempSync(join(tmpdir(), 'krefresh-'));
+  const res = await runRefresh('yearly', cwd, new Date('2026-07-21T00:00:00Z'), { getToken: () => 'tok', crawl: spyCrawl });
+  assert.equal(captured.dateField, 'updated');
+  assert.ok(res.written.some((p) => p.endsWith('current.md')));
+  assert.ok(res.written.some((p) => p.endsWith('GLOBAL.md')));
+});
