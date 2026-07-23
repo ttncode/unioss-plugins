@@ -41,3 +41,12 @@ test('weekly refresh with no approved.md still succeeds and renders "(none yet)"
   const content = readFileSync(globalPath, 'utf8');
   assert.match(content, /## Top active pitfalls \(approved rules\)\n- \(none yet\)/);
 });
+
+test('daily refresh crawls by created window; weekly by updated', async () => {
+  const fields = [];
+  const spyCrawl = async (opts) => { fields.push(opts.dateField); return crawlStub(); };
+  const spyDeps = { getToken: () => 'tok', crawl: spyCrawl };
+  await runRefresh('daily', mkdtempSync(join(tmpdir(), 'krefresh-')), new Date('2026-07-21T00:00:00Z'), spyDeps);
+  await runRefresh('weekly', mkdtempSync(join(tmpdir(), 'krefresh-')), new Date('2026-07-21T00:00:00Z'), spyDeps);
+  assert.deepEqual(fields, ['created', 'updated']);
+});

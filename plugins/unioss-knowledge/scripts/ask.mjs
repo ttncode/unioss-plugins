@@ -24,7 +24,8 @@ export async function runAsk({ intent, period, mutate = false }, cwd = process.c
   const cfg = resolveConfig(cwd);
   const token = getToken();
   if (!token) throw new Error('GITLAB_TOKEN not found in env or ~/.zshrc.local');
-  const crawled = await crawl({ host: cfg.host, token, label: cfg.workLabel, from: period.from, to: period.to });
+  // Activity view: any ticket updated in the period counts, not only newly created ones.
+  const crawled = await crawl({ host: cfg.host, token, label: cfg.workLabel, from: period.from, to: period.to, dateField: 'updated' });
   const dir = knowledgeDir(cwd, cfg.artifactRoot);
   ensureDir(join(dir, 'digests'));
   const observations = toObservations(crawled);

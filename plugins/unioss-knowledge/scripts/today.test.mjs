@@ -25,3 +25,17 @@ test('runToday throws a clear error without a token', async () => {
   const cwd = mkdtempSync(join(tmpdir(), 'ktoday-'));
   await assert.rejects(() => runToday(cwd, new Date(), { getToken: () => undefined, crawl: async () => [] }), /GITLAB_TOKEN/);
 });
+
+test('today crawls by created window', async () => {
+  let captured;
+  const spyCrawl = async (opts) => {
+    captured = opts;
+    return [{
+      issue: { iid: 10, project_id: 32, title: 'T', description: 'd', web_url: 'https://g/unioss/AdminPage/-/issues/10', created_at: '2026-07-21T00:00:00Z', labels: [], author: { name: 'A' } },
+      notes: [],
+    }];
+  };
+  const cwd = mkdtempSync(join(tmpdir(), 'ktoday-'));
+  await runToday(cwd, new Date('2026-07-21T00:00:00Z'), { getToken: () => 'tok', crawl: spyCrawl });
+  assert.equal(captured.dateField, 'created');
+});

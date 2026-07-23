@@ -27,7 +27,9 @@ export async function runRefresh(kind, cwd = process.cwd(), now = new Date(), de
   const written = [];
   try {
     const period = parsePeriod(WINDOW[kind], now);
-    const crawled = await crawl({ host: cfg.host, token, label: cfg.workLabel, from: period.from, to: period.to });
+    // daily digest = tickets that arrived today; weekly/monthly = any ticket active in the window.
+    const dateField = kind === 'daily' ? 'created' : 'updated';
+    const crawled = await crawl({ host: cfg.host, token, label: cfg.workLabel, from: period.from, to: period.to, dateField });
     appendObservations(dir, toObservations(crawled));
 
     if (kind === 'daily') {
