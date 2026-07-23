@@ -5,14 +5,24 @@ export function moduleOf(issue) {
   return issue.web_url?.includes('/FrontEnd/') ? 'front-end' : 'admin-page';
 }
 
-export async function crawl({ host, token, label, from, to }, deps = { listIssues, listNotes }) {
-  const createdAfter = from ? from.toISOString() : undefined;
-  const createdBefore = to ? to.toISOString() : undefined;
-  const issues = await deps.listIssues(host, token, { label, createdAfter, createdBefore });
+function noteInWindow(note, from, to) {
+  if (!note.created_at) return false;
+  const at = new Date(note.created_at);
+  if (from && at < from) return false;
+  if (to && at > to) return false;
+  return true;
+}
+
+export async function crawl({ host, token, label, from, to, dateField = 'created' }, deps = { listIssues, listNotes }) {
+  const after = from ? from.toISOString() : undefined;
+  const before = to ? to.toISOString() : undefined;
+  const issues = await deps.listIssues(host, token, { label, after, before, dateField });
   const out = [];
   for (const issue of issues) {
     const notes = await deps.listNotes(host, token, issue.project_id, issue.iid);
-    out.push({ issue, notes: Array.isArray(notes) ? notes : [] });
+    const all = Array.isArray(notes) ? notes : [];
+    // 'updated' windows on activity — an old ticket's full history must not re-enter every period.
+    out.push({ issue, notes: dateField === 'updated' ? all.filter((n) => noteInWindow(n, from, to)) : all });
   }
   return out;
 }
