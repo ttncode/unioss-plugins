@@ -43,3 +43,33 @@ export function renderGlobal({ focus = [], rules = [], friction = [], updated, s
   ];
   return truncateToCap(lines.join('\n'), capTokens);
 }
+
+export const EVIDENCE_CAP = 300;
+const MAX_CLASSIFIED_ITEMS = 20;
+const MAX_CLASSIFIED_BODY = 200;
+
+// Evidence handed to the agent for sentiment classification — newest first, capped.
+export function buildEvidence(periodKey, focus, observations) {
+  const obs = [...observations]
+    .sort((a, b) => String(b.at).localeCompare(String(a.at)))
+    .slice(0, EVIDENCE_CAP)
+    .map((o) => ({ author: o.author, at: o.at, body: o.body, source: o.source }));
+  return { periodKey, focus, observations: obs };
+}
+
+// Agent-written sentiment must round-trip through this gate before anything is rendered.
+export function validateClassified(raw) {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) throw new Error('classified: must be an object with praise/criticism arrays');
+  const out = {};
+  for (const key of ['praise', 'criticism']) {
+    const arr = raw[key];
+    if (!Array.isArray(arr)) throw new Error(`classified: ${key} must be an array`);
+    if (arr.length > MAX_CLASSIFIED_ITEMS) throw new Error(`classified: ${key} exceeds ${MAX_CLASSIFIED_ITEMS} items`);
+    out[key] = arr.map((item, i) => {
+      if (!item || typeof item.body !== 'string' || typeof item.source !== 'string') throw new Error(`classified: ${key}[${i}] needs string body and source`);
+      if (item.body.length > MAX_CLASSIFIED_BODY) throw new Error(`classified: ${key}[${i}] body exceeds ${MAX_CLASSIFIED_BODY} chars`);
+      return { body: item.body, source: item.source };
+    });
+  }
+  return out;
+}
