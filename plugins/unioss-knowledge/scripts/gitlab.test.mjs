@@ -23,3 +23,28 @@ test('listIssues stops on first empty page', async () => {
   const issues = await listIssues('h', 't', {}, fakeFetch([[]]));
   assert.equal(issues.length, 0);
 });
+
+function captureFetch(urls) {
+  return async (url) => { urls.push(url); return { ok: true, status: 200, json: async () => [] }; };
+}
+
+test('listIssues windows on created_* by default', async () => {
+  const urls = [];
+  await listIssues('h', 't', { after: '2026-07-14T00:00:00.000Z', before: '2026-07-21T00:00:00.000Z' }, captureFetch(urls));
+  assert.match(urls[0], /created_after=/);
+  assert.match(urls[0], /created_before=/);
+  assert.doesNotMatch(urls[0], /updated_after=/);
+});
+
+test('listIssues windows on updated_* when dateField is updated', async () => {
+  const urls = [];
+  await listIssues('h', 't', { after: '2026-07-14T00:00:00.000Z', before: '2026-07-21T00:00:00.000Z', dateField: 'updated' }, captureFetch(urls));
+  assert.match(urls[0], /updated_after=/);
+  assert.match(urls[0], /updated_before=/);
+  assert.doesNotMatch(urls[0], /created_after=/);
+  assert.match(urls[0], /state=all/);
+});
+
+test('listIssues rejects an unknown dateField', async () => {
+  await assert.rejects(() => listIssues('h', 't', { dateField: 'closed' }, captureFetch([])), /Unknown dateField/);
+});
