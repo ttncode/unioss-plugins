@@ -43,9 +43,8 @@ Reply in **exactly** this shape. Fill the placeholder; change nothing else:
 
   ```
     [XX] Playwright MCP — not loaded
-         -> Close and reopen Claude Code to activate it.
-            If the problem persists, reinstall the plugin:
-            /plugin install unioss-pipeline
+         -> Restart your session to activate it.
+            If the problem persists, reinstall the plugin.
   ```
 
 - Decision prompts (below), if triggered, come after the table.

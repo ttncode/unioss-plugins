@@ -10,9 +10,11 @@
 [![PHP](https://img.shields.io/badge/PHP-8.1-777bb4)](#)
 [![CodeIgniter](https://img.shields.io/badge/CodeIgniter-3.x-ee4323)](#)
 [![Claude Code](https://img.shields.io/badge/Claude%20Code-plugin-d97757)](#)
+[![Antigravity](https://img.shields.io/badge/Antigravity-plugin-4285f4)](#)
+[![Codex](https://img.shields.io/badge/Codex-plugin-00a67e)](#)
 [![license](https://img.shields.io/badge/license-MIT-green)](./LICENSE)
 
-<sub>A Claude Code plugin by <strong>ttncode</strong>.</sub>
+<sub>An AI Agent plugin by <strong>ttncode</strong>.</sub>
 
 </div>
 
@@ -111,6 +113,14 @@ Artifacts land in `.walkthrough/<PREFIX>#<IID>/round-<N>/`, surfaced as Ctrl+Cli
 
 ```bash
 agy plugin install https://github.com/ttncode/ttnplugins
+```
+
+### Codex
+
+```bash
+codex marketplace add https://github.com/ttncode/ttnplugins
+codex plugin install unioss-pipeline
+codex plugin install unioss-knowledge
 ```
 
 After installation, run `/unioss-doctor` (or ask the agent to run doctor check) to verify the environment.

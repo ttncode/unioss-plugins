@@ -1,0 +1,18 @@
+{
+  "$schema": "https://codex.openai.com/marketplace.schema.json",
+  "name": "ttnplugins",
+  "description": "ttncode's plugins — the UNIOSS A→Z ticket pipeline and knowledge base.",
+  "owner": { "name": "ttncode" },
+  "plugins": [
+    {
+      "name": "unioss-pipeline",
+      "source": "./plugins/unioss-pipeline",
+      "description": "Automated UNIOSS ticket workflow: investigator → planner → coder → reviewer → tester."
+    },
+    {
+      "name": "unioss-knowledge",
+      "source": "./plugins/unioss-knowledge",
+      "description": "UNIOSS knowledge workflow for crawling, digesting, and building an agent knowledge base."
+    }
+  ]
+}
