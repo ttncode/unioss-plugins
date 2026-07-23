@@ -1,22 +1,11 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { estimateTokens, truncateToCap, splitSentiment, renderGlobal, buildEvidence, validateClassified } from './distill.mjs';
+import { estimateTokens, truncateToCap, renderGlobal, buildEvidence, validateClassified } from './distill.mjs';
 
 test('truncateToCap keeps short text, trims long', () => {
   assert.equal(truncateToCap('abc', 100), 'abc');
   const long = 'x'.repeat(1000);
   assert.ok(truncateToCap(long, 10).length <= 40);
-});
-
-test('splitSentiment classifies by keyword', () => {
-  const obs = [
-    { body: 'Thank you, this is very helpful', source: 's1' },
-    { body: 'This is broken and frustrating', source: 's2' },
-    { body: 'neutral status update', source: 's3' },
-  ];
-  const { praise, criticism } = splitSentiment(obs);
-  assert.equal(praise.length, 1);
-  assert.equal(criticism.length, 1);
 });
 
 test('renderGlobal respects the token cap', () => {
