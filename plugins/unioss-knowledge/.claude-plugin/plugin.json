@@ -1,6 +1,6 @@
 {
   "name": "unioss-knowledge",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "UNIOSS knowledge base + digests: crawl UNIOSS 3 tickets/comments into human reports and a tiered agent knowledge base injected before every ticket.",
   "author": { "name": "ttncode" }
 }
