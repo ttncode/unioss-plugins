@@ -32,15 +32,18 @@ The single definition of a valuable ticket report. Both digest flows read this b
 | **Who/When** | <author> · created <date> · state <opened/closed> |
 | **Ticket** | <web_url> |
 
-**What** — the actual requirement, synthesized from description + notes. Never raw template slices.
+**What**
+- synthesize the actual requirement from description + notes as concise bullet points. Never raw template slices.
 
-**Why** — business reason / customer impact. Relayed municipality context counts.
+**Why**
+- business reason / customer impact as bullet points. Relayed municipality context counts.
 
 **Acceptance criteria**
 - [ ] testable criterion derived from ticket content
 - [ ] ...
 
-**Suggested direction** — solution sketch. (Single-ticket mode: codebase-informed. Daily mode: omit or ticket-content-level.)
+**Suggested direction**
+- solution sketch as bullet points. (Single-ticket mode: codebase-informed. Daily mode: omit or ticket-content-level.)
 
 **Open questions**
 - ambiguity a developer must clarify before starting (omit section when none)

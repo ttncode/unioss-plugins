@@ -1,6 +1,6 @@
 {
   "name": "unioss-knowledge",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "description": "UNIOSS knowledge workflow for crawling, digesting, and building an agent knowledge base.",
   "author": {
     "name": "ttncode"
