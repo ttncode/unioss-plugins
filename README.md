@@ -42,7 +42,7 @@
 
 **🧠 Team knowledge**
 
-- Every ticket turned into an agent-written English report — ask what happened today, this week, or on any past ticket without digging through GitLab.
+- Every ticket turned into an agent-written report in your language — ask what happened today, this week, or on any past ticket without digging through GitLab.
 - Ask free-form questions like "what did customers complain about this week?" and get an answer, not a search.
 - Facts and rules learned from past tickets carry forward automatically into new investigations, so the pipeline gets sharper over time.
 
@@ -90,7 +90,7 @@ Artifacts land in `.walkthrough/<PREFIX>#<IID>/round-<N>/`, surfaced as Ctrl+Cli
 
 | Command                                              | What                                                                                       |
 | ---------------------------------------------------- | ------------------------------------------------------------------------------------------ |
-| `/unioss-knowledge-today`                            | Today's new tickets — agent-written English reports                                        |
+| `/unioss-knowledge-today`                            | Today's new tickets — agent-written reports in your language                               |
 | `/unioss-knowledge-ticket <gitlab-url>`              | Full report for one ticket (analysis + AC + direction)                                     |
 | `/unioss-knowledge-ask "<question>" [period]`        | Ask anything — e.g. `/unioss-knowledge-ask "What did customers complain about this week?"` |
 | `/unioss-knowledge-refresh [daily\|weekly\|monthly\|yearly]` | Refresh from tickets — run `/unioss-knowledge-approve` after                       |

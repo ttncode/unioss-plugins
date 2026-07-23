@@ -1,5 +1,5 @@
 ---
-description: Full English report for one GitLab ticket — evidence out, agent analysis (ticket + codebase) in.
+description: Full report (user's language) for one GitLab ticket — evidence out, agent analysis (ticket + codebase) in.
 argument-hint: <gitlab-url>
 ---
 

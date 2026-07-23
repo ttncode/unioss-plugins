@@ -34,7 +34,7 @@ description: Crawl + distill the current window into the knowledge base (daily t
    - **Criticism** — bugs reported from municipalities/production, complaints, repeated requests, dissatisfaction, urgent escalations relayed in comments.
    - **Praise** — relayed thanks, satisfaction, positive confirmations from the customer side.
    - Still ignore: pure dev/PM process chatter (review approvals, merge/deploy notices, refactor debates, CI/test logs) with no customer-impacting content.
-   - Read Japanese natively; one concise English line + source URL per item; ≤20 per list; ≤200 chars per body; empty arrays are honest — never pad with noise.
+   - Read Japanese natively; one concise line in the user's current conversation language + source URL per item; ≤20 per list; ≤200 chars per body; empty arrays are honest — never pad with noise.
    - **Coverage:** the evidence file carries `totalObservations`, `sampled`, `covered`. If `sampled < totalObservations`, your final answer MUST say so (e.g. "classified 300 of 794, sampled across 2026-01-05 – 2026-07-23"). For full coverage you MAY classify `sentiment/observations.jsonl` in period-filtered batches and merge before writing the classified file.
 
    Write the result as `sentiment/classified-<period>.json` next to the evidence file:

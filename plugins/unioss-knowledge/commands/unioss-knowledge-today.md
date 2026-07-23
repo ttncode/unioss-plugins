@@ -1,5 +1,5 @@
 ---
-description: Report today's new UNIOSS 3 tickets — evidence out, agent-written English reports.
+description: Report today's new UNIOSS 3 tickets — evidence out, agent-written reports in the user's language.
 ---
 
 # UNIOSS Knowledge — Today

@@ -1,6 +1,6 @@
 ---
 name: unioss-knowledge-report
-description: How to write a valuable English ticket report from ticket evidence — structure, method, and depth modes. Read before writing any today/ticket/daily report.
+description: How to write a valuable ticket report from ticket evidence — structure, method, depth modes, user's language. Read before writing any today/ticket/daily report.
 ---
 
 # UNIOSS Knowledge — Ticket Report
@@ -10,7 +10,7 @@ The single definition of a valuable ticket report. Both digest flows read this b
 ## Method
 
 - Read the ticket's FULL description and ALL notes from the evidence file — never summarize from the title alone.
-- Translate Japanese titles/content; the report is always **English**.
+- Write the report in the **user's current conversation language** — never a fixed language. Translate Japanese source content into it.
 - Derive acceptance criteria from concrete statements in the ticket — never invent requirements.
 - Mark uncertainty explicitly in Open questions rather than guessing.
 - Never drop a ticket from a multi-ticket digest.
@@ -23,7 +23,7 @@ The single definition of a valuable ticket report. Both digest flows read this b
 ## Report structure (one section per ticket)
 
 ```markdown
-## AP#<iid> — <English one-line title translation>
+## AP#<iid> — <one-line title translated to the user's language>
 
 **Summary** — one sentence: what this ticket is.
 

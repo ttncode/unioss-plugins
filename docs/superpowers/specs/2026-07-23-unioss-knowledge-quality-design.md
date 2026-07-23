@@ -45,16 +45,16 @@ The classification guidance in both skills (refresh step 2, ask step b) is rewri
 > - **Praise** — relayed thanks, satisfaction, positive confirmations from the customer side.
 > - Still ignore: pure dev/PM process chatter (review approvals, merge/deploy notices, refactor debates, CI/test logs) with no customer-impacting content.
 
-Same output contract as today: one concise English line + source URL per item, ≤20/list, ≤200 chars, empty is honest.
+Same output contract as today: one concise line in the user's language + source URL per item, ≤20/list, ≤200 chars, empty is honest.
 
 ## Part C — Report skill + agent-written digests
 
 ### New skill `skills/unioss-knowledge-report/SKILL.md`
 
-The single definition of a valuable ticket report. Both digest flows read it before writing. Report structure (English, always; tables and list items as shown):
+The single definition of a valuable ticket report. Both digest flows read it before writing. Report structure (user's current conversation language — never fixed; tables and list items as shown):
 
 ```markdown
-## AP#<iid> — <English one-line title translation>
+## AP#<iid> — <one-line title translated to the user's language>
 
 **Summary** — one sentence: what this ticket is.
 
