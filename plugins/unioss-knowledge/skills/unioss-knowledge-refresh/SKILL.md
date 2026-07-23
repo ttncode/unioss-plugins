@@ -1,6 +1,6 @@
 ---
 name: unioss-knowledge-refresh
-description: Crawl + distill the current window into the knowledge base (daily WWWH; weekly/monthly/yearly two-phase sentiment + GLOBAL).
+description: Crawl + distill the current window into the knowledge base (daily ticket reports; weekly/monthly/yearly two-phase sentiment + GLOBAL).
 ---
 
 # UNIOSS Knowledge — Refresh
