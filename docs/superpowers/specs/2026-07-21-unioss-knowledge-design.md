@@ -28,7 +28,7 @@
 | Trigger | Manual commands + SessionStart staleness nudge. No cron. |
 | Lesson sources | Customer signal (GitLab comments) + domain/codebase facts. |
 | Language | Both digests and KB in English. Clear, concise, agent-optimized — no rambling prose. |
-| Ticket source | The dashboard label filter, not per-project crawl: `labels=UNIOSS 3 · state=opened · sort=created_date`, spanning all projects that carry the label. Label configurable (`gitlab.workLabel`, default `UNIOSS 3`). |
+| Ticket source | The dashboard label filter, not per-project crawl: `labels=UNIOSS 3 · state=all`, spanning all projects that carry the label. Window: today/daily by `created_*`, weekly/monthly/ask by `updated_*` (see 2026-07-22 amendment). Label configurable (`gitlab.workLabel`, default `UNIOSS 3`). |
 
 ## Architecture
 
@@ -65,7 +65,7 @@ New plugin `plugins/unioss-knowledge/`, added to `.claude-plugin/marketplace.jso
              + staleness nudge                          rules/approved.md
 ```
 
-- **Crawl** = one shared `crawl.mjs`. Given a date window, lists issues via the dashboard label filter (`GET /api/v4/issues?labels=<workLabel>&state=…&created_after=…`, paginated) across every project carrying the label, then pulls each issue's notes. Reuses `fetch-ticket.js`'s token/host logic and pipeline config. Reference (human view): `https://gitlab.unioss.jp/dashboard/issues?sort=created_date&state=opened&label_name[]=UNIOSS+3`.
+- **Crawl** = one shared `crawl.mjs`. Given a date window and a `dateField` (`created` for today/daily, `updated` for weekly/monthly/ask), lists issues via the dashboard label filter (`GET /api/v4/issues?labels=<workLabel>&state=all&<dateField>_after=…`, paginated) across every project carrying the label, then pulls each issue's notes (filtered to the window when `dateField=updated`). Reuses `fetch-ticket.js`'s token/host logic and pipeline config. Reference (human view): `https://gitlab.unioss.jp/dashboard/issues?sort=created_date&label_name[]=UNIOSS+3`.
 - **Digest renderer** and **KB distiller** both consume crawl output — no duplicated ingestion.
 - **Store** is progressive-disclosure (below).
 - **Injection** is layered: hook = tiny always-on `GLOBAL.md`; pipeline = deep ticket-scoped read.

@@ -5,7 +5,7 @@ description: Answer a free-form question about UNIOSS 3 tickets/comments for any
 
 # UNIOSS Knowledge — Ask (read-first)
 
-Answer from the most-recently-stored knowledge. Crawl only on an opted-in refresh.
+Answer from the most-recently-stored knowledge. Crawl only on an opted-in refresh. Crawls cover any ticket **active** (updated) in the period, all states — not only newly created ones.
 
 ## Workflow
 
