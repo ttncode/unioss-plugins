@@ -12,7 +12,7 @@ function why(issue) {
   return labels.length ? labels.join(', ') : 'customer request';
 }
 
-export function renderWwwh(issue) {
+function renderWwwh(issue) {
   return [
     `### ${prefixOf(issue)}#${issue.iid} — ${issue.title}`,
     `- **What:** ${firstLine(issue.description)}`,

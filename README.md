@@ -42,7 +42,7 @@
 
 **🧠 Team knowledge**
 
-- Every ticket auto-summarized (WWWH) — ask what happened today, this week, or on any past ticket without digging through GitLab.
+- Every ticket turned into an agent-written English report — ask what happened today, this week, or on any past ticket without digging through GitLab.
 - Ask free-form questions like "what did customers complain about this week?" and get an answer, not a search.
 - Facts and rules learned from past tickets carry forward automatically into new investigations, so the pipeline gets sharper over time.
 
@@ -90,8 +90,8 @@ Artifacts land in `.walkthrough/<PREFIX>#<IID>/round-<N>/`, surfaced as Ctrl+Cli
 
 | Command                                              | What                                                                                       |
 | ---------------------------------------------------- | ------------------------------------------------------------------------------------------ |
-| `/unioss-knowledge-today`                            | Today's new tickets, summarized (WWWH)                                                     |
-| `/unioss-knowledge-ticket <gitlab-url>`              | Summarize one ticket                                                                       |
+| `/unioss-knowledge-today`                            | Today's new tickets — agent-written English reports                                        |
+| `/unioss-knowledge-ticket <gitlab-url>`              | Full report for one ticket (analysis + AC + direction)                                     |
 | `/unioss-knowledge-ask "<question>" [period]`        | Ask anything — e.g. `/unioss-knowledge-ask "What did customers complain about this week?"` |
 | `/unioss-knowledge-refresh [daily\|weekly\|monthly\|yearly]` | Refresh from tickets — run `/unioss-knowledge-approve` after                       |
 | `/unioss-knowledge-approve`                          | Approve staged rules — only then injected into the agents' brain                           |
@@ -109,7 +109,7 @@ Typical working combos:
 
 **A ticket, start to ship**
 
-1. `/unioss-knowledge-ticket <gitlab-url>` — quick WWWH read before committing to it _(optional)_
+1. `/unioss-knowledge-ticket <gitlab-url>` — quick report read before committing to it _(optional)_
 2. `/unioss-pipeline <gitlab-url>` — full A→Z run, approve at each gate
 3. `/unioss-ship staging` — open the staging MR
 
@@ -121,7 +121,7 @@ Typical working combos:
 
 **Morning catch-up**
 
-1. `/unioss-knowledge-today` — what came in today, WWWH per ticket
+1. `/unioss-knowledge-today` — what came in today, one report per ticket
 2. `/unioss-knowledge-ask "What did customers complain about this week?"` — dig into anything
 
 **Weekly knowledge upkeep** (keeps agents sharp)

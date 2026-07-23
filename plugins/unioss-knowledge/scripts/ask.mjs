@@ -83,7 +83,7 @@ if (isMain) {
   })
     .then((r) => {
       if (r.needsClassification) {
-        console.log(`${r.path}\n\n${r.count} observation(s) — classify (customer voice only), write classified JSON, then re-run with --classified=<path>`);
+        console.log(`${r.path}\n\n${r.count} observation(s) — classify (customer-impacting signal — see the ask skill), write classified JSON, then re-run with --classified=<path>`);
       } else {
         console.log(`${r.path}\n\n${r.markdown}`);
       }

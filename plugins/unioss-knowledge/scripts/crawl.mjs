@@ -45,3 +45,21 @@ export function toObservations(crawled) {
   }
   return recs;
 }
+
+// Full-fidelity per-ticket evidence for agent-written reports (today/ticket/daily flows).
+export function toTicketEvidence(crawled) {
+  return crawled.map(({ issue, notes }) => ({
+    iid: issue.iid,
+    prefix: moduleOf(issue) === 'front-end' ? 'FE' : 'AP',
+    title: issue.title,
+    web_url: issue.web_url,
+    state: issue.state ?? 'opened',
+    author: issue.author?.name ?? 'unknown',
+    created_at: issue.created_at,
+    labels: issue.labels ?? [],
+    description: issue.description ?? '',
+    notes: (Array.isArray(notes) ? notes : [])
+      .filter((n) => !n.system)
+      .map((n) => ({ author: n.author?.name ?? 'unknown', at: n.created_at, body: n.body ?? '' })),
+  }));
+}

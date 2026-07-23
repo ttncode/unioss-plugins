@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import { resolveConfig } from './config.mjs';
 import { getToken as realGetToken } from './gitlab.mjs';
 import { parsePeriod } from './period.mjs';
-import { crawl as realCrawl, toObservations } from './crawl.mjs';
+import { crawl as realCrawl, toObservations, toTicketEvidence } from './crawl.mjs';
 import {
   knowledgeDir, ensureDir, atomicWrite, appendObservations, touchLayer,
   readIndex, stalenessDays, acquireLock, releaseLock,
@@ -35,10 +35,17 @@ async function crawlPhase(kind, period, cfg, dir, now, deps) {
   appendObservations(dir, toObservations(crawled));
   if (kind === 'daily') {
     ensureDir(join(dir, 'digests'));
-    const p = join(dir, 'digests', `${period.key}-daily.md`);
-    atomicWrite(p, renderDailyDigest(crawled.map((c) => c.issue), period.key));
     touchLayer(dir, 'daily', now);
-    return { written: [p] };
+    if (crawled.length === 0) {
+      const p = join(dir, 'digests', `${period.key}-daily.md`);
+      atomicWrite(p, renderDailyDigest([], period.key));
+      return { written: [p] };
+    }
+    // Reports are the agent's job (unioss-knowledge-report skill) — emit evidence only.
+    const evidence = { date: period.key, tickets: toTicketEvidence(crawled) };
+    const p = join(dir, 'digests', `${period.key}-daily.evidence.json`);
+    atomicWrite(p, JSON.stringify(evidence, null, 2) + '\n');
+    return { written: [p], ticketCount: crawled.length, needsReport: true };
   }
   // Sentiment is the agent's judgment — emit evidence only; finalize renders it.
   ensureDir(join(dir, 'sentiment'));
@@ -107,6 +114,7 @@ if (isMain) {
     .then((r) => {
       console.log(r.written.join('\n'));
       if (r.count != null) console.log(`${r.count} observation(s) in evidence — classify, then run --phase=finalize --classified=<path>`);
+      if (r.needsReport) console.log(`${r.ticketCount} ticket(s) — write the daily report per the unioss-knowledge-report skill.`);
     })
     .catch((e) => { console.error(e.message); process.exit(1); });
 }
