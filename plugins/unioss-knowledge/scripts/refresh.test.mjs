@@ -105,3 +105,21 @@ test('daily has no finalize phase', async () => {
     /daily has no finalize/,
   );
 });
+
+test('daily refresh with tickets writes evidence json, no rendered digest', async () => {
+  const cwd = mkdtempSync(join(tmpdir(), 'krefresh-'));
+  const res = await runRefresh('daily', cwd, NOW, deps);
+  assert.ok(res.needsReport);
+  assert.equal(res.ticketCount, 1);
+  assert.ok(res.written.some((p) => p.endsWith('2026-07-21-daily.evidence.json')));
+  assert.equal(existsSync(kb(cwd, 'digests', '2026-07-21-daily.md')), false);
+  const ev = JSON.parse(readFileSync(res.written[0], 'utf8'));
+  assert.equal(ev.tickets[0].iid, 42);
+});
+
+test('daily refresh with zero tickets writes the empty digest itself', async () => {
+  const cwd = mkdtempSync(join(tmpdir(), 'krefresh-'));
+  const res = await runRefresh('daily', cwd, NOW, { getToken: () => 'tok', crawl: async () => [] });
+  assert.ok(res.written.some((p) => p.endsWith('2026-07-21-daily.md')));
+  assert.match(readFileSync(res.written[0], 'utf8'), /No new tickets/);
+});
