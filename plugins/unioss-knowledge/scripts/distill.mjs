@@ -35,13 +35,26 @@ export const EVIDENCE_CAP = 300;
 const MAX_CLASSIFIED_ITEMS = 20;
 const MAX_CLASSIFIED_BODY = 200;
 
-// Evidence handed to the agent for sentiment classification — newest first, capped.
+// Evidence handed to the agent for sentiment classification.
+// Over-cap windows sample EVENLY across the sorted range — coverage over recency —
+// and the coverage fields let the agent disclose exactly what it classified.
 export function buildEvidence(periodKey, focus, observations) {
-  const obs = [...observations]
-    .sort((a, b) => String(b.at).localeCompare(String(a.at)))
-    .slice(0, EVIDENCE_CAP)
-    .map((o) => ({ author: o.author, at: o.at, body: o.body, source: o.source }));
-  return { periodKey, focus, observations: obs };
+  const sorted = [...observations].sort((a, b) => String(b.at).localeCompare(String(a.at)));
+  const total = sorted.length;
+  const picked = total > EVIDENCE_CAP
+    ? Array.from({ length: EVIDENCE_CAP }, (_, i) => sorted[Math.floor(i * total / EVIDENCE_CAP)])
+    : sorted;
+  const obs = picked.map((o) => ({ author: o.author, at: o.at, body: o.body, source: o.source }));
+  return {
+    periodKey,
+    focus,
+    totalObservations: total,
+    sampled: obs.length,
+    covered: obs.length
+      ? { from: obs[obs.length - 1].at, to: obs[0].at }
+      : { from: null, to: null },
+    observations: obs,
+  };
 }
 
 // Agent-written sentiment must round-trip through this gate before anything is rendered.
