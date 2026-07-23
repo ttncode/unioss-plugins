@@ -14,7 +14,7 @@ export async function runToday(cwd = process.cwd(), now = new Date(), deps = {})
   const token = getToken();
   if (!token) throw new Error('GITLAB_TOKEN not found in env or ~/.zshrc.local');
   const period = parsePeriod('today', now);
-  const crawled = await crawl({ host: cfg.host, token, label: cfg.workLabel, from: period.from, to: period.to });
+  const crawled = await crawl({ host: cfg.host, token, label: cfg.workLabel, from: period.from, to: period.to, dateField: 'created' });
   const dir = knowledgeDir(cwd, cfg.artifactRoot);
   ensureDir(join(dir, 'digests'));
   const date = period.key;

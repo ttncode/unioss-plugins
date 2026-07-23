@@ -27,3 +27,12 @@ test('ask on historical period ignores mutate=true (never overwrites live now-KB
   await runAsk({ intent: 'sentiment', period, mutate: true }, cwd, new Date('2026-07-21T00:00:00Z'), { getToken: () => 'tok', crawl: crawlStub });
   assert.equal(existsSync(join(cwd, '.walkthrough', '.knowledge', 'sentiment', 'current.md')), false);
 });
+
+test('ask crawls by updated window (activity view)', async () => {
+  let captured;
+  const spyCrawl = async (opts) => { captured = opts; return crawlStub(); };
+  const cwd = mkdtempSync(join(tmpdir(), 'kask-'));
+  const period = parsePeriod('2026-06', new Date('2026-07-21T00:00:00Z'));
+  await runAsk({ intent: 'focus', period, mutate: false }, cwd, new Date('2026-07-21T00:00:00Z'), { getToken: () => 'tok', crawl: spyCrawl });
+  assert.equal(captured.dateField, 'updated');
+});

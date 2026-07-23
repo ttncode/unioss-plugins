@@ -24,11 +24,12 @@ export async function apiGet(host, endpoint, token, fetchImpl = fetch) {
 const MAX_PAGES = 50;
 
 export async function listIssues(host, token, opts = {}, fetchImpl = fetch) {
-  const { label, createdAfter, createdBefore, state = 'all' } = opts;
+  const { label, after, before, dateField = 'created', state = 'all' } = opts;
+  if (dateField !== 'created' && dateField !== 'updated') throw new Error(`Unknown dateField: ${dateField}`);
   const params = new URLSearchParams({ scope: 'all', per_page: '100', order_by: 'created_at', sort: 'desc', state });
   if (label) params.set('labels', label);
-  if (createdAfter) params.set('created_after', createdAfter);
-  if (createdBefore) params.set('created_before', createdBefore);
+  if (after) params.set(`${dateField}_after`, after);
+  if (before) params.set(`${dateField}_before`, before);
   const out = [];
   for (let page = 1; page <= MAX_PAGES; page++) {
     params.set('page', String(page));

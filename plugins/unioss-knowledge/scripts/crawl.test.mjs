@@ -29,3 +29,34 @@ test('toObservations dedup-keys and skips system notes', () => {
   assert.equal(obs[0].body, 'real');
   assert.ok(obs[0].id.length === 40);
 });
+
+test('crawl with dateField updated forwards it and filters notes to the window', async () => {
+  let captured;
+  const from = new Date('2026-07-14T00:00:00Z');
+  const to = new Date('2026-07-21T00:00:00Z');
+  const deps = {
+    listIssues: async (h, t, opts) => { captured = opts; return [issue()]; },
+    listNotes: async () => [
+      { id: 1, body: 'old comment', system: false, created_at: '2026-06-01T00:00:00Z', author: { name: 'U' } },
+      { id: 2, body: 'in window', system: false, created_at: '2026-07-15T00:00:00Z', author: { name: 'U' } },
+      { id: 3, body: 'boundary', system: false, created_at: '2026-07-21T00:00:00Z', author: { name: 'U' } },
+      { id: 4, body: 'no date', system: false, author: { name: 'U' } },
+    ],
+  };
+  const out = await crawl({ host: 'h', token: 't', label: 'UNIOSS 3', from, to, dateField: 'updated' }, deps);
+  assert.equal(captured.dateField, 'updated');
+  assert.equal(captured.after, from.toISOString());
+  assert.equal(captured.before, to.toISOString());
+  assert.deepEqual(out[0].notes.map((n) => n.body), ['in window', 'boundary']);
+});
+
+test('crawl with default dateField keeps all notes', async () => {
+  const deps = {
+    listIssues: async () => [issue()],
+    listNotes: async () => [
+      { id: 1, body: 'old comment', system: false, created_at: '2026-06-01T00:00:00Z', author: { name: 'U' } },
+    ],
+  };
+  const out = await crawl({ host: 'h', token: 't', label: 'UNIOSS 3', from: new Date('2026-07-14T00:00:00Z'), to: new Date('2026-07-21T00:00:00Z') }, deps);
+  assert.equal(out[0].notes.length, 1);
+});
