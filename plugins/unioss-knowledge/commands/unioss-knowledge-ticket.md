@@ -1,5 +1,6 @@
 ---
 description: Summarize one GitLab ticket by URL using WWWH.
+argument-hint: <gitlab-url>
 ---
 
 # UNIOSS Knowledge — Ticket
