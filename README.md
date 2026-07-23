@@ -99,9 +99,21 @@ Artifacts land in `.walkthrough/<PREFIX>#<IID>/round-<N>/`, surfaced as Ctrl+Cli
 
 ## Install
 
-- `/plugin marketplace add https://github.com/ttncode/ttnplugins`
-- `/plugin install unioss-pipeline` · `/plugin install unioss-knowledge`
-- `/unioss-doctor` — verify the environment.
+### Claude Code
+
+```bash
+/plugin marketplace add https://github.com/ttncode/ttnplugins
+/plugin install unioss-pipeline
+/plugin install unioss-knowledge
+```
+
+### Antigravity
+
+```bash
+agy plugin install https://github.com/ttncode/ttnplugins
+```
+
+After installation, run `/unioss-doctor` (or ask the agent to run doctor check) to verify the environment.
 
 ## Usage
 

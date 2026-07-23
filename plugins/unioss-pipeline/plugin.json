@@ -1,0 +1,9 @@
+{
+  "name": "unioss-pipeline",
+  "version": "1.11.1",
+  "description": "Automated UNIOSS ticket workflow: investigator → planner → coder → reviewer → tester.",
+  "author": {
+    "name": "ttncode"
+  },
+  "disabled": false
+}
