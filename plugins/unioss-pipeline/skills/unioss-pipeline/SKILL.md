@@ -23,7 +23,7 @@ Three entry modes. All share the same gates, rounds, and stages; they differ onl
 
 - **ticket mode** — `/unioss-pipeline <url>` (default). New GitLab ticket, full flow from Investigate. `<PREFIX>` is `AP`/`FE` from the URL.
 - **feedback mode** — `/unioss-feedback <url>`. Ticket already has ≥1 sealed round. Open round N+1 (never restart):
-  1. Run Parse/round-setup (Flow step 1) to open round N+1.
+  1. Read `pipeline-state.json`, determine latest round `N`, set `current_round = N + 1` in state, and create `round-<N+1>/` folder **before Step 0**.
   2. Re-fetch the ticket (`unioss-pipeline:unioss-gitlab-issue-context`); read only the **new comments since the last round**.
   3. Write `round-<N+1>/round-brief.md` from that comment delta; invoke `unioss-pipeline:unioss-brainstorming` on the feedback.
   4. Continue from the **spec** stage (Flow step 4) onward. Investigator (step 2) + GATE 0 (step 3) are skipped — the ticket was investigated in round 1. Prior rounds stay frozen.

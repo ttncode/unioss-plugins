@@ -33,8 +33,8 @@ For each task:
 
 After all tasks complete and verified:
 - Announce: "All tasks complete — running /unioss-ship to open the merge request(s)."
-- **REQUIRED:** run `/unioss-ship`
-- Follow that command's prompts to select the target and confirm the MR(s)
+- **REQUIRED:** ask user to select target mode (`staging` or `customer`), then run `/unioss-ship <mode>`
+- Follow that command's prompts to confirm the MR(s)
 
 ## When to Stop and Ask for Help
 

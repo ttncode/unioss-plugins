@@ -46,6 +46,20 @@ export function authorizingPlanFiles(root) {
   return latest ? planFilesForRound(active, latest) : planFilesIn(active);
 }
 
+export function isMigrationReferenced(file, planFiles) {
+  const base = basename(file);
+  const baseNoTimestamp = base.replace(/^\d{14}_/, '');
+  const baseNoExt = baseNoTimestamp.replace(/\.php$/, '');
+  return planFiles.some((p) => {
+    try {
+      const content = readFileSync(p, 'utf8');
+      return content.includes(base) || content.includes(baseNoTimestamp) || (baseNoExt && content.includes(baseNoExt));
+    } catch {
+      return false;
+    }
+  });
+}
+
 // Only attach stdin listeners when run as the hook entrypoint, so importing this
 // module (e.g. from tests) does not keep the process alive waiting on stdin.
 const isMain = process.argv[1] && process.argv[1].endsWith('guard-migrations.mjs');
@@ -54,19 +68,22 @@ if (isMain) {
   process.stdin.on('data', (c) => (raw += c));
   process.stdin.on('end', () => {
     let file = '';
-    try { file = (JSON.parse(raw).tool_input || {}).file_path || ''; } catch { process.exit(0); }
+    try { file = (JSON.parse(raw).tool_input || {}).file_path || (JSON.parse(raw).tool_input || {}).new_file_path || ''; } catch { process.exit(0); }
     const f = file.replace(/\\/g, '/');
     if (!f.includes('application/migrations/')) process.exit(0);
     const base = basename(f);
     const root = resolveConfig().artifactRoot;
-    const planFiles = authorizingPlanFiles(root);
-    const referenced = planFiles.some((p) => {
-      try { return readFileSync(p, 'utf8').includes(base); } catch { return false; }
-    });
+    let planFiles = authorizingPlanFiles(root);
+    let referenced = isMigrationReferenced(f, planFiles);
+    if (!referenced && activeTicketDir(root)) {
+      // Fallback: check all ticket plans in case activeTicketDir picked a different ticket directory
+      const allPlans = allTicketPlanFiles(root);
+      referenced = isMigrationReferenced(f, allPlans);
+    }
     if (!referenced) {
       const active = activeTicketDir(root);
       const where = active
-        ? `the active ticket's latest round plan (under ${active})`
+        ? `the active ticket's latest round plan (under ${active}) or any plan under ${root}/`
         : `any implementation plan under ${root}/`;
       process.stderr.write(`Blocked: ${base} is not referenced by ${where}. Add it to the plan first.\n`);
       process.exit(2);

@@ -29,7 +29,10 @@ if (isMain) {
   process.stdin.on('data', (c) => (raw += c));
   process.stdin.on('end', () => {
     let file = '';
-    try { file = (JSON.parse(raw).tool_input || {}).file_path || ''; } catch { process.exit(0); }
+    try {
+      const input = (JSON.parse(raw).tool_input || {});
+      file = input.file_path || input.new_file_path || '';
+    } catch { process.exit(0); }
     const root = resolveConfig().artifactRoot;
     const violated = sealedRoundViolation(file, root);
     if (violated !== null) {

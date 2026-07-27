@@ -52,12 +52,12 @@ Write/modify tests for the changed logic, then run **fast mode** from `unioss-ph
 
 ### Step 3 — Write `changes.md`, and the API spec if needed
 
-- Save `round-<N>/changes.md`.
+- Save `round-<N>/changes.md` following `./changes-template.md`.
 - If the change adds a new API endpoint, invoke `unioss-pipeline:unioss-api-spec` → `round-<N>/api-spec.md`.
 
 ### Step 4 — On GATE 3 fix
 
-Apply the orchestrator-provided fixes and re-run the filtered tests.
+Apply the orchestrator-provided fixes, update `changes.md` with a `## GATE 3 Fixes` section detailing applied fixes, and re-run the filtered tests.
 
 ### Step 5 — On GATE 3 accept (AdminPage only)
 

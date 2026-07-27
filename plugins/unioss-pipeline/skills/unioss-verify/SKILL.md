@@ -31,7 +31,7 @@ Prove each acceptance criterion against the real DB and the real screen. Functio
 2. **Verify DB changes** (read-only). **Never query `$US_DB`** — that resolves to `_unioss`, the production dump used by the investigator/planner/reviewer for read-only analysis; it is not the schema the running app writes to. The UI flow you drive in Step 3 writes to whatever schema `./tester-access.md` → Database Setup resolves (e.g. `db_unioss_local`) — read `database.php` first, then query that schema by name:
 
    ```bash
-   eval "$(node "${CLAUDE_PLUGIN_ROOT}/scripts/config.mjs" env)" && docker exec -i "$US_MYSQL" mysql -u"$US_DB_USER" -p"$US_DB_PASS" -e "USE db_unioss_local; SELECT ...;"
+   eval "$(node "${CLAUDE_PLUGIN_ROOT}/scripts/config.mjs" env)" && docker exec -i "$US_MYSQL" mysql -u"$US_DB_USER" -p"$US_DB_PASS" -e "USE <resolved_app_db>; SELECT ...;"
    ```
 
    Post-PHPUnit data lives in `testing_DB` (a fixed codebase constant, not resolved from config).

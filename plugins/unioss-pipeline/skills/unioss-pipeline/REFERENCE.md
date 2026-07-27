@@ -6,6 +6,14 @@ name: unioss-pipeline reference
 
 Single source of truth for every stage. When a skill says "follow REFERENCE → Shared stage rules", apply the block below.
 
+## Philosophy
+
+You are working for a Japanese client.
+
+- Quality over speed.
+- Think before every action.
+- Earn trust through consistency.
+
 ## Shared stage rules
 
 Every stage skill (investigator, planner, coder, reviewer, tester, ship, api-spec, gitlab-context) follows these:
@@ -37,21 +45,21 @@ All per-machine values come from `node "${CLAUDE_PLUGIN_ROOT}/scripts/config.mjs
 
 A **module key** (`admin-page`, `front-end`, `common-helper`, `common-models`) is the one vocabulary: `source.modules` gives its path on disk, `gitlab.projects` gives its project id. Keys are ordered by how likely they are to need changing — per-machine first, project-wide last.
 
-| Key                                        | Default                                                   | Used for                                             |
-| ------------------------------------------ | --------------------------------------------------------- | ---------------------------------------------------- |
-| `source.root`                              | current workspace (cwd)                                   | host root that holds the module checkouts            |
-| `source.modules.<key>`                     | `AdminPage`, `FrontEnd`, `common-helper`, `common-models` | **the** on-disk path per module                      |
-| `docker.mysql` / `docker.php`              | `mysql-unioss3` / `php-unioss3`                           | container names                                      |
+| Key                                        | Default                                                   | Used for                                                                                                                                                      |
+| ------------------------------------------ | --------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `source.root`                              | current workspace (cwd)                                   | host root that holds the module checkouts                                                                                                                     |
+| `source.modules.<key>`                     | `AdminPage`, `FrontEnd`, `common-helper`, `common-models` | **the** on-disk path per module                                                                                                                               |
+| `docker.mysql` / `docker.php`              | `mysql-unioss3` / `php-unioss3`                           | container names                                                                                                                                               |
 | `db.name` / `db.user` / `db.password`      | `_unioss` / `root` / `ProotW`                             | DB access for investigation/read-only stages (production dump) — tester queries the app's own configured schema instead, see `unioss-verify/tester-access.md` |
-| `ship.assignee`                            | `null` → auto (the `GITLAB_TOKEN` owner)                  | MR assignee (both modes); set a username to override |
-| `ship.label`                               | `UNIOSS 3`                                                | MR label if it exists on the project                 |
-| `ship.staging.targetBranch` / `.reviewer`  | `v3-develop-tps` / `dat.pham`                             | internal-staging MR target + reviewer                |
-| `ship.customer.targetBranch` / `.reviewer` | `v3-develop` / `r.yosimura`                               | customer-staging MR target + reviewer                |
-| `gitlab.host`                              | `gitlab.unioss.jp`                                        | API + image URLs                                     |
-| `gitlab.projects.<key>`                    | `32`, `31`, `18`, `19`                                    | GitLab project id per module                         |
-| `gitlab.baseBranch`                        | `v3-master`                                               | base for feature branches                            |
-| `gitlab.protected`                         | `master, v3-master, develop, v3-develop, v3-develop-tps`  | never-write list (enforced by a hook)                |
-| `artifactRoot`                             | `.walkthrough`                                            | output dir                                           |
+| `ship.assignee`                            | `null` → auto (the `GITLAB_TOKEN` owner)                  | MR assignee (both modes); set a username to override                                                                                                          |
+| `ship.label`                               | `UNIOSS 3`                                                | MR label if it exists on the project                                                                                                                          |
+| `ship.staging.targetBranch` / `.reviewer`  | `v3-develop-tps` / `dat.pham`                             | internal-staging MR target + reviewer                                                                                                                         |
+| `ship.customer.targetBranch` / `.reviewer` | `v3-develop` / `r.yosimura`                               | customer-staging MR target + reviewer                                                                                                                         |
+| `gitlab.host`                              | `gitlab.unioss.jp`                                        | API + image URLs                                                                                                                                              |
+| `gitlab.projects.<key>`                    | `32`, `31`, `18`, `19`                                    | GitLab project id per module                                                                                                                                  |
+| `gitlab.baseBranch`                        | `v3-master`                                               | base for feature branches                                                                                                                                     |
+| `gitlab.protected`                         | `master, v3-master, develop, v3-develop, v3-develop-tps`  | never-write list (enforced by a hook)                                                                                                                         |
+| `artifactRoot`                             | `.walkthrough`                                            | output dir                                                                                                                                                    |
 
 - **Secrets:** `GITLAB_TOKEN` is env-only (required). `db.password` resolves env `DB_PASSWORD` → file → default.
 - `testing_DB` is a fixed codebase constant — not configurable.
@@ -127,11 +135,15 @@ Resolve config first, then query:
 
 ```bash
 eval "$(node "${CLAUDE_PLUGIN_ROOT}/scripts/config.mjs" env)"
-# Production-shaped data
-docker exec -i "$US_MYSQL" mysql -u"$US_DB_USER" -p"$US_DB_PASS" -e "USE $US_DB; SHOW TABLES;"
-# Testing data (fixed name, imported during PHPUnit runs)
-docker exec -i "$US_MYSQL" mysql -u"$US_DB_USER" -p"$US_DB_PASS" -e "USE testing_DB; SHOW TABLES;"
 ```
+
+- **`$US_DB` (`_unioss`)** — Read-only production dump used ONLY for investigation and schema/data reference during Investigate/Planner stages.
+- **Application Runtime DB (User-Configured Schema)** — The schema configured by the user in `AdminPage/application/config/<ENV>/database.php` and `FrontEnd/application/config/<ENV>/database.php`. Resolve `<ENV>` via `node "${CLAUDE_PLUGIN_ROOT}/scripts/detect-app-env.mjs"`, read `'database'` in `database.php`, and query that schema for migration verification and test evidence (see `unioss-verify/tester-access.md`):
+  ```bash
+  # Query the user's resolved app DB (e.g., USE <resolved_app_db>;)
+  docker exec -i "$US_MYSQL" mysql -u"$US_DB_USER" -p"$US_DB_PASS" -e "USE <resolved_app_db>; SHOW TABLES;"
+  ```
+- **`testing_DB`** — Fixed database name imported and queried during PHPUnit runs (`phpunit-config.mjs apply --import`).
 
 ## Source paths (read the real code)
 

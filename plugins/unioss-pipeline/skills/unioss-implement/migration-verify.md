@@ -47,6 +47,8 @@ Example, irreversible case (`20260608090246_delete_duplicated_asct_records_a1798
 `public function down() { echo "..."; return true; }  // does NOT restore deleted rows`
 Running up() on staging/production here permanently removes those `ascts` rows — down() gives no way back.
 
+**Failed `down()` Recovery:** If running `down()` throws an error midway, stop execution immediately. Do not attempt re-up until DB state is manually verified/restored. Report the exact SQL exception and missing tables/columns to the user.
+
 **Rule:** STOP and ask the user for explicit go-ahead before running up() OR down() whenever either one destroys data that existed before the migration and the other side can't restore it. Say plainly what's deleted, on which table, on which environment, whether it's recoverable, and wait for confirmation. Pure create-then-drop cases (nothing pre-existing touched) can proceed without asking.
 
 ## 4. Run the verify (per-environment)
