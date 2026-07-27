@@ -177,7 +177,7 @@ Which option?
 ```
 Implementation complete. What would you like to do?
 
-1. Push and create a Merge to Staging
+1. Ship to Staging
 2. Keep work as-is (I'll handle it later)
 
 Which option?
