@@ -14,6 +14,7 @@ The single definition of a valuable ticket report. Both digest flows read this b
 - Derive acceptance criteria from concrete statements in the ticket — never invent requirements.
 - Mark uncertainty explicitly in Open questions rather than guessing.
 - Never drop a ticket from a multi-ticket digest.
+- Report with the user's language, never use fixed language.
 
 ## Depth modes
 
