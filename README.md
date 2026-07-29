@@ -5,7 +5,7 @@
     A GitLab ticket in — an investigated, planned, coded, reviewed, tested, ship-ready change out.
   </p>
 
-[![version](https://img.shields.io/badge/version-1.11.1-blue)](./plugins/unioss-pipeline/.claude-plugin/plugin.json)
+[![version](https://img.shields.io/badge/version-1.11.3-blue)](./plugins/unioss-pipeline/.claude-plugin/plugin.json)
 [![tests](https://img.shields.io/badge/tests-94%20passing-brightgreen)](#)
 [![PHP](https://img.shields.io/badge/PHP-8.1-777bb4)](#)
 [![CodeIgniter](https://img.shields.io/badge/CodeIgniter-3.x-ee4323)](#)
