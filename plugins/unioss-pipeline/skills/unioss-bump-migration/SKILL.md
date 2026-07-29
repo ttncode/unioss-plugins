@@ -9,8 +9,6 @@ description: Use when bumping a UNIOSS migration timestamp, reindexing files, an
 
 Move a set of migrations — plus their configs and tests — from an old timestamp to a new one. **Core principle:** reindex from the current active sequence, never the directory's absolute max index.
 
-**Track progress:** create a todo per Workflow step below and check each off as you complete it.
-
 ## Input
 
 - **OLD_TS** — 14-digit timestamp of the target migrations (e.g. `20260114101209`).

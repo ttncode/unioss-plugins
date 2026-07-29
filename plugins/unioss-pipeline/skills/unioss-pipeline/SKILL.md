@@ -15,8 +15,6 @@ Drive a ticket from A to Z, stopping at every human gate. The pipeline requires 
 
 **Core principle:** it stops at human gates; never auto-merges.
 
-**Track progress:** create a todo per Workflow step below and check each off as you complete it.
-
 ## Input
 
 Three entry modes. All share the same gates, rounds, and stages; they differ only in what starts the run and which early steps are skipped.
@@ -163,14 +161,14 @@ Print these **verbatim** — exact wording, exact option order. Add no explanati
 ```
 Change requirement. What would you like to do?
 
-1. Create a new version (V2, V3...)
-2. Update current version
+1. Update current version
+2. Create a new version (V2, V3...)
 
 Which option?
 ```
 
-- `1` → write the next version (`spec.v{n+1}.md` / `implementation.v{n+1}.md`); bump `spec_version` / `plan_version`.
-- `2` → edit the current spec/plan file in place. No new file, no version bump.
+- `1` → edit the current spec/plan file in place. No new file, no version bump.
+- `2` → write the next version (`spec.v{n+1}.md` / `implementation.v{n+1}.md`); bump `spec_version` / `plan_version`.
 
 **(b) Pipeline complete** — at the end of Flow step 13:
 

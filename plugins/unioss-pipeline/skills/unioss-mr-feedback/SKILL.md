@@ -11,8 +11,6 @@ Turn another developer's merge-request review comments into verified, tested, pu
 
 Follow `../unioss-pipeline/REFERENCE.md` — its Branches, Protected-branch, Submodule, and Commit-message rules are binding. This skill is the second (and only other) place GitLab writes are permitted — see REFERENCE → GitLab: it may `git push` a feature branch; it must never create or merge an MR. **Core principle:** verify every comment against the code as it stands now — a reviewer's suggestion is not gospel just because someone else wrote it.
 
-**Track progress:** create a todo per Workflow step below and check each off as you complete it.
-
 ## Input
 
 - One or more GitLab merge-request URLs (`https://<host>/<namespace>/<repo>/-/merge_requests/<iid>`), extracted from the user's message. **Zero URLs found → ask the user for at least one before doing anything else.** Offer the ask as a short multiple-choice prompt where practical.

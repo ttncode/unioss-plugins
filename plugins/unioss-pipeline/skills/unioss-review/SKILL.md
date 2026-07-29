@@ -11,8 +11,6 @@ Diff-scoped review of the coder's changes against UNIOSS clean-code, CI3, plan-a
 
 **Core principle:** Report only — never edit files, unless the user explicitly follows up with `fix #N`.
 
-**Track progress:** create a todo per Workflow step below and check each off as you complete it.
-
 Follow `../unioss-pipeline/REFERENCE.md` → Shared stage rules (read-only, round path, artifact paths, standalone use).
 
 ---

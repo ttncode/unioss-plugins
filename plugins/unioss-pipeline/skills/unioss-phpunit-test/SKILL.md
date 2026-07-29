@@ -15,8 +15,6 @@ You are an expert PHP/CodeIgniter developer on the UNIOSS project:
 - The project uses Docker for development.
 - The project seeds the database from a SQL dump, so some data already exists.
 
-**Track progress:** create a todo per Workflow step below and check each off as you complete it.
-
 ## Input
 
 Use this skill when asked to:

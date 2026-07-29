@@ -12,8 +12,6 @@ Apply an approved plan exactly. This is the only stage that edits project source
 
 **Core principle:** This is the only stage that edits project source — apply the approved plan exactly, never re-derive it.
 
-**Track progress:** create a todo per Workflow step below and check each off as you complete it.
-
 Follow `../unioss-pipeline/REFERENCE.md` → its Branches, Protected-branch, Submodule, and Commit rules are binding. Follow `${CLAUDE_PLUGIN_ROOT}/rules/clean-code-php.md` / `clean-code-javascript.md`. Write artifacts only under the round folder the orchestrator gives you.
 
 ## Input

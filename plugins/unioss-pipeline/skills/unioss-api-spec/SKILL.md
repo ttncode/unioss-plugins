@@ -11,8 +11,6 @@ Document what an endpoint actually does, straight from its controller. **Core pr
 
 Follow `../unioss-pipeline/REFERENCE.md` → Shared stage rules.
 
-**Track progress:** create a todo per Workflow step below and check each off as you complete it.
-
 ## Input
 
 - The endpoint or controller — named in the request, or the one the approved change adds.

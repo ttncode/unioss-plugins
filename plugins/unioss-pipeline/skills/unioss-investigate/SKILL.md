@@ -11,8 +11,6 @@ Establish what a ticket really requires — from the linked issues, the real cod
 
 **Core principle:** Read-only: investigate first, report to the PM only once the ticket is clear.
 
-**Track progress:** create a todo per Workflow step below and check each off as you complete it.
-
 Follow `../unioss-pipeline/REFERENCE.md` → Shared stage rules (read-only, round path, resolve config before source/DB access, artifact paths, standalone use).
 
 ## Input

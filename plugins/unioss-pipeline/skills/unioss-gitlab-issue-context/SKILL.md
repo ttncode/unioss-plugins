@@ -11,8 +11,6 @@ Pull a ticket's current state from GitLab, and say what changed since last time.
 
 Writes only to `.walkthrough/.pipeline/<PREFIX>-[IID]/` (hidden tracking files).
 
-**Track progress:** create a todo per Workflow step below and check each off as you complete it.
-
 ## Input
 
 - The GitLab ticket URL.

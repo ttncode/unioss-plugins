@@ -25,6 +25,7 @@ Every stage skill (investigator, planner, coder, reviewer, tester, ship, api-spe
 - **Artifact paths.** Surface every artifact as an absolute path in backticks, on its own line, the moment it is written (see Artifact paths) — never a `file://` URL or a relative path.
 - **Return summaries, not bodies.** Return counts, verdicts, and links; never paste full artifact contents back to the orchestrator.
 - **Asking the user:** when a stage must ask a question, present it as superpowers-style **multiple-choice** options (2–4 concrete choices, a recommended one first) rather than open-ended prose — one question at a time.
+- **Task tracking:** For multi-step workflows (≥3 sequential steps), use native `Todo` tools if supported; otherwise create `task-progress.md` via `write_to_file` (`- [ ]`) and mark steps done via `replace_file_content` (`- [x]`). Skip for short or single-step tasks.
 
 ### Output & Style Rules
 

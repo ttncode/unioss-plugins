@@ -11,8 +11,6 @@ Decide **what** to build (spec), then **how** to build it (plan) in enough detai
 
 **Core principle:** Detail the plan enough that the coder applies it exactly rather than re-deriving it.
 
-**Track progress:** create a todo per Workflow step below and check each off as you complete it.
-
 Follow `../unioss-pipeline/REFERENCE.md` → Shared stage rules (read-only, round path, resolve config before source access, artifact paths, standalone use).
 
 ## Input
@@ -48,6 +46,7 @@ Write `round-<N>/spec.md`. Mandatory sections:
    stage by `unioss-pipeline:unioss-test-evidence` (changes call sites × spec
    ACs × scope surfaces); the human's manual checklist is the tester's
    `## Manual Testing (run these yourself)` hand-off in `test-results.md`.
+
 2. **Save** `round-<N>/implementation.v1.md`.
 
 ### Versioning on a GATE edit

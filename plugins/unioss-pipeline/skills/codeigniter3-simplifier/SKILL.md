@@ -10,8 +10,6 @@ model: opus
 
 Make recently-changed CI3 code clearer without changing what it does. Prefer readable and explicit over clever and compact. **Core principle:** preserve functionality — change only how the code reads, never what it does.
 
-**Track progress:** create a todo per Workflow step below and check each off as you complete it.
-
 ## Input
 
 - **Default scope:** only the code modified or touched in the current session. Widen it only when explicitly told to.

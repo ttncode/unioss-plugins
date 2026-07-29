@@ -11,8 +11,6 @@ Push the finalized branches and open one MR per touched repo. **Core principle:*
 
 Follow `../unioss-pipeline/REFERENCE.md` → its Branches, Protected-branch, and Submodule rules are binding.
 
-**Track progress:** create a todo per Workflow step below and check each off as you complete it.
-
 ## Input
 
 - **Argument:** `staging` or `customer`.

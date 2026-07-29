@@ -11,8 +11,6 @@ Tell a PM/QC reader what changed and what to retest — in business language, no
 
 Follow `../unioss-pipeline/REFERENCE.md` → Shared stage rules, with one deliberate exception: **this skill writes to the ticket folder `.walkthrough/<PREFIX>-[IID]/`, not into a `round-<N>/` subfolder.** `scope.md` spans rounds — one file per ticket, overwritten in place every round so it always reflects the current cumulative scope. Never version it (no `.v2`). **Core principle:** never assume a change is contained — every related area is potentially affected and belongs on the retest list.
 
-**Track progress:** create a todo per Workflow step below and check each off as you complete it.
-
 ## Philosophy
 
 - Never assume anything is certainly correct.
