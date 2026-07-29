@@ -26,6 +26,12 @@ Every stage skill (investigator, planner, coder, reviewer, tester, ship, api-spe
 - **Return summaries, not bodies.** Return counts, verdicts, and links; never paste full artifact contents back to the orchestrator.
 - **Asking the user:** when a stage must ask a question, present it as superpowers-style **multiple-choice** options (2–4 concrete choices, a recommended one first) rather than open-ended prose — one question at a time.
 
+### Output & Style Rules
+
+- **Format:** Scannable, structured output (tables for summaries/metrics, bulleted lists for key details).
+- **Tone:** Concise, objective, technical prose. Avoid fluff, filler phrases, or redundant intros/outros.
+- **Paths:** Always surface files as backticked absolute paths (`/abs/path/file.md`), one per line.
+
 ### Standalone use
 
 Any stage skill can be invoked directly (e.g. `/unioss-review Review this controller …`) with no orchestrator context — no ticket, no round path. When that happens:

@@ -145,7 +145,7 @@ Goal: Create a new migration file based on the template below and intent to all 
        */
       private function execute_sql(string $sql, string $message): bool
       {
-          if ($this->db->simple_query($sql)) {
+          if ($this->db->query($sql)) {
               echo "<p style='color:green'>{$message} success</p>";
               return true;
           }

@@ -27,6 +27,6 @@ Per the skill: the created MR URL(s), or the fallback links. **Merging stays a h
 
 ## Related files
 
-- `skills/unioss-ship/SKILL.md` — repo keys, fixed MR titles, both modes.
 - `scripts/ship.mjs` — `create`, and the pre-filled-URL fallback.
+- `skills/unioss-ship/SKILL.md` — repo keys, fixed MR titles, both modes.
 - `skills/unioss-pipeline/REFERENCE.md` — branch naming, protected branches.
