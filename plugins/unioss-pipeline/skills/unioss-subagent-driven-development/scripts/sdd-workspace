@@ -16,7 +16,7 @@
 set -euo pipefail
 
 root=$(git rev-parse --show-toplevel)
-dir="$root/.superpowers/sdd"
+dir="$root/.walkthrough/.pipeline/sdd"
 mkdir -p "$dir"
 printf '*\n' > "$dir/.gitignore"
 cd "$dir" && pwd

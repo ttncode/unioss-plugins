@@ -68,7 +68,10 @@ if (isMain) {
   process.stdin.on('data', (c) => (raw += c));
   process.stdin.on('end', () => {
     let file = '';
-    try { file = (JSON.parse(raw).tool_input || {}).file_path || (JSON.parse(raw).tool_input || {}).new_file_path || ''; } catch { process.exit(0); }
+    try {
+      const input = (JSON.parse(raw).tool_input || {});
+      file = input.file_path || input.new_file_path || '';
+    } catch { process.exit(0); }
     const f = file.replace(/\\/g, '/');
     if (!f.includes('application/migrations/')) process.exit(0);
     const base = basename(f);

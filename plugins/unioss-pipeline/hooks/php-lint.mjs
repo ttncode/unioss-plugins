@@ -12,14 +12,24 @@ process.stdin.on('end', () => {
   if (!file.endsWith('.php')) process.exit(0);
 
   const cfg = resolveConfig();
-  const repo = cfg.source.modules['admin-page'].replace(/\/+$/, ''); // "AdminPage"
-  const marker = `/${repo}/`;
-  const idx = file.indexOf(marker);
-  if (idx === -1) process.exit(0);
+  let matchedModule = null;
+  let relPath = '';
 
-  const rel = file.slice(idx + marker.length);
+  for (const [key, modulePath] of Object.entries(cfg.source.modules)) {
+    const cleanPath = modulePath.replace(/\\/g, '/').replace(/\/+$/, '');
+    const marker = `/${cleanPath}/`;
+    const idx = file.indexOf(marker);
+    if (idx !== -1) {
+      matchedModule = cleanPath;
+      relPath = file.slice(idx + marker.length);
+      break;
+    }
+  }
+
+  if (!matchedModule) process.exit(0);
+
   try {
-    execFileSync('docker', ['exec', '-i', cfg.docker.php, 'php', '-l', `/var/www/html/${repo}/${rel}`], { stdio: ['ignore', 'ignore', 'inherit'] });
+    execFileSync('docker', ['exec', '-i', cfg.docker.php, 'php', '-l', `/var/www/html/${matchedModule}/${relPath}`], { stdio: ['ignore', 'ignore', 'inherit'] });
     process.exit(0);
   } catch {
     process.stderr.write(`php -l failed for ${file}\n`);

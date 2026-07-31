@@ -11,7 +11,7 @@ Read `REFERENCE.md` (this dir) first — its branch, protected-branch, submodule
 
 ## Overview
 
-Drive a ticket from A to Z, stopping at every human gate. The pipeline requires explicit user approval at each decision point before proceeding.
+The pipeline requires explicit user approval at each decision point before proceeding.
 
 **Core principle:** it stops at human gates; never auto-merges.
 
