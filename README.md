@@ -6,9 +6,6 @@
   </p>
 
 [![version](https://img.shields.io/badge/version-1.11.3-blue)](./plugins/unioss-pipeline/.claude-plugin/plugin.json)
-[![tests](https://img.shields.io/badge/tests-94%20passing-brightgreen)](#)
-[![PHP](https://img.shields.io/badge/PHP-8.1-777bb4)](#)
-[![CodeIgniter](https://img.shields.io/badge/CodeIgniter-3.x-ee4323)](#)
 [![Claude Code](https://img.shields.io/badge/Claude%20Code-plugin-d97757)](#)
 [![Antigravity](https://img.shields.io/badge/Antigravity-plugin-4285f4)](#)
 [![Codex](https://img.shields.io/badge/Codex-plugin-00a67e)](#)
