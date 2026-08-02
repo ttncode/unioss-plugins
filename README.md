@@ -74,27 +74,27 @@ Artifacts land in `.walkthrough/<PREFIX>#<IID>/round-<N>/`, surfaced as Ctrl+Cli
 
 **Pipeline** (`unioss-pipeline` plugin)
 
-| Command                                   | What                                                                                                      |
-| ----------------------------------------- | --------------------------------------------------------------------------------------------------------- |
-| `/unioss-pipeline <gitlab-url>`           | New ticket — e.g. `/unioss-pipeline https://gitlab.unioss.jp/unioss/AdminPage/-/work_items/1834`          |
-| `/unioss-feedback <gitlab-url>`           | Customer feedback — continues in a new round, not a restart                                               |
-| `/unioss-task "<description>"`            | No ticket — e.g. `/unioss-task "Add a CSV export button to the sales-ledger screen"`                      |
-| `/unioss-mr-feedback <mr-url> [...]`      | Verifies and applies another developer's review comments — standalone, not part of the A→Z pipeline       |
-| `/unioss-ship staging`                    | MR into `v3-develop-tps` — previews the plan and waits for "Proceed?" first                               |
-| `/unioss-ship customer`                   | MR into `v3-develop` — syncs `v3-master`, re-runs tests, previews the plan and waits for "Proceed?" first |
-| `/unioss-api-spec <endpoint\|controller>` | Write the house-template API spec for a new/changed endpoint                                              |
-| `/unioss-doctor`                          | Check deps, containers, token, browser                                                                    |
+| Command                                   | What                                                                                                           |
+| ----------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| `/unioss-pipeline <gitlab-url>`           | New ticket — e.g. `/unioss-pipeline https://gitlab.unioss.jp/unioss/AdminPage/-/work_items/1834`               |
+| `/unioss-feedback <gitlab-url>`           | Customer feedback — e.g. `/unioss-feedback https://gitlab.unioss.jp/unioss/AdminPage/-/work_items/1834`        |
+| `/unioss-task "<description>"`            | Specific task — e.g. `/unioss-task "Add a CSV export button to the product detail screen"`                     |
+| `/unioss-mr-feedback <merge-url> [...]`   | Reviewer feedback — e.g. `/unioss-mr-feedback https://gitlab.unioss.jp/unioss/AdminPage/-/merge_requests/3818` |
+| `/unioss-ship staging`                    | Create a new merge request into `v3-develop-tps` branch                                                        |
+| `/unioss-ship customer`                   | Create a new merge request into `v3-develop` branch (sync with the `v3-master` branch & re-run tests)          |
+| `/unioss-api-spec <endpoint\|controller>` | Write the API spec for a new/changed endpoint                                                                  |
+| `/unioss-doctor`                          | Check dependencies                                                                                             |
 
 **Knowledge** (`unioss-knowledge` plugin)
 
-| Command                                              | What                                                                                       |
-| ---------------------------------------------------- | ------------------------------------------------------------------------------------------ |
-| `/unioss-knowledge-today`                            | Today's new tickets — agent-written reports in your language                               |
-| `/unioss-knowledge-ticket <gitlab-url>`              | Full report for one ticket (analysis + AC + direction)                                     |
-| `/unioss-knowledge-ask "<question>" [period]`        | Ask anything — e.g. `/unioss-knowledge-ask "What did customers complain about this week?"` |
-| `/unioss-knowledge-refresh [daily\|weekly\|monthly\|yearly]` | Refresh from tickets — run `/unioss-knowledge-approve` after                       |
-| `/unioss-knowledge-approve`                          | Approve staged rules — only then injected into the agents' brain                           |
-| `/unioss-knowledge`                                  | Status — freshness of the knowledge base                                                   |
+| Command                                                      | What                                                                                       |
+| ------------------------------------------------------------ | ------------------------------------------------------------------------------------------ |
+| `/unioss-knowledge-today`                                    | Report new issues today?                                                                   |
+| `/unioss-knowledge-ticket <gitlab-url>`                      | Report a specific issue?                                                                   |
+| `/unioss-knowledge-refresh [daily\|weekly\|monthly\|yearly]` | Refresh the knowledge — If you want the Agent to remember, run `/unioss-knowledge-approve` |
+| `/unioss-knowledge-approve`                                  | Approve staged rules — only then injected into the agents' brain                           |
+| `/unioss-knowledge-ask "<question>" [period]`                | Ask anything — e.g. `/unioss-knowledge-ask "What did customers complain about this week?"` |
+| `/unioss-knowledge`                                          | Check of the knowledge base status                                                         |
 
 ## Install
 
@@ -110,6 +110,7 @@ Artifacts land in `.walkthrough/<PREFIX>#<IID>/round-<N>/`, surfaced as Ctrl+Cli
 
 ```bash
 agy plugin install https://github.com/ttncode/unioss-plugins
+# If the plugin hasn't been loaded yet -> Ask the agent to load it
 ```
 
 ### Codex
@@ -120,40 +121,41 @@ codex plugin install unioss-pipeline
 codex plugin install unioss-knowledge
 ```
 
-After installation, run `/unioss-doctor` (or ask the agent to run doctor check) to verify the environment.
+After installation, run `/unioss-doctor` to verify the environment.
 
 ## Usage
 
-Typical working combos:
+Commonly used:
 
-**A ticket, start to ship**
+**Something broke?** — `/unioss-doctor` first.
 
-1. `/unioss-knowledge-ticket <gitlab-url>` — quick report read before committing to it _(optional)_
-2. `/unioss-pipeline <gitlab-url>` — full A→Z run, approve at each gate
-3. `/unioss-ship staging` — open the staging MR
+**New ticket, start to ship**
+
+1. `/unioss-pipeline <gitlab-url>` — full A→Z run, approve at each gate
+2. `/unioss-ship staging` — open the staging MR
+3. `/unioss-mr-feedback <merge-url>` — improve based on the reviewer's feedback (if any)
+4. `/unioss-ship customer` — open the staging MR
 
 **Customer feedback on a shipped ticket**
 
-1. `/unioss-feedback <gitlab-url>` — new round on the same ticket
+1. `/unioss-feedback <gitlab-url>` — improve based on the customer's feedback
 2. `/unioss-ship staging` — re-ship
 3. `/unioss-ship customer` — when staging is confirmed OK
 
 **Morning catch-up**
 
-1. `/unioss-knowledge-today` — what came in today, one report per ticket
-2. `/unioss-knowledge-ask "What did customers complain about this week?"` — dig into anything
+1. `/unioss-knowledge-today` — What's new today?
+2. `/unioss-knowledge-ask "What did customers complain about this week?"` — ask for anything
 
-**Weekly knowledge upkeep** (keeps agents sharp)
+**Monthly knowledge upkeep** (keeps agents sharp)
 
-1. `/unioss-knowledge-refresh weekly` — distill sentiment, rebuild the global brief, stage rules
+1. `/unioss-knowledge-refresh monthly` — distill sentiment, rebuild the global brief, stage rules
 2. `/unioss-knowledge-approve` — review staged rules; approved ones are injected into every agent session
 3. `/unioss-knowledge` — confirm freshness
 
-**Something broke?** — `/unioss-doctor` first.
-
 ## Configuration
 
-One file holds everything: `.walkthrough/.config/unioss.config.json` (gitignored, shared by both plugins). `/unioss-doctor` creates it for you.
+One file holds everything: `.walkthrough/.config/unioss.config.json` via `/unioss-doctor` command.
 
 - **Scaffold:** `node "${CLAUDE_PLUGIN_ROOT}/scripts/config.mjs" init` — writes every key, grouped per-machine → per-team → project-wide.
 - **Resolution:** env → file → default, deep-merged.
@@ -162,7 +164,7 @@ One file holds everything: `.walkthrough/.config/unioss.config.json` (gitignored
 - **Wrong module paths:** `config.mjs scan` locates them; `scan --write` repairs the file (`/unioss-doctor` offers this).
 - **Secrets (env only):** `GITLAB_TOKEN` (required) · `DB_PASSWORD` (optional).
 - **Tester browser:** `! npx playwright install --with-deps chrome` if Chrome is missing.
-- **Tester URLs/credentials** are not config — they live in `skills/unioss-verify/tester-access.md`.
+- **Tester URLs/credentials** are not configured — they live in `skills/unioss-verify/tester-access.md`.
 
 ## Requirements
 
