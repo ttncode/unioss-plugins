@@ -50,7 +50,8 @@ Every stage skill (investigator, planner, coder, reviewer, tester, ship, api-spe
 
 - **Format:** Scannable, structured output (tables for summaries/metrics, bulleted lists for key details).
 - **Tone:** Concise, objective, technical prose. Avoid fluff, filler phrases, or redundant intros/outros.
-- **Paths:** Always surface files as backticked absolute paths (`/abs/path/file.md`), one per line.
+- **Paths:** Always surface files as backticked absolute paths (`/abs/path/file.md`), one per bullet.
+- **Fixed-shape reports** (Step 0 opener, GATE 2 preview, Step 13 completion, artifact announcements) are **markdown bullet lists, never fenced code blocks** — a fence renders backticks literally and kills both the inline-code styling and the terminal's path linkifier. Reserve fences for content that is genuinely preformatted: the `plan-table.mjs` output, code, and command transcripts.
 
 ### Standalone use
 
@@ -139,12 +140,14 @@ Hidden tracking + input, under `.walkthrough/.pipeline/<PREFIX>-[IID]/`:
 
 ## Artifact paths
 
-- **Announce every file the moment its stage writes it — never wait for the final summary.** The instant a stage (investigator, reporter, spec, plan, coder, reviewer, scope, tester) finishes a file, print one standalone line per file so the human gets a clickable link immediately:
+- **Announce every file the moment its stage writes it — never wait for the final summary.** The instant a stage (investigator, reporter, spec, plan, coder, reviewer, scope, tester) finishes a file, print one markdown bullet per file so the human gets a clickable link immediately:
 
-      📄 `/home/me/unioss/.walkthrough/AP-1583/round-1/review.md`
+  ```markdown
+  - 📄 `/home/me/unioss/.walkthrough/AP-1583/round-1/review.md`
+  ```
 
 - **Use the ABSOLUTE path** — prefix the workspace-relative path with the workspace root (the dir that holds `.walkthrough/`; run `pwd` once if unsure). An absolute path opens directly in the IDE.
-- **One file per line, each on its own line, wrapped in backticks.** Never wrap the path in a `file://` URL, a markdown link, or a table cell — those break the terminal's linkifier. On-disk paths are `#`-free (hyphenated ticket folder, lower-kebab files), so they resolve cleanly with no special handling.
+- **One file per bullet, wrapped in backticks.** Never wrap the path in a `file://` URL, a markdown link, or a table cell, and never put it inside a fenced code block — those break the terminal's linkifier or the inline-code styling. On-disk paths are `#`-free (hyphenated ticket folder, lower-kebab files), so they resolve cleanly with no special handling.
 
 ## GitLab (reads)
 

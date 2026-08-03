@@ -88,7 +88,7 @@ Parse the URL (REFERENCE regex) → IID + origin repo → prefix `AP`/`FE`. Rend
 node "${CLAUDE_PLUGIN_ROOT}/scripts/plan-table.mjs" <PREFIX> [IID] <current_round>
 ```
 
-Print the **Output → Step 0** run header, the table, and the confirm line — that contract is fixed, so emit it identically every run — then **stop.** Wait for the user to confirm. Run no stage until they do.
+Print the **Output → Step 0** blocks — the table, the branch list, the confirm line — that contract is fixed, so emit it identically every run — then **stop.** Wait for the user to confirm. Run no stage until they do.
 
 **Rounds.** Per-round artifacts go under `.walkthrough/<PREFIX>-[IID]/round-<current_round>/`; the `report.md` and `scope.md` deliverables sit at the ticket root `.walkthrough/<PREFIX>-[IID]/` and are overwritten each round (REFERENCE → Artifact layout). On a re-run (a sealed round exists), first write `round-<current_round>/round-brief.md` capturing exactly what this round must do (ticket delta since last round and/or user instruction), and state that all prior rounds stay frozen. Every stage is scoped to the brief and treats prior rounds as an immutable baseline. Never write outside the current round (sealed-round guard enforces this).
 
@@ -152,33 +152,17 @@ digraph unioss_pipeline {
 
 ### After every stage — announce its artifacts
 
-The instant a stage returns, print the absolute path to each file it wrote, one per line, per REFERENCE → Artifact paths — **do not wait for Step 13.** This is mandatory for the gate-less stages the human would otherwise never see a link for: investigator (`investigation.md`), reporter (`report.md`), coder (`changes.md`, `api-spec.md`), scope (`scope.md`), and tester (`test-results.md`). Subagents return absolute paths; relay them verbatim — never downgrade to a relative path.
+The instant a stage returns, print the absolute path to each file it wrote as a markdown bullet — **not** in a code fence, so the path renders as highlighted inline code (REFERENCE → Artifact paths). **Do not wait for Step 13.** This is mandatory for the gate-less stages the human would otherwise never see a link for: investigator (`investigation.md`), reporter (`report.md`), coder (`changes.md`, `api-spec.md`), scope (`scope.md`), and tester (`test-results.md`). Subagents return absolute paths; relay them verbatim — never downgrade to a relative path.
 
-```
-📄 `/abs/workspace/.walkthrough/AP-1583/round-1/investigation.md`
-```
-
-### Step 0 — the run header (fixed template)
-
-Step 0 and Step 13 are the two moments the human sees most often, so both have a **fixed shape**. Emit Step 0 as exactly these three blocks, in this order, every run — ticket, feedback, and task mode alike. No extra preamble, no closing commentary, no restating the ticket title in prose.
-
-**Block 1 — the header.** Fill every field; write `—` for anything that does not apply (e.g. `Ticket` in task mode). Never add or drop a row.
-
-```
-UNIOSS Pipeline
-Ticket:  <PREFIX>#[IID] — <title>
-Repo:    <origin repo>
-Mode:    ticket | feedback | task
-Round:   <current_round> (<new> | <resumed at: stage>)
-Output:  /abs/workspace/.walkthrough/<PREFIX>-[IID]/round-<N>/
-
-Branches
-  <origin repo>: feature/v3/#[IID]
-  common-models: feature/v3/[ORIGIN]#[IID] (if touched)
-  common-helper: feature/v3/[ORIGIN]#[IID] (if touched)
+```markdown
+- 📄 `/abs/workspace/.walkthrough/AP-1583/round-1/investigation.md`
 ```
 
-**Block 2 — the plan table.** Print `plan-table.mjs` output **verbatim**, character-for-character, in a fenced code block:
+### Step 0 — the run opener (fixed template)
+
+Step 0 and Step 13 are the two moments the human sees most often, so both have a **fixed shape**. Emit Step 0 as exactly these three blocks, in this order, every run — ticket, feedback, and task mode alike. Nothing else: no preamble, no header block, no ticket title in prose, no closing commentary. The table's own title line already carries the ticket and round.
+
+**Block 1 — the plan table.** Print `plan-table.mjs` output **verbatim**, character-for-character, in a fenced code block:
 
 ````
 ```
@@ -187,6 +171,21 @@ Branches
 ````
 
 It is already flush — never hand-draw, re-pad, reflow, rebuild, or summarize it into prose. This table is the payload, not decoration: **print it even when a brevity, concise, or terse-output style is active.**
+
+**Block 2 — the branches.** A markdown bullet list directly under the table — **not** in a code fence, so each branch name renders as highlighted inline code:
+
+```markdown
+**Branches**
+
+- AdminPage — `feature/v3/#1586`
+- common-models — `feature/v3/AP#1586` (if touched)
+- common-helper — `feature/v3/AP#1586` (if touched)
+```
+
+- Origin repo first, named as itself (`AdminPage` / `FrontEnd`), then the two common repos.
+- Backtick every branch name. That is the only styling — no ANSI escapes; they render as literal garbage inside a fenced block and this plugin uses none anywhere.
+- Keep `(if touched)` on the common repos: at Step 0 the plan does not exist yet, so whether common code is involved is genuinely unknown. Never promise a branch that may not be cut.
+- **task mode** has no IID — use `feature/v3/task-<slug>` and drop the common-repo lines unless the request clearly names common code.
 
 **Block 3 — the confirm line.** Verbatim, on its own line, nothing after it:
 
@@ -202,65 +201,71 @@ GATE 2 is the last gate before the coder writes to disk, so it carries a preview
 
 Derive every row from the approved plan — never from a guess about what the coder might do. If the plan does not name a file, it does not belong here.
 
-```
-Change preview — <PREFIX>#[IID] · <N> files · <M> migrations · <P> points
+Emit as markdown, **not inside a code fence**, so every path and branch renders as highlighted inline code:
 
-<repo>  (branch: feature/v3/…)
-  + create   application/models/Foo_model.php
-  ~ modify   application/controllers/Bar.php  (methods: index, save)
-  - delete   application/views/old_form.php
-  ⚙ migrate  20260731120000_add_is_active_to_users_1583_01.php
-             users: + is_active TINYINT(1) AFTER status
+```markdown
+**Change preview — AP#1586** · 4 files · 1 migration · 5 points
 
-<other repo>  (branch: feature/v3/<ORIGIN>#[IID])
-  ~ modify   …
+**AdminPage** — `feature/v3/#1586`
+
+- **+ create** `application/models/Foo_model.php`
+- **~ modify** `application/controllers/Bar.php` (methods: index, save)
+- **- delete** `application/views/old_form.php`
+- **⚙ migrate** `20260731120000_add_is_active_to_users_1583_01.php`
+  - `users`: + `is_active` TINYINT(1) AFTER `status`
+
+**common-models** — `feature/v3/AP#1586` (submodule — pushed, unlike app branches)
+
+- **~ modify** `Shop_model.php` (methods: getActive)
 ```
 
 Rules for the preview:
 
-- Group by repo; show each repo's feature branch on its header line.
-- One line per file, prefixed `+` create · `~` modify · `-` delete · `⚙` migration.
+- Group by repo; each repo is a bold header with its feature branch backticked beside it.
+- One bullet per file, prefixed `+ create` · `~ modify` · `- delete` · `⚙ migrate`. Backtick every path.
 - On a modify, name the methods/functions touched — not a diff, just the surface.
-- On a migration, add one indented line per DDL effect in the form `<table>: <+|~|-> <column> <type> AFTER <column>`.
-- If the plan touches a submodule, say so explicitly — that change is pushed, unlike app branches.
+- On a migration, nest one bullet per DDL effect: `` `<table>`: <+|~|-> `<column>` <type> AFTER `<column>` ``.
+- If the plan touches a submodule, say so on that repo's header line — that change is pushed, unlike app branches.
 - Nothing else. No rationale, no code, no acceptance criteria — those live in the plan.
 
 Then the plan path, then Decision prompt **(e)** verbatim.
 
 ### Step 13 — the completion report (fixed template)
 
-Emit exactly these blocks, in this order, every run. Same rule as Step 0: no preamble, no closing commentary.
+Emit exactly these blocks, in this order, every run — as markdown, **never inside a code fence**, so branches and paths render as highlighted inline code. Same rule as Step 0: no preamble, no closing commentary.
 
+```markdown
+**AP#1586 — round 1 · passed** · 5 points
+
+**Branches**
+
+- AdminPage — `feature/v3/#1586` · committed (local)
+- common-models — `feature/v3/AP#1586` · committed + pushed (submodule)
+
+**Results**
+
+- Review — 🔴 0 · 🟡 2 · 🟢 4 (fixed then accepted)
+- PHPUnit — 42/42
+- Tester — PASS (skipped: 0, manual hand-off: 3)
+
+**Artifacts**
+
+- 📄 `/abs/…/report.md`
+- 📄 `/abs/…/scope.md`
+- 📄 `/abs/…/round-1/investigation.md`
+- 📄 `/abs/…/round-1/spec.md`
+- 📄 `/abs/…/round-1/implementation.v1.md`
+- 📄 `/abs/…/round-1/changes.md`
+- 📄 `/abs/…/round-1/review.md`
+- 📄 `/abs/…/round-1/test-results.md`
 ```
-UNIOSS Pipeline — complete
-Ticket:  <PREFIX>#[IID] — <title>
-Round:   <N>  ·  Outcome: passed | partial | failed
-Points:  <estimate points>
 
-Branches
-  <repo>  feature/v3/…            committed (local)
-  <repo>  feature/v3/<ORIGIN>#…   committed + pushed (submodule)
-
-Results
-  Review:  🔴 <n>  🟡 <n>  🟢 <n>   (<accepted | fixed then accepted>)
-  PHPUnit: <passed>/<total>          (FrontEnd: skipped — no unit tests)
-  Tester:  PASS | PARTIAL | FAIL     (skipped: <n>, manual hand-off: <n>)
-
-Artifacts
-  📄 `/abs/…/report.md`
-  📄 `/abs/…/scope.md`
-  📄 `/abs/…/round-<N>/investigation.md`
-  📄 `/abs/…/round-<N>/spec.md`
-  📄 `/abs/…/round-<N>/implementation.v<n>.md`
-  📄 `/abs/…/round-<N>/changes.md`
-  📄 `/abs/…/round-<N>/review.md`
-  📄 `/abs/…/round-<N>/test-results.md`
-```
-
-- Every artifact is a backticked absolute path on its own line (REFERENCE → Artifact paths). List only files that exist.
-- If UI verification was SKIPPED, add `⚠ UI verification: SKIPPED — no browser MCP configured` as its own line directly under `Results`.
-- If the tester handed off manual cases, add `⚠ <n> manual test cases await you in test-results.md`.
-- If `open_issues` is non-empty, add an `Open issues` block listing them one per line — the next round picks these up as `carry_over`.
+- The lead line carries ticket, round, outcome (`passed` | `partial` | `failed`), and points — the ticket title is not repeated, the artifacts already name it.
+- Every artifact is a backticked absolute path on its own bullet (REFERENCE → Artifact paths). List only files that exist.
+- FrontEnd has no unit tests — write `PHPUnit — skipped (FrontEnd has no unit tests)` rather than a fake `0/0`.
+- If UI verification was SKIPPED, add `- ⚠ UI verification: SKIPPED — no browser MCP configured` as the last bullet under **Results**.
+- If the tester handed off manual cases, add `- ⚠ <n> manual test cases await you in test-results.md`.
+- If `open_issues` is non-empty, add an **Open issues** block after **Results**, one bullet each — the next round picks these up as `carry_over`.
 
 Then, and only then, ask Decision prompt **(b)**.
 
