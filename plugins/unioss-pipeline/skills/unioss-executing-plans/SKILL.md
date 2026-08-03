@@ -1,6 +1,6 @@
 ---
 name: unioss-executing-plans
-description: Use when you have a written implementation plan to execute in a separate session with review checkpoints
+description: Use when executing a written UNIOSS implementation plan in a separate session with batch checkpoints. Standalone alternative to the gated /unioss-pipeline flow — inside that flow the coder is unioss-implement at GATE 2.
 ---
 
 # Executing Plans

@@ -1,6 +1,6 @@
 ---
 name: unioss-investigate
-description: Use when investigating a UNIOSS GitLab ticket — the read-only investigator stage: fetches the ticket and related issues, maps codebase/DB impact, and produces the investigation, Vietnamese scope report, and clarity verdict.
+description: Use when investigating a UNIOSS GitLab ticket — the read-only investigator stage: fetches the ticket and related issues, maps codebase/DB impact, and produces investigation.md plus a clarity verdict. Step 6 writes the PM-facing Vietnamese report and runs only after GATE 0.
 ---
 
 # UNIOSS Investigator (read-only)
@@ -11,14 +11,14 @@ Establish what a ticket really requires — from the linked issues, the real cod
 
 **Core principle:** Read-only: investigate first, report to the PM only once the ticket is clear.
 
-Follow `../unioss-pipeline/REFERENCE.md` → Shared stage rules (read-only, round path, resolve config before source/DB access, artifact paths, standalone use).
+Follow `../unioss-pipeline/REFERENCE.md` → Shared stage rules (read-only, round path, resolve config before source/DB access, artifact paths, standalone use) and `../unioss-pipeline/REFERENCE-data.md` for DB + source-path access.
 
 ## Input
 
-The dispatch prompt states the mode. They run at different points in the flow — never do both in one dispatch.
+Two modes, each with its own agent and its own point in the flow. **Never do both in one dispatch** — they are deliberately separated by GATE 0.
 
-- **investigate** (default) — the GitLab ticket URL. Runs Steps 1–5, **before** GATE 0.
-- **report** — the path to the already-clarified `investigation.md` (including its `## Clarifications` section, if any). Runs Step 6 only, **after** GATE 0, so the PM never receives a report built on unanswered questions. Re-read `investigation.md` first; do not re-run Steps 1–5.
+- **investigate** (default) — the GitLab ticket URL. Runs Steps 1–5, **before** GATE 0. Dispatched as `unioss-investigator`.
+- **report** — the path to the already-clarified `investigation.md` (including its `## Clarifications` section, if any). Runs Step 6 only, **after** GATE 0, so the PM never receives a report built on unanswered questions. Re-read `investigation.md` first; do not re-run Steps 1–5 and do not re-open the codebase or DB — everything you need is already in the file. Dispatched as `unioss-reporter`.
 - Both — the round path.
 
 ## Workflow
@@ -51,7 +51,7 @@ eval "$(node "${CLAUDE_PLUGIN_ROOT}/scripts/config.mjs" env)" && docker exec -i 
 
 ### Step 5 — Write `investigation.md` (investigate mode)
 
-Save `round-<N>/investigation.md` (English; keep technical terms in Japanese) with these sections:
+Save `round-<N>/investigation.md` (English; keep technical terms in Japanese) with these seven sections:
 
 1. **Requirements** — REQ/CON from the ticket, translated.
 2. **Related-issue dependency map** — each linked issue → effect on this ticket.
@@ -59,6 +59,13 @@ Save `round-<N>/investigation.md` (English; keep technical terms in Japanese) wi
 4. **DB facts** — from Step 4.
 5. **## Clarity Verdict** — exactly one of `CLEAR` / `NEEDS_CLARIFICATION`.
 6. **## Open Questions** — numbered, concrete (missing specs, ambiguous behavior, conflicting related-issue requirements, undefined edge cases). Empty only if verdict is `CLEAR`. Phrase each clarification as a multiple-choice question (see REFERENCE → Asking the user).
+7. **## Spec Outline** — the skeleton the spec stage will expand, so the human can approve the spec's *shape* before a full document exists. You already hold every input here; keep it to headlines and let the spec stage write the bodies:
+   - **Goal** — one line.
+   - **Scope** — In-Scope / Out-of-Scope bullets.
+   - **Requirements** — one headline line per anticipated `REQ-`/`CON-`/`SEC-`/`GUD-`, numbered, no bodies.
+   - **Acceptance criteria** — a count and the surfaces they cover, not the criteria themselves.
+
+   Write it from what the ticket actually establishes. If the verdict is `NEEDS_CLARIFICATION`, still draft the outline — it will be refreshed after GATE 0 — and mark any line the open questions could change with `(pending Q<n>)`.
 
 ### Step 6 — Write `report.md` (report mode only)
 
@@ -72,7 +79,7 @@ Save `report.md` at the **ticket root** `.walkthrough/<PREFIX>-[IID]/report.md` 
 
 ### `investigation.md` — investigate mode
 
-The six sections above. Return: prefix+IID, repo, clarity verdict, count of open questions, and the backticked absolute path. Never paste file bodies.
+The seven sections above. Return: prefix+IID, repo, clarity verdict, count of open questions, and the backticked absolute path. Never paste file bodies — **except `## Spec Outline`, which you return verbatim**: the orchestrator prints it at Flow step 3c and must not have to re-open the file to do so.
 
 ### `report.md` — report mode
 
@@ -114,10 +121,27 @@ Fill verbatim:
 
 Return: the report's line count (must be ≤ 40) and the backticked absolute path.
 
+### Standalone — offer the next action
+
+Dispatched by the orchestrator, return your summary and stop; the pipeline owns the questions. Invoked directly, close with a menu (REFERENCE → Ending a run):
+
+```
+Investigation complete — <verdict>, <n> open questions. What would you like to do?
+
+1. Write the spec from this investigation
+2. Dig deeper on a specific area
+3. Stop here
+
+Which option?
+```
+
+When the verdict is `NEEDS_CLARIFICATION`, make `1.` *"Work through the open questions"* instead — a spec built on unanswered questions is the failure this stage exists to prevent.
+
 ## Related files
 
 - `./report-example.md` — the gold standard for `report.md` length and tone.
 - `./ecsite-screens.md` — ECSite screens tree; verify user-facing URLs against it.
 - `skills/unioss-gitlab-issue-context/SKILL.md` — the Step 1 fetcher.
-- `agents/unioss-investigator.md` — the subagent that runs this.
-- `skills/unioss-pipeline/REFERENCE.md` — shared stage rules, GitLab, DB, source paths.
+- `agents/unioss-investigator.md` — runs Steps 1–5. `agents/unioss-reporter.md` — runs Step 6.
+- `skills/unioss-pipeline/REFERENCE.md` — shared stage rules, GitLab reads.
+- `skills/unioss-pipeline/REFERENCE-data.md` — DB access, source paths on disk.

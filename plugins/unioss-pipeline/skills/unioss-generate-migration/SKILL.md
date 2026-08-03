@@ -17,6 +17,8 @@ From the user message. All optional:
 - a ticket id: f353, a1768, etc (meaning: include in the migration file name)
 - column type/default/null/after (if provided, honor it)
 
+**Column position is mandatory when adding to an existing table.** Every `ADD COLUMN` against a table that already exists must carry an explicit `AFTER \`<column>\`` — MySQL otherwise appends to the end, which drifts the column order away from the schema the spec describes and away from the required `delete_flg, created_at, updated_at` tail. If the prompt does not say where the column goes, `DESCRIBE` the table, pick the position that groups it with related columns (and keeps the audit tail last), and state the chosen position back to the user. Never emit a bare `ADD COLUMN` without a position. `FIRST` is the one legal alternative to `AFTER`, for a column that genuinely belongs at the head of the table.
+
 ### Rules & structure
 
 - Migration filename format:
@@ -47,7 +49,7 @@ Extract as much as possible:
 - Operation: add column / drop column / add index / drop index / create table / drop table / rename column / change column / add foreign key / data migration
 - Table name
 - Column name(s)
-- Type / nullability / default / comment / after (if provided)
+- Type / nullability / default / comment / after — **`after` is required for an add to an existing table**; resolve it from the table's current column list if the prompt omits it
 - Ticket id (if present)
 - Env scope:
   - If prompt includes "production only" -> keep only production migration files

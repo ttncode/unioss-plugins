@@ -1,7 +1,6 @@
 ---
 name: codeigniter3-simplifier
 description: Use when refining recently-changed PHP/CodeIgniter 3 code for clarity and consistency without changing behavior.
-model: opus
 ---
 
 # CodeIgniter 3 Simplifier

@@ -1,7 +1,6 @@
 ---
 name: unioss-implement
 description: Use when applying an approved UNIOSS implementation plan exactly — the coder stage: edits code, runs migrations, owns PHPUnit, and writes a diff manifest.
-model: sonnet
 ---
 
 # UNIOSS Coder (main thread — the only writer)
@@ -12,7 +11,7 @@ Apply an approved plan exactly. This is the only stage that edits project source
 
 **Core principle:** This is the only stage that edits project source — apply the approved plan exactly, never re-derive it.
 
-Follow `../unioss-pipeline/REFERENCE.md` → its Branches, Protected-branch, Submodule, and Commit rules are binding. Follow `${CLAUDE_PLUGIN_ROOT}/rules/clean-code-php.md` / `clean-code-javascript.md`. Write artifacts only under the round folder the orchestrator gives you.
+Follow `../unioss-pipeline/REFERENCE.md` → Shared stage rules, and `../unioss-pipeline/REFERENCE-git.md` → its Branches, Protected-branch, Submodule, and Commit rules are binding. Read `../unioss-pipeline/REFERENCE-data.md` when the plan touches the DB. Follow `${CLAUDE_PLUGIN_ROOT}/rules/clean-code-php.md` / `clean-code-javascript.md`. Write artifacts only under the round folder the orchestrator gives you.
 
 ## Input
 
@@ -25,18 +24,24 @@ Follow `../unioss-pipeline/REFERENCE.md` → its Branches, Protected-branch, Sub
 
 ### Step 0 — Branch setup (before the first edit in any repo)
 
-Determine the origin repo from the ticket. Put each repo on its correct feature branch cut from `v3-master` (REFERENCE → Branches):
+Determine the origin repo from the ticket. Put each repo on its correct feature branch cut from `v3-master` (REFERENCE-git → Branches):
 
 ```bash
 git fetch origin && git checkout v3-master && git pull && git checkout -b <branch>   # origin repo → feature/v3/#[IID]; other repos → feature/v3/[ORIGIN]#[IID]
 ```
 
 - Never commit to or modify a protected branch. Verify the current branch is a `feature/v3/...` branch before committing.
-- **Common code (`common-models` / `common-helper`)** is edited ONLY in its canonical source (`submodules/…`), never inside `application/{models,helpers}/common`. Follow REFERENCE → Submodules (branch → edit → commit → push submodule → move each app's pointer in the working tree only; never `git add`/commit/push the pointer bump).
+- **Common code (`common-models` / `common-helper`)** is edited ONLY in its canonical source (`submodules/…`), never inside `application/{models,helpers}/common`. Follow REFERENCE-git → Submodules (branch → edit → commit → push submodule → move each app's pointer in the working tree only; never `git add`/commit/push the pointer bump).
 
 ### Step 1 — Apply the approved plan
 
 Apply the exact per-file changes from the plan. For migrations use `unioss-pipeline:unioss-generate-migration` / `unioss-pipeline:unioss-bump-migration`. Use `unioss-pipeline:codeigniter3-simplifier` to keep CI3 code clean.
+
+**`rules/clean-code-php.md` overrides the plan wherever the plan violates it** — apply the corrected form and note the deviation in `changes.md`. The three the planner most often gets wrong:
+
+- **Booleans are prefixed `is` / `has` / `can`** (rules → Variables). Never rename a pre-existing name to comply.
+- **Every `ADD COLUMN` on an existing table names its position** (rules → Database migrations). If the plan omits it, `DESCRIBE` the table, place the column per that rule, and record the position you chose.
+- **No spec, plan, or ticket identifiers in source comments** (rules → Comments). If the plan's code carries such a comment, rewrite it as you apply it.
 
 ### Step 1b — Verify the migration (only if the plan added one)
 
@@ -68,10 +73,28 @@ Switch to **full mode**: `phpunit-config.mjs apply --import` (fresh DB), run the
 - `UT_#[IID]_[YYYYMMDD]_V{n}.txt` — only on GATE 3 accept.
 - Return the backticked absolute path to each file written, the branch per repo, and the test result.
 
+### Standalone — offer the next action
+
+Inside the pipeline the orchestrator runs the reviewer next, so return your summary and stop. Invoked directly, close with a menu (REFERENCE → Ending a run):
+
+```
+Changes applied — <n> files, tests <passed>/<total>. What would you like to do?
+
+1. Review the changes
+2. Run the full test suite
+3. Stop here, leave the work uncommitted
+
+Which option?
+```
+
+`1` → `unioss-pipeline:unioss-review`. If any test failed, make `1.` *"Fix the failing tests"* — never offer review over a red suite.
+
 ## Related files
 
 - `./migration-verify.md` — the up/down/re-up verification procedure.
 - `skills/unioss-phpunit-test/SKILL.md` — fast vs full mode run commands.
 - `skills/unioss-generate-migration/SKILL.md`, `skills/unioss-bump-migration/SKILL.md`.
 - `rules/clean-code-php.md`, `rules/clean-code-javascript.md` — the standards the reviewer enforces.
-- `skills/unioss-pipeline/REFERENCE.md` — branches, protected branches, submodules, commits.
+- `skills/unioss-pipeline/REFERENCE.md` — shared stage rules, artifact layout.
+- `skills/unioss-pipeline/REFERENCE-git.md` — branches, protected branches, submodules, commits.
+- `skills/unioss-pipeline/REFERENCE-data.md` — DB access for migration work.

@@ -1,6 +1,6 @@
 ---
 name: unioss-receiving-code-review
-description: Use when receiving code review feedback, before implementing suggestions, especially if feedback seems unclear or technically questionable - requires technical rigor and verification, not performative agreement or blind implementation
+description: Use when evaluating review feedback on UNIOSS code — GATE 3 findings and GitLab MR comments — before implementing any suggestion. Requires verifying each claim against the current code, not performative agreement.
 ---
 
 # Code Review Reception

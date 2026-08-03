@@ -1,6 +1,6 @@
 ---
 name: unioss-requesting-code-review
-description: Use when completing tasks, implementing major features, or before merging to verify work meets requirements
+description: Use when requesting a whole-branch code review of UNIOSS work before merging — the standalone reviewer dispatch. Inside the gated /unioss-pipeline flow the diff review is unioss-review at GATE 3 instead.
 ---
 
 # Requesting Code Review

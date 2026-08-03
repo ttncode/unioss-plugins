@@ -1,6 +1,6 @@
 ---
 name: unioss-writing-plans
-description: Use when you have a spec or requirements for a multi-step task, before touching code
+description: Use when structuring a UNIOSS implementation plan from an approved UNIOSS spec — the plan format the unioss-planner stage emits and the unioss-implement coder applies.
 ---
 
 # Writing Plans
@@ -58,7 +58,7 @@ independently testable deliverable.
 ```markdown
 # [Feature Name] Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use unioss-pipeline:unioss-subagent-driven-development (recommended) or unioss-pipeline:unioss-executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: inside the gated pipeline, `unioss-pipeline:unioss-implement` applies this plan after GATE 2. Standalone, use `unioss-pipeline:unioss-subagent-driven-development` (recommended) or `unioss-pipeline:unioss-executing-plans` to work it task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** [One sentence describing what this builds]
 
@@ -134,6 +134,7 @@ Every step must contain the actual content an engineer needs. These are **plan f
 - "Similar to Task N" (repeat the code — the engineer may be reading tasks out of order)
 - Steps that describe what to do without showing how (code blocks required for code steps)
 - References to types, functions, or methods not defined in any task
+- Spec, ticket, or plan identifiers (`REQ-1`, `CON-4`, `SEC-2`, `GUD-3`, `AC-5`, `spec.md`, "per the plan") in code comments or code notes — state the business rule itself
 
 ## Remember
 - Exact file paths always
@@ -155,20 +156,19 @@ If you find issues, fix them inline. No need to re-review — just fix and move 
 
 ## Execution Handoff
 
-After saving the plan, offer execution choice:
+Never execute the plan yourself — this skill writes the plan and stops. How you hand off depends on how you were invoked.
+
+**Pipeline mode** (the orchestrator dispatched you with a round path): return the plan path and stop. The orchestrator presents the GATE 2 change preview, and on approval the coder (`unioss-pipeline:unioss-implement`) applies the plan in the main thread. **Offer no execution choice — the gate is the choice.** Never hand off to a subagent runner from inside the pipeline; it would bypass GATE 2 and the reviewer.
+
+**Standalone mode** (no round path, plan saved under `.walkthrough/plans/`): offer the execution choice.
 
 **"Plan complete and saved to `.walkthrough/plans/<filename>.md`. Two execution options:**
 
-**1. Subagent-Driven (recommended)** - I dispatch a fresh subagent per task, review between tasks, fast iteration
+**1. Subagent-Driven (recommended)** - a fresh subagent per task, review between tasks, fast iteration
 
-**2. Inline Execution** - Execute tasks in this session using unioss-pipeline:unioss-executing-plans, batch execution with checkpoints
+**2. Inline Execution** - execute tasks in this session, batch execution with checkpoints
 
 **Which approach?"**
 
-**If Subagent-Driven chosen:**
-- **REQUIRED SUB-SKILL:** Use unioss-pipeline:unioss-subagent-driven-development
-- Fresh subagent per task + two-stage review
-
-**If Inline Execution chosen:**
-- **REQUIRED SUB-SKILL:** Use unioss-pipeline:unioss-executing-plans
-- Batch execution with checkpoints for review
+- `1` → **REQUIRED SUB-SKILL:** `unioss-pipeline:unioss-subagent-driven-development` — fresh subagent per task + two-stage review.
+- `2` → **REQUIRED SUB-SKILL:** `unioss-pipeline:unioss-executing-plans` — batch execution with checkpoints for review.

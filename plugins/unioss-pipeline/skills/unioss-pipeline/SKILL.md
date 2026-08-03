@@ -7,7 +7,7 @@ description: Use when running the full UNIOSS A→Z ticket pipeline on a GitLab 
 
 Drive a ticket from A to Z, stopping at every human gate.
 
-Read `REFERENCE.md` (this dir) first — its branch, protected-branch, submodule, and commit rules are binding. You run in the MAIN thread: dispatch read-only stages as subagents, run the coder yourself, own the gates.
+Read `REFERENCE.md` (this dir) first. You also commit at Step 13, so `REFERENCE-git.md` — branch, protected-branch, submodule, and commit rules — is binding on you. You run in the MAIN thread: dispatch read-only stages as subagents, run the coder yourself, own the gates.
 
 ## Overview
 
@@ -37,13 +37,34 @@ State file: `.walkthrough/.pipeline/<PREFIX>-[IID]/pipeline-state.json` — the 
 
 ```json
 {
-  "schema_version": 1,
-  "task": { "id": "FE-347", "title": "…", "type": "feature|bug", "status": "in_progress|completed" },
-  "current_round": 1,
-  "execution": { "created_at": "<iso8601>", "updated_at": "<iso8601>" },
-  "rounds": { "<n>": { "stage": "finalized", "gate_decisions": { "gate_0": "clarified|skipped", "gate_1": "approved", "gate_2": "approved", "gate_3": "accepted" }, "spec_version": 1, "plan_version": 1, "review_counts": 1, "test_status": "pass|fail|pass-with-skips", "outcome": "passed|failed|partial", "open_issues": [], "carry_over": [] } },
-  "artifacts": { "report": "FE-347/report.md", "scope": "FE-347/scope.md", "investigation": "FE-347/round-1/investigation.md", "spec": "FE-347/round-1/spec.md", "implementation": "FE-347/round-1/implementation.v1.md", "changes": "FE-347/round-1/changes.md", "review": "FE-347/round-1/review.md", "test_results": "FE-347/round-1/test-results.md" },
-  "result": { "outcome": "passed|failed|pending", "tests_passed": 0, "tests_failed": 0, "requires_human_review": true }
+	"schema_version": 1,
+	"task": { "id": "FE-347", "title": "…", "type": "feature|bug", "status": "in_progress|completed" },
+	"current_round": 1,
+	"execution": { "created_at": "<iso8601>", "updated_at": "<iso8601>" },
+	"rounds": {
+		"<n>": {
+			"stage": "finalized",
+			"gate_decisions": { "gate_0": "clarified|skipped", "gate_1": "approved", "gate_2": "approved", "gate_3": "accepted" },
+			"spec_version": 1,
+			"plan_version": 1,
+			"review_counts": 1,
+			"test_status": "pass|fail|pass-with-skips",
+			"outcome": "passed|failed|partial",
+			"open_issues": [],
+			"carry_over": []
+		}
+	},
+	"artifacts": {
+		"report": "FE-347/report.md",
+		"scope": "FE-347/scope.md",
+		"investigation": "FE-347/round-1/investigation.md",
+		"spec": "FE-347/round-1/spec.md",
+		"implementation": "FE-347/round-1/implementation.v1.md",
+		"changes": "FE-347/round-1/changes.md",
+		"review": "FE-347/round-1/review.md",
+		"test_results": "FE-347/round-1/test-results.md"
+	},
+	"result": { "outcome": "passed|failed|pending", "tests_passed": 0, "tests_failed": 0, "requires_human_review": true }
 }
 ```
 
@@ -67,28 +88,29 @@ Parse the URL (REFERENCE regex) → IID + origin repo → prefix `AP`/`FE`. Rend
 node "${CLAUDE_PLUGIN_ROOT}/scripts/plan-table.mjs" <PREFIX> [IID] <current_round>
 ```
 
-Print its output per the **Output → Step 0** contract below, then **stop — ask the user to confirm before any stage runs.** Wait for them to say proceed. Run no stage until they confirm.
+Print the **Output → Step 0** run header, the table, and the confirm line — that contract is fixed, so emit it identically every run — then **stop.** Wait for the user to confirm. Run no stage until they do.
 
 **Rounds.** Per-round artifacts go under `.walkthrough/<PREFIX>-[IID]/round-<current_round>/`; the `report.md` and `scope.md` deliverables sit at the ticket root `.walkthrough/<PREFIX>-[IID]/` and are overwritten each round (REFERENCE → Artifact layout). On a re-run (a sealed round exists), first write `round-<current_round>/round-brief.md` capturing exactly what this round must do (ticket delta since last round and/or user instruction), and state that all prior rounds stay frozen. Every stage is scoped to the brief and treats prior rounds as an immutable baseline. Never write outside the current round (sealed-round guard enforces this).
 
 ### Flow
 
 1. **Parse** the URL → IID + origin repo → prefix. Determine `current_round`. Create `.walkthrough/.pipeline/<PREFIX>-[IID]/` and `.walkthrough/<PREFIX>-[IID]/round-<current_round>/`. Pass that round path to every subagent.
-2. **Investigator** — dispatch the `unioss-pipeline:unioss-investigator` agent (**investigate mode**) with the URL. Writes `investigation.md` only; returns a clarity verdict + open-question count.
+2. **Investigator** — dispatch the `unioss-pipeline:unioss-investigator` agent with the URL. Writes `investigation.md` only; returns a clarity verdict + open-question count.
 3. **GATE 0 — Clarify (conditional).** If verdict is `NEEDS_CLARIFICATION`: invoke the `unioss-pipeline:unioss-brainstorming` skill in THIS thread, work the numbered Open Questions with the user, then append a `## Clarifications` section to `investigation.md`. If `CLEAR`: skip.
-   - **Step 3b — Reporter.** Dispatch the `unioss-pipeline:unioss-investigator` agent (**report mode**) with the `investigation.md` path. Writes the PM-facing `report.md` at the **ticket root** (`.walkthrough/<PREFIX>-[IID]/report.md`, a deliverable that spans rounds — overwritten, not under `round-<N>/`) from the now-clarified investigation. Always runs, whether or not GATE 0 clarified anything — the report must never be built on unanswered questions.
-4. **Planner — spec mode.** Dispatch the `unioss-pipeline:unioss-planner` agent (spec mode) with the investigation path. Writes `spec.md` (what/why — scope, requirements, acceptance criteria; no code); returns path + one-line scope. Set `spec_version`.
-5. **GATE 1 — Spec approval.** Present spec summary + path. **approve** → record `gate_decisions.gate_1 = "approved"`, go to step 6. **edit** → ask Decision prompt **(a)**, then re-dispatch spec mode with the feedback and re-present. Never proceed without approval.
-6. **Planner — plan mode.** Dispatch the `unioss-pipeline:unioss-planner` agent (plan mode) with the approved `spec.md` path. Writes `implementation.v1.md` (exact per-file code); returns path + estimate points.
-7. **GATE 2 — Plan approval.** Present plan summary + paths. The plan holds exact code, so this is a real code approval. On edits, ask Decision prompt **(a)**, then re-dispatch (plan mode) with the feedback and re-present until approved.
-8. **Coder (this thread)** — invoke the `unioss-pipeline:unioss-implement` skill: apply the approved plan, run migrations if required, fast-verify new PHPUnit tests (AdminPage), write `changes.md`. It creates the correct feature branch off `v3-master` before its first edit per repo (REFERENCE branch rules) and follows the REFERENCE submodule flow for any common-code change.
+   - **Step 3b — Reporter.** Dispatch the `unioss-pipeline:unioss-reporter` agent with the `investigation.md` path. Writes the PM-facing `report.md` at the **ticket root** (`.walkthrough/<PREFIX>-[IID]/report.md`, a deliverable that spans rounds — overwritten, not under `round-<N>/`) from the now-clarified investigation. Always runs, whether or not GATE 0 clarified anything — the report must never be built on unanswered questions.
+   - **Step 3c — Spec outline confirm.** Print the `## Spec Outline` the investigator returned (goal, in/out of scope, requirement headlines, acceptance-criteria count), then ask Decision prompt **(c)**. Runs every round, whether or not GATE 0 clarified anything. This is the cheap approval of the spec's *shape* — the user confirms scope before a full `spec.md` exists, so a wrong direction costs an outline instead of a document.
+4. **Spec** — dispatch the `unioss-pipeline:unioss-spec` agent with the investigation path. It expands the **approved** `## Spec Outline` into `spec.md` (what/why — scope, requirements, acceptance criteria; no code); returns path + one-line scope. Set `spec_version`.
+5. **GATE 1 — Spec approval.** Present the spec summary + path, then ask Decision prompt **(d)**. Never proceed without approval.
+6. **Planner** — dispatch the `unioss-pipeline:unioss-planner` agent with the approved `spec.md` path. Writes `implementation.v1.md` (exact per-file code); returns path, estimate points, and the file/migration counts the GATE 2 preview needs.
+7. **GATE 2 — Plan approval.** The plan holds exact code, so this is a real code approval — and the last gate before anything is written to disk. Print the **Output → GATE 2** change preview (every file the plan creates, modifies, or deletes, per repo, plus migration DDL effects), then the plan path, then ask Decision prompt **(e)**. On edits, ask Decision prompt **(a)** first, then re-dispatch (plan mode) with the feedback and re-present the preview until approved.
+8. **Coder (this thread)** — invoke the `unioss-pipeline:unioss-implement` skill: apply the approved plan, run migrations if required, fast-verify new PHPUnit tests (AdminPage), write `changes.md`. It creates the correct feature branch off `v3-master` before its first edit per repo (REFERENCE-git branch rules) and follows the REFERENCE-git submodule flow for any common-code change.
 9. **Reviewer** — dispatch the `unioss-pipeline:unioss-reviewer` agent with the `changes.md` path. Writes `review.md`; returns severity counts + top findings.
-10. **GATE 3 — Review fix/accept.** Present findings by severity.
-    - **fix** → invoke `unioss-pipeline:unioss-implement` to apply fixes + re-run filtered tests → ask "re-review or proceed?"; if re-review, go to step 9.
+10. **GATE 3 — Review fix/accept.** Present findings by severity, then ask Decision prompt **(f)**.
+    - **fix** → invoke `unioss-pipeline:unioss-implement` to apply fixes + re-run filtered tests, then ask Decision prompt **(g)**; on re-review, go to step 9.
     - **accept** → (AdminPage) invoke `unioss-pipeline:unioss-implement` full mode: full suite with a fresh DB (`phpunit-config apply --import`) → `round-<current_round>/UT_#[IID]_[YYYYMMDD]_V1.txt`.
 11. **Scope** — dispatch the `unioss-pipeline:unioss-scope` agent with the `changes.md` path + round path. Writes/updates `scope.md` at the ticket root (a sibling of `round-<N>/`, not inside it — see REFERENCE → Artifact layout); returns its path. Runs right after GATE 3 accept — the diff is final, and the scope reflects the code change, not the verification outcome. It runs **before** the tester so the tester consumes its affected features/URLs as a coverage source.
 12. **Tester** — dispatch the `unioss-pipeline:unioss-tester` agent with the `changes.md` path + acceptance criteria + the ticket-root `scope.md` path. The tester derives its case set per `unioss-pipeline:unioss-test-evidence` (changes call sites × spec ACs × scope surfaces). Writes `test-results.md`; returns a `PASS`/`PARTIAL`/`FAIL` verdict plus the skipped-case list — record skips into the round's `open_issues`/`carry_over`. Never treat SKIPPED as a pass. If the tester returns a non-zero manual-hand-off count, tell the user their `## Manual Testing (run these yourself)` checklist awaits in `test-results.md`.
-13. **Finalize** — for every repo the coder touched, commit on its feature branch using `#[IID] - [Message]`. Per REFERENCE: app branches (AdminPage/FrontEnd) are committed locally only (no push, no MR) and exclude the submodule gitlink; submodule branches are pushed. Never touch a protected branch. Present the final summary per **Output → Step 13**, then ask Decision prompt **(b)**.
+13. **Finalize** — for every repo the coder touched, commit on its feature branch using `#[IID] - [Message]`. Per REFERENCE-git: app branches (AdminPage/FrontEnd) are committed locally only (no push, no MR) and exclude the submodule gitlink; submodule branches are pushed. Never touch a protected branch. Print the **Output → Step 13** completion report — that contract is fixed, so emit it identically every run — then ask Decision prompt **(b)**.
 
 ### Flow diagram
 
@@ -102,23 +124,27 @@ digraph unioss_pipeline {
   "GATE 0\n(clarify?)" -> Brainstorm [label="NEEDS_CLARIFICATION"];
   Brainstorm -> Reporter;
   "GATE 0\n(clarify?)" -> Reporter [label="CLEAR"];
-  Reporter -> "Planner (spec)";
-  "Planner (spec)" -> "GATE 1\n(spec)";
-  "GATE 1\n(spec)" -> "Planner (spec)" [label="edit"];
-  "GATE 1\n(spec)" -> "Planner (plan)" [label="approve"];
-  "Planner (plan)" -> "GATE 2\n(plan)";
-  "GATE 2\n(plan)" -> "Planner (plan)" [label="edit"];
-  "GATE 2\n(plan)" -> Coder [label="approve"];
+  Reporter -> "3c\n(spec outline)";
+  "3c\n(spec outline)" -> Brainstorm [label="3: back"];
+  "3c\n(spec outline)" -> Spec [label="1: write"];
+  Spec -> "GATE 1\n(spec)";
+  "GATE 1\n(spec)" -> Spec [label="2: edit"];
+  "GATE 1\n(spec)" -> Planner [label="1: approve"];
+  Planner -> "GATE 2\n(preview + plan)";
+  "GATE 2\n(preview + plan)" -> Planner [label="2: edit"];
+  "GATE 2\n(preview + plan)" -> Spec [label="3: back to spec"];
+  "GATE 2\n(preview + plan)" -> Coder [label="1: approve"];
   Coder -> Reviewer;
   Reviewer -> "GATE 3\n(review)";
-  "GATE 3\n(review)" -> Coder [label="fix"];
-  "GATE 3\n(review)" -> "Full PHPUnit" [label="accept"];
+  "GATE 3\n(review)" -> Coder [label="1: fix"];
+  "GATE 3\n(review)" -> "Full PHPUnit" [label="2: accept"];
   "Full PHPUnit" -> Scope;
   Scope -> Tester;
   Tester -> Finalize;
   Finalize -> "Decision (b)";
   "Decision (b)" -> Ship [label="1: push + MR"];
   "Decision (b)" -> Stop [label="2: keep as-is"];
+  "Decision (b)" -> "Round N+1" [label="3: open issues"];
 }
 ```
 
@@ -132,25 +158,111 @@ The instant a stage returns, print the absolute path to each file it wrote, one 
 📄 `/abs/workspace/.walkthrough/AP-1583/round-1/investigation.md`
 ```
 
-### Step 0 — the plan table
+### Step 0 — the run header (fixed template)
 
-Print `plan-table.mjs` output **verbatim**, character-for-character, in a fenced code block:
+Step 0 and Step 13 are the two moments the human sees most often, so both have a **fixed shape**. Emit Step 0 as exactly these three blocks, in this order, every run — ticket, feedback, and task mode alike. No extra preamble, no closing commentary, no restating the ticket title in prose.
+
+**Block 1 — the header.** Fill every field; write `—` for anything that does not apply (e.g. `Ticket` in task mode). Never add or drop a row.
+
+```
+UNIOSS Pipeline
+Ticket:  <PREFIX>#[IID] — <title>
+Repo:    <origin repo>
+Mode:    ticket | feedback | task
+Round:   <current_round> (<new> | <resumed at: stage>)
+Output:  /abs/workspace/.walkthrough/<PREFIX>-[IID]/round-<N>/
+
+Branches
+  <origin repo>: feature/v3/#[IID]
+  common-models: feature/v3/[ORIGIN]#[IID] (if touched)
+  common-helper: feature/v3/[ORIGIN]#[IID] (if touched)
+```
+
+**Block 2 — the plan table.** Print `plan-table.mjs` output **verbatim**, character-for-character, in a fenced code block:
 
 ````
 ```
 <paste the FULL stdout of plan-table.mjs here — every row>
 ```
-
-Confirm to start the Investigate stage?
 ````
 
 It is already flush — never hand-draw, re-pad, reflow, rebuild, or summarize it into prose. This table is the payload, not decoration: **print it even when a brevity, concise, or terse-output style is active.**
 
-### Step 13 — the final summary
+**Block 3 — the confirm line.** Verbatim, on its own line, nothing after it:
 
-- Branch per repo · spec · plan · changes · review status · test status · scope.
-- The backticked absolute path to every artifact, including the ticket-root `scope.md` and `report.md`, each on its own line (REFERENCE → Artifact paths).
-- If UI verification was SKIPPED, surface `UI verification: SKIPPED — no browser MCP configured` prominently.
+```
+Confirm to start the Investigate stage? (yes / no)
+```
+
+Then **stop**. Run no stage until the user answers.
+
+### GATE 2 — the change preview (before any file is touched)
+
+GATE 2 is the last gate before the coder writes to disk, so it carries a preview the human can approve at a glance without opening the plan. Print the preview **first**, then the plan path, then the gate question.
+
+Derive every row from the approved plan — never from a guess about what the coder might do. If the plan does not name a file, it does not belong here.
+
+```
+Change preview — <PREFIX>#[IID] · <N> files · <M> migrations · <P> points
+
+<repo>  (branch: feature/v3/…)
+  + create   application/models/Foo_model.php
+  ~ modify   application/controllers/Bar.php  (methods: index, save)
+  - delete   application/views/old_form.php
+  ⚙ migrate  20260731120000_add_is_active_to_users_1583_01.php
+             users: + is_active TINYINT(1) AFTER status
+
+<other repo>  (branch: feature/v3/<ORIGIN>#[IID])
+  ~ modify   …
+```
+
+Rules for the preview:
+
+- Group by repo; show each repo's feature branch on its header line.
+- One line per file, prefixed `+` create · `~` modify · `-` delete · `⚙` migration.
+- On a modify, name the methods/functions touched — not a diff, just the surface.
+- On a migration, add one indented line per DDL effect in the form `<table>: <+|~|-> <column> <type> AFTER <column>`.
+- If the plan touches a submodule, say so explicitly — that change is pushed, unlike app branches.
+- Nothing else. No rationale, no code, no acceptance criteria — those live in the plan.
+
+Then the plan path, then Decision prompt **(e)** verbatim.
+
+### Step 13 — the completion report (fixed template)
+
+Emit exactly these blocks, in this order, every run. Same rule as Step 0: no preamble, no closing commentary.
+
+```
+UNIOSS Pipeline — complete
+Ticket:  <PREFIX>#[IID] — <title>
+Round:   <N>  ·  Outcome: passed | partial | failed
+Points:  <estimate points>
+
+Branches
+  <repo>  feature/v3/…            committed (local)
+  <repo>  feature/v3/<ORIGIN>#…   committed + pushed (submodule)
+
+Results
+  Review:  🔴 <n>  🟡 <n>  🟢 <n>   (<accepted | fixed then accepted>)
+  PHPUnit: <passed>/<total>          (FrontEnd: skipped — no unit tests)
+  Tester:  PASS | PARTIAL | FAIL     (skipped: <n>, manual hand-off: <n>)
+
+Artifacts
+  📄 `/abs/…/report.md`
+  📄 `/abs/…/scope.md`
+  📄 `/abs/…/round-<N>/investigation.md`
+  📄 `/abs/…/round-<N>/spec.md`
+  📄 `/abs/…/round-<N>/implementation.v<n>.md`
+  📄 `/abs/…/round-<N>/changes.md`
+  📄 `/abs/…/round-<N>/review.md`
+  📄 `/abs/…/round-<N>/test-results.md`
+```
+
+- Every artifact is a backticked absolute path on its own line (REFERENCE → Artifact paths). List only files that exist.
+- If UI verification was SKIPPED, add `⚠ UI verification: SKIPPED — no browser MCP configured` as its own line directly under `Results`.
+- If the tester handed off manual cases, add `⚠ <n> manual test cases await you in test-results.md`.
+- If `open_issues` is non-empty, add an `Open issues` block listing them one per line — the next round picks these up as `carry_over`.
+
+Then, and only then, ask Decision prompt **(b)**.
 
 ## Decision prompts
 
@@ -183,20 +295,109 @@ Which option?
 
 - `1` → invoke the `unioss-pipeline:unioss-ship` skill in `staging` mode.
 - `2` → STOP. Nothing is pushed.
+- Add a third option **only when the round's `open_issues` is non-empty** — the round closed with work outstanding, so opening the next round is a real choice the user should not have to ask for:
+
+  ```
+  3. Open the next round now (<n> open issues)
+  ```
+
+  `3` → run feedback mode: set `current_round = N + 1`, create the round folder, and seed its `round-brief.md` from this round's `carry_over`.
+
+**(c) Spec outline** — at Flow step 3c, before the spec is written:
+
+```
+Spec outline ready. What would you like to do?
+
+1. Write the full spec
+2. Adjust the outline first
+3. Back to clarification
+
+Which option?
+```
+
+- `1` → dispatch `unioss-spec` (Flow step 4).
+- `2` → ask what to change, edit the `## Spec Outline` section of `investigation.md` in place, and re-present the outline + this prompt.
+- `3` → re-enter `unioss-pipeline:unioss-brainstorming` on the unresolved point, append to `## Clarifications`, refresh the outline, re-present.
+
+**(d) GATE 1 — spec approval** — at Flow step 5:
+
+```
+Spec ready for approval. What would you like to do?
+
+1. Approve — continue to Plan
+2. Edit the spec
+3. Stop here, keep artifacts
+
+Which option?
+```
+
+- `1` → record `gate_decisions.gate_1 = "approved"`, go to Flow step 6.
+- `2` → ask Decision prompt **(a)**, re-dispatch `unioss-spec` with the feedback, re-present.
+- `3` → STOP. Leave the round in-progress (`stage` ≠ `finalized`) so a later run resumes here.
+
+**(e) GATE 2 — plan approval** — at Flow step 7, after the change preview:
+
+```
+Plan ready for approval. What would you like to do?
+
+1. Approve and apply the changes
+2. Edit the plan
+3. Back to the spec
+4. Stop here, keep artifacts
+
+Which option?
+```
+
+- `1` → record `gate_decisions.gate_2 = "approved"`, go to Flow step 8 (the coder).
+- `2` → ask Decision prompt **(a)**, re-dispatch `unioss-planner` with the feedback, re-present the preview.
+- `3` → the plan exposed a problem in the spec: reopen GATE 1 — re-dispatch `unioss-spec` with the feedback, re-approve at prompt **(d)**, then re-run the planner.
+- `4` → STOP. Nothing has been written to source yet.
+
+**(f) GATE 3 — review** — at Flow step 10, after the findings:
+
+```
+Review complete — 🔴 <n>  🟡 <n>  🟢 <n>. What would you like to do?
+
+1. Fix the findings
+2. Accept as-is — run the full suite
+3. Stop here, keep artifacts
+
+Which option?
+```
+
+- `1` → invoke `unioss-pipeline:unioss-implement` with the findings, then ask Decision prompt **(g)**.
+- `2` → record `gate_decisions.gate_3 = "accepted"`, run the full suite (AdminPage), continue to Flow step 11.
+- `3` → STOP. The code stays uncommitted on its feature branch.
+
+**(g) After a GATE 3 fix pass** — once the coder has applied fixes:
+
+```
+Fixes applied. What would you like to do?
+
+1. Re-review the changes
+2. Proceed to the full suite
+
+Which option?
+```
+
+- `1` → back to Flow step 9 (re-dispatch the reviewer).
+- `2` → treat as prompt **(f)** option `2`.
 
 ## Rules
 
 - Never edit source except via the `unioss-pipeline:unioss-implement` coder step.
 - Honor the gates — never run past Step 0, GATE 1, GATE 2, or GATE 3 without an explicit user decision.
-- Protected branches are read-only (REFERENCE → Branches). Verify the current branch before any commit/push.
+- Protected branches are read-only (REFERENCE-git → Branches). Verify the current branch before any commit/push.
 - Keep main context lean: rely on subagents' returned summaries; read full artifacts only when a gate needs it.
 - Emit every artifact as an absolute path in backticks the moment it is written (REFERENCE → Artifact paths) — never a `file://` URL, a markdown link, or a relative path.
 
 ## Related files
 
-- `./REFERENCE.md` — config, repos, branches, artifact layout, submodules, MCP.
+- `./REFERENCE.md` — shared stage rules, config, repos, artifact layout, GitLab reads.
+- `./REFERENCE-git.md` — branches, protected branches, commits, submodules (binding on Step 13).
+- `./REFERENCE-data.md` — DB, source paths, MCP (dispatched stages read this, not you).
 - `scripts/plan-table.mjs` — renders the Step 0 table.
-- `agents/unioss-investigator.md`, `unioss-planner.md`, `unioss-reviewer.md`, `unioss-tester.md`, `unioss-scope.md` — the dispatched subagents.
+- `agents/` — the dispatched subagents, one per stage: `unioss-investigator.md` (investigate), `unioss-reporter.md` (PM report), `unioss-spec.md` (spec), `unioss-planner.md` (plan), `unioss-reviewer.md`, `unioss-scope.md`, `unioss-tester.md`. Each pins its own model tier; dispatch by name and let the agent decide its depth.
 - `skills/unioss-implement/SKILL.md` — the coder (main thread).
 - `skills/unioss-scope/SKILL.md` — the Step 11 scope writer (runs before the tester).
 - `skills/unioss-ship/SKILL.md` — invoked by Decision prompt (b).

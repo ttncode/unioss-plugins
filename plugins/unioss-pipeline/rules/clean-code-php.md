@@ -26,6 +26,7 @@ Use these rules when writing or refactoring PHP. Keep code readable, reusable, a
   - Prefer `foreach ($locations as $location)` over index loops with `$l`, `$li`.
 - **Don’t add unneeded context**
   - Don’t repeat the type in field names (e.g., `Car::$make`, not `Car::$carMake`).
+- **Prefix booleans with `is` (or `has`/`can` where it reads better)**. Example: `$isActive`, `$isDeleted`, `$hasStock`, `$canEdit` — not `$active`, `$deleted`, `$stock`, `$edit`.
 
 ## Comparisons
 
@@ -64,6 +65,46 @@ Use these rules when writing or refactoring PHP. Keep code readable, reusable, a
   - Prefer `function combine(int $a, int $b): int` over `is_numeric()` + exceptions.
 - **Remove dead code**
   - Delete unused/legacy functions; rely on version control history instead.
+
+## Comments
+
+- **Comment why, not what.** The code already says what it does; a comment earns its place only by explaining a constraint, a trade-off, or a non-obvious business rule. Comments are written in English.
+- **Never cite spec, ticket, or plan identifiers in a comment.** No `REQ-1`, `CON-4`, `SEC-2`, `GUD-3`, `AC-5`; no `spec.md` / `implementation.v1.md` references; no "per the plan" or "as required by the ticket".
+  - Those identifiers live under `.walkthrough/`, which never ships with the source and goes stale the moment the spec is revised. A reader six months from now cannot resolve them, so the comment becomes noise pointing at nothing.
+  - **Write the comment as if that documentation did not exist** — state the rule itself, in terms someone reading only this file can act on.
+
+  ```php
+  // BAD
+  // REQ-2: only active shops may be listed (see spec.md)
+  $this->db->where('status', self::STATUS_ACTIVE);
+
+  // GOOD
+  // Suspended shops stay in the table for audit, but must never appear in the storefront.
+  $this->db->where('status', self::STATUS_ACTIVE);
+  ```
+
+  The ticket number belongs in the branch name, the commit message, and the migration filename — not in the source.
+- **Delete commented-out code and journal comments.** Version control remembers.
+- PHPDoc on every public method/class/property, including `@property` for CI3 magic-loaded dependencies.
+
+## Database migrations
+
+- **Every `ADD COLUMN` on an existing table names its position** — `AFTER \`<column>\``, or `FIRST` for the leading column. Those two are the only legal forms; a bare `ADD COLUMN` is never acceptable on a table that already exists.
+  - MySQL appends a positionless column wherever the table happens to end at that moment, so the resulting column order depends on which migrations ran first. Two environments that ran the same migrations in a different order end up with different schemas — and a `SELECT *` or an `INSERT` without a column list then behaves differently between them.
+  - Place the new column with the columns it relates to, and keep the `delete_flg, created_at, updated_at` tail last.
+  - Resolve the position against the live table (`DESCRIBE <table>`) rather than guessing from a model or an older migration.
+
+  ```php
+  // BAD — lands in a different place per environment
+  $this->dbforge->add_column('shops', ['is_featured' => ['type' => 'TINYINT', 'constraint' => 1]]);
+
+  // GOOD
+  $this->dbforge->add_column('shops', [
+      'is_featured' => ['type' => 'TINYINT', 'constraint' => 1, 'default' => 0, 'after' => 'status'],
+  ]);
+  ```
+
+  A new table has no existing order to preserve, so its `CREATE TABLE` needs no positions.
 
 ## Objects and Data Structures
 

@@ -1,4 +1,4 @@
-# #391 Report
+# #[IID] Report
 
 ### 1. Mục tiêu:
 
@@ -24,7 +24,6 @@
 
 **URLs**
 
-- `/`
 - `/products/detail/:id`
 - `/cart`
 - `/order/confirm`

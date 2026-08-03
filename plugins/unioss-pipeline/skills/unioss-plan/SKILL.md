@@ -15,9 +15,9 @@ Follow `../unioss-pipeline/REFERENCE.md` → Shared stage rules (read-only, roun
 
 ## Input
 
-The dispatch prompt states the mode. A standalone invocation has no mode.
+The dispatch prompt states the mode, and each mode has its own agent — `unioss-spec` runs spec mode, `unioss-planner` runs plan mode. Never run both in one dispatch. A standalone invocation has no mode.
 
-- **spec mode** — `round-<N>/investigation.md`, including any `## Clarifications`.
+- **spec mode** — `round-<N>/investigation.md`, including any `## Clarifications` and its **approved** `## Spec Outline`.
 - **plan mode** — the **approved** `spec.md`, plus the investigation.
 - Both — the round path.
 - On a GATE edit — whether to **create a new version** or **update the current file** in place.
@@ -25,6 +25,8 @@ The dispatch prompt states the mode. A standalone invocation has no mode.
 ## Workflow
 
 ### Spec mode — the what/why, no code
+
+**Expand the approved `## Spec Outline` from `investigation.md`** — the user already approved that shape at Flow step 3c. It is your skeleton: write the bodies the outline's headlines promise. Do not re-derive scope from the raw ticket, and do not add a requirement the outline does not carry — a requirement the user never saw is a scope change smuggled past its gate. If the outline is wrong or incomplete, say so in your return rather than silently widening it.
 
 Write `round-<N>/spec.md`. Mandatory sections:
 
@@ -47,7 +49,14 @@ Write `round-<N>/spec.md`. Mandatory sections:
    ACs × scope surfaces); the human's manual checklist is the tester's
    `## Manual Testing (run these yourself)` hand-off in `test-results.md`.
 
-2. **Save** `round-<N>/implementation.v1.md`.
+2. **House rules the plan's code must already satisfy.** The coder applies your code verbatim, so a violation here ships. Read `${CLAUDE_PLUGIN_ROOT}/rules/clean-code-php.md` (and `clean-code-javascript.md` for JS) and bake its rules into the code you write rather than leaving them to review. The three the reviewer rejects most often:
+   - **Booleans are prefixed `is` / `has` / `can`** — see Variables. Never rename a pre-existing name to comply.
+   - **Every `ADD COLUMN` on an existing table names its position** — see Database migrations. Resolve the position from the live table via `DESCRIBE`, never from a model or an older migration.
+   - **No spec, plan, or ticket identifiers in comments** — see Comments. Trace requirements to tasks in the plan's prose, never in a code comment.
+
+3. **Name every touched file explicitly.** The orchestrator renders the GATE 2 change preview from your plan — file paths (created / modified / deleted), the methods each modification touches, and one line per DDL effect in the form `<table>: + <column> <type> AFTER <column>`. A file the plan does not name is a file the human never sees coming, so leave nothing implicit.
+
+4. **Save** `round-<N>/implementation.v1.md`.
 
 ### Versioning on a GATE edit
 
@@ -58,12 +67,28 @@ Write `round-<N>/spec.md`. Mandatory sections:
 
 Never paste the spec or plan body.
 
-- **spec mode:** the spec path (backticked, absolute) + a one-line scope summary.
-- **plan mode:** the plan path (backticked, absolute), total estimate points, and a one-line scope summary.
+- **spec mode:** the spec path (backticked, absolute) + a one-line scope summary + whether `Open Questions` came out empty.
+- **plan mode:** the plan path (backticked, absolute), total estimate points, a one-line scope summary, and the counts the GATE 2 preview needs — files created / modified / deleted, and migrations.
+
+### Standalone — offer the next action
+
+Dispatched by the orchestrator, return your summary and stop; the gates own the questions. Invoked directly, close with a menu (REFERENCE → Ending a run):
+
+```
+Plan complete — <n> tasks, <p> points. What would you like to do?
+
+1. Apply the plan
+2. Revise the plan
+3. Stop here
+
+Which option?
+```
+
+`1` → `unioss-pipeline:unioss-implement`. In spec mode, offer *"Write the implementation plan"* as `1.` instead.
 
 ## Related files
 
 - `skills/unioss-writing-plans/SKILL.md` — the plan structure this stage produces (plus Story points).
-- `agents/unioss-planner.md` — the subagent that runs this.
+- `agents/unioss-spec.md` — runs spec mode. `agents/unioss-planner.md` — runs plan mode.
 - `skills/unioss-implement/SKILL.md` — the coder that applies the plan.
 - `skills/unioss-pipeline/REFERENCE.md` — shared stage rules.

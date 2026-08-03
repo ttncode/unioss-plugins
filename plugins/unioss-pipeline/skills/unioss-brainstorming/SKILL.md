@@ -1,6 +1,6 @@
 ---
 name: unioss-brainstorming
-description: "You MUST use this before any creative work - creating features, building components, adding functionality, or modifying behavior. Explores user intent, requirements and design before implementation."
+description: Use before any creative work on UNIOSS code — GATE 0 clarification, feedback rounds, and ad-hoc UNIOSS tasks. Explores intent, requirements and design against the UNIOSS codebase before implementation.
 ---
 
 # Brainstorming Ideas Into Designs
@@ -12,6 +12,12 @@ Start by understanding the current project context, then ask questions one at a 
 <HARD-GATE>
 Do NOT invoke any implementation skill, write any code, scaffold any project, or take any implementation action until you have presented a design and the user has approved it. This applies to EVERY project regardless of perceived simplicity.
 </HARD-GATE>
+
+## Pipeline mode vs. standalone
+
+**In the gated pipeline** the orchestrator invokes you at GATE 0 to work the investigation's Open Questions, and nothing more. Steps 5–9 of the checklist below belong to the pipeline, not to you: the design presentation is Decision prompt **(c)** at Flow step 3c, the spec is written by the `unioss-spec` agent, and the plan comes from `unioss-planner` at GATE 2. Append your answers to `## Clarifications`, return, and stop — do not present a design, write `spec.md`, or invoke `unioss-writing-plans`.
+
+**Standalone** (no round path), run the whole checklist as written.
 
 ## Anti-Pattern: "This Is Too Simple To Need A Design"
 

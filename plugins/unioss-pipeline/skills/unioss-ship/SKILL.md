@@ -9,7 +9,7 @@ description: Use when shipping a finalized UNIOSS ticket — pushes the feature 
 
 Push the finalized branches and open one MR per touched repo. **Core principle:** never merges — that stays a human action.
 
-Follow `../unioss-pipeline/REFERENCE.md` → its Branches, Protected-branch, and Submodule rules are binding.
+Follow `../unioss-pipeline/REFERENCE.md` → Shared stage rules, and `../unioss-pipeline/REFERENCE-git.md` → its Branches, Protected-branch, Submodule, and GitLab-write rules are binding.
 
 ## Input
 
@@ -31,7 +31,7 @@ Every touched repo gets its own MR, including the submodules.
 
 ### Preconditions
 
-- Determine the touched repos + their feature branches from `changes.md` (REFERENCE branch naming). Include any submodule the coder edited.
+- Determine the touched repos + their feature branches from `changes.md` (REFERENCE-git branch naming). Include any submodule the coder edited.
 - Verify every branch to ship is a `feature/v3/…` branch. **Abort** if any is a protected branch.
 
 ### Preview
@@ -105,4 +105,4 @@ A plain "proceed"/"yes"/"go ahead" (no skip mentioned) runs every listed step as
 - `scripts/ship.mjs` — `create`, `mrTitle`, and the pre-filled-URL fallback.
 - `scripts/ship-plan.mjs` — the preview-gate plan text.
 - `scripts/config.mjs` — `ship.*` settings.
-- `skills/unioss-pipeline/REFERENCE.md` — branch naming, protected branches, submodules.
+- `skills/unioss-pipeline/REFERENCE-git.md` — branch naming, protected branches, submodules, GitLab writes.

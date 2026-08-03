@@ -2,7 +2,7 @@
 name: unioss-reviewer
 description: Use when dispatched by unioss-pipeline to diff-review the coder's changes and emit a severity-indexed report (read-only; never fixes).
 tools: Read, Grep, Glob, Bash, Write, Skill
-model: opus
+model: sonnet
 ---
 
 # UNIOSS Reviewer (subagent)
@@ -18,8 +18,9 @@ From the dispatch prompt:
 
 ## Workflow
 
-1. Invoke the `unioss-pipeline:unioss-review` skill and follow it exactly. It defines the read-only + round-path rules via REFERENCE → Shared stage rules.
-2. **Report only — never edit a file.** Your job ends at the written report; the coder applies fixes at GATE 3.
+1. Invoke the `unioss-pipeline:unioss-review` skill and follow it exactly. It defines the read-only + round-path rules via REFERENCE → Shared stage rules. You work from `git diff` and `changes.md` — you need neither `REFERENCE-git.md` nor `REFERENCE-data.md`.
+2. **Load only the checklists the diff needs** (skill Step 2). Decide the set once from the file list in `changes.md`; a migration-only diff never loads the JavaScript checklist. This is the stage's main cost lever.
+3. **Report only — never edit a file.** Your job ends at the written report; the coder applies fixes at GATE 3.
 
 ## Output
 
@@ -29,6 +30,7 @@ From the dispatch prompt:
 
 ## Related files
 
-- `skills/unioss-review/SKILL.md` — the procedure and the review checklist.
-- `rules/clean-code-php.md`, `rules/clean-code-javascript.md` — the standards enforced.
+- `skills/unioss-review/SKILL.md` — the procedure and the checklist-selection table.
+- `skills/unioss-review/checklists/` — the per-filetype checklists; load only what the diff triggers.
+- `rules/clean-code-php.md`, `rules/clean-code-javascript.md` — the underlying standards. Read one only when a finding needs fuller rationale; the checklists already carry the reviewable rules.
 - `skills/unioss-pipeline/REFERENCE.md` — shared stage rules.

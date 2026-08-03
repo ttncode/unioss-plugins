@@ -198,4 +198,4 @@ See `../unioss-pipeline/REFERENCE.md` → Shared stage rules → Standalone use 
 - `./examples/*` — passing tests; read these before writing any test code.
 - `scripts/phpunit-config.mjs` — `apply --skip-import` (fast), `apply --import` (full), `restore`.
 - `skills/unioss-implement/SKILL.md` — the coder that invokes this.
-- `skills/unioss-pipeline/REFERENCE.md` — config resolution, DB access.
+- `skills/unioss-pipeline/REFERENCE-data.md` — DB access.

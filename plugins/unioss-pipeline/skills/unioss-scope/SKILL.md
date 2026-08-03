@@ -41,6 +41,22 @@ Structure must match `./scope-template.md` exactly — read `./scope-examples.md
 
 Return: the backticked absolute path (workspace root + `.walkthrough/<PREFIX>-[IID]/scope.md`), whether it was created or updated, and one line noting if a common-code change forced a multi-app scope.
 
+### Standalone — offer the next action
+
+Dispatched by the orchestrator, return your summary and stop — the tester runs next. Invoked directly, close with a menu (REFERENCE → Ending a run):
+
+```
+Scope written — <n> affected features, <m> URLs. What would you like to do?
+
+1. Verify the affected flows
+2. Ship to staging
+3. Stop here
+
+Which option?
+```
+
+`1` → `unioss-pipeline:unioss-verify`, `2` → `unioss-pipeline:unioss-ship`. Order matters: verification before shipping unless the user overrides.
+
 ## Common Mistakes
 
 | Mistake                                              | Why it breaks                                                                                                      | Instead                                                              |

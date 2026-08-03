@@ -7,11 +7,11 @@ description: Use when diff-reviewing the UNIOSS coder's changes against clean-co
 
 ## Overview
 
-Diff-scoped review of the coder's changes against UNIOSS clean-code, CI3, plan-adherence, and security standards, flagging every place new/changed code breaks a standard below.
+Diff-scoped review of the coder's changes against UNIOSS clean-code, CI3, plan-adherence, and security standards, flagging every place new/changed code breaks a standard.
 
 **Core principle:** Report only — never edit files, unless the user explicitly follows up with `fix #N`.
 
-Follow `../unioss-pipeline/REFERENCE.md` → Shared stage rules (read-only, round path, artifact paths, standalone use).
+Follow `../unioss-pipeline/REFERENCE.md` → Shared stage rules (read-only, round path, artifact paths, standalone use). You work from `git diff` and `changes.md` only — you do not need `REFERENCE-git.md` or `REFERENCE-data.md`.
 
 ---
 
@@ -29,7 +29,26 @@ Scope is the **diff only**. Never comment on code outside the `+` lines.
 
 Read `.walkthrough/<PREFIX>-[IID]/round-<N>/changes.md` to get the changed files and repo. `cd` into that repo (`AdminPage` or `FrontEnd`).
 
-### Step 2 — Read the diff
+### Step 2 — Load only the checklists this diff needs
+
+The checklists live in `./checklists/`. **Read only the ones whose trigger matches a path in `changes.md`** — a migration-only diff must not pull in the JavaScript checklist, and a JS-only diff must not pull in the PHP ones. Decide the set once, up front, from the file list; do not re-read a checklist you already loaded.
+
+| Checklist                   | Load when a changed path…                                   |
+| --------------------------- | ----------------------------------------------------------- |
+| `checklists/php-common.md`  | ends in `.php` (**always**, alongside the layer file below) |
+| `checklists/controllers.md` | is under `application/controllers/`                         |
+| `checklists/models.md`      | is under `application/models/`                              |
+| `checklists/views.md`       | is under `application/views/` or `application/language/`    |
+| `checklists/helpers.md`     | is under `application/helpers/`                             |
+| `checklists/migrations.md`  | is under `application/migrations/`                          |
+| `checklists/tests.md`       | is under `application/tests/`                               |
+| `checklists/javascript.md`  | ends in `.js`                                               |
+
+The Security, Logging, Coding-standards, Philosophy, and False-positive sections below are **universal** — they apply to every review regardless of which checklists loaded.
+
+For a diff that touches a file type with no checklist (`.css`, `.json`, `.sql`, config), review it against the universal sections plus general clean-code judgment.
+
+### Step 3 — Read the diff
 
 ```bash
 git diff            # working-tree changes from the coder stage
@@ -37,7 +56,7 @@ git diff            # working-tree changes from the coder stage
 
 Judge `+` lines for the quality of new/changed code. Do **not** ignore `-` lines — each removal is a change with consequences. Whenever the diff deletes a referenceable symbol (a constant, function/method, class, DB column, route, config key, parameter, or a guard/branch), grep the repo for surviving references — e.g. `grep -rn "REMOVED_NAME" AdminPage FrontEnd` — and flag any remaining usage as 🔴 Critical (the change breaks callers). Likewise, when a signature, return shape, or column is changed (not just added), check the call sites. Unchanged context outside the diff is otherwise out of scope.
 
-### Step 3 — Classify Each Issue
+### Step 4 — Classify each issue
 
 Assign every finding to one of three severity levels:
 
@@ -47,14 +66,13 @@ Assign every finding to one of three severity levels:
 | 🟡   | **Violation**    | Breaks a rule; degrades maintainability or safety                             |
 | 🟢   | **Good / Style** | Noteworthy improvement or minor style note                                    |
 
-### Step 4 — Assign Sequential Indices
+### Step 5 — Assign sequential indices
 
 Every finding gets a unique global index: `[#1]`, `[#2]`, `[#3]`, etc.
 
-Group by file, but the index is continuous across the entire report — never
-reset per file.
+Group by file, but the index is continuous across the entire report — never reset per file.
 
-### Step 5 — Output the Report
+### Step 6 — Output the report
 
 Write the report to `.walkthrough/<PREFIX>-[IID]/round-<N>/review.md` and return the severity counts (🔴/🟡/🟢), the top-priority list, and the backticked absolute path to `review.md` (REFERENCE → Artifact paths) — do not paste the full report body.
 
@@ -149,195 +167,12 @@ Good because X.
 
 ## Agent Execution Notes
 
+- **Load only the checklists Step 2 selects.** This is the single biggest cost lever in this stage — the full checklist set is several times the size of a typical diff.
 - **Do not read entire files** — only read the diff lines and their immediate context (±10 lines) to understand intent.
 - **Batch file reads**: if multiple files are changed, read all diffs in one pass before starting the report.
 - **One report per session**: produce a single consolidated report, not one per file.
 - **Token efficiency**: keep code snippets to the relevant lines only; avoid quoting entire methods.
 - **Ambiguous changes**: if the intent of a change is unclear, note the ambiguity and flag it as 🟡 with a question rather than assuming incorrectly.
-
----
-
-## Unioss Rules
-
-Use these checklists when reviewing each file type. Flag each failing check as
-a finding.
-
-### Project Baseline Rules
-
-- [ ] Target stack remains compatible with **CodeIgniter 3.x**, **PHP 8.1+**, **Bootstrap 3.x**, **jQuery**, **MySQL 8.0**, **PHPUnit with CI3 bootstrap**, and **Composer**.
-- [ ] Code remains backward-compatible with CI3 loader conventions; avoid traits/features/patterns that break CI3 loading behavior.
-- [ ] Environments are respected through CI3 `ENVIRONMENT` (`development`, `staging`, `testing`, `production`); no environment-specific branching is hardcoded in feature code.
-- [ ] Follow **SOLID**, **CRY**, **KISS**, and **YAGNI** principles when reviewing new code.
-- [ ] Prefer CI3 standard libraries/helpers/methods over ad-hoc globals or custom reimplementation.
-- [ ] New code fails gracefully; do not introduce fatal `die`/`exit` flows except existing migration execution patterns if explicitly accepted by the project.
-- [ ] Avoid external dependencies beyond CI3 + Bootstrap 3 + PHPUnit unless the requirement explicitly asks for them.
-- [ ] New code should be self-consistent and runnable inside a typical CI3 app.
-
-### Naming & Structure Rules
-
-- [ ] Files follow project naming: `Snake_case` for controllers, models, libraries, and migration classes; `snake_case` for helper files/functions.
-- [ ] Controllers, models, and libraries use `Snake_case` class names; methods, variables, and properties use `snake_case`; constants use `SCREAMING_SNAKE_CASE`.
-- [ ] Routes use `kebab-case` URLs where possible and are mapped through `application/config/routes.php`.
-- [ ] Tests use `Snake_case` for class names and `snake_case` for test methods.
-- [ ] DB tables and columns use `snake_case`.
-- [ ] SQL keywords are uppercase, and raw SQL must be parameterized.
-- [ ] The generated or changed project structure should preserve standard CI3 directories and avoid misplaced feature code.
-
-### Database Design Rules
-
-- [ ] Database design must clearly reflect specifications so requirements can be understood without reading application code.
-- [ ] DB structure or production/staging data changes must be performed through migrations only, never through direct manual SQL.
-- [ ] Foreign keys should be used for relationships wherever feasible to protect data integrity.
-- [ ] Avoid storing multiple data items in one JSON-like column; normalize into relational tables where feasible.
-- [ ] If JSON-like storage is unavoidable, store it as a text string, not as a MySQL `JSON` type.
-- [ ] Select only necessary columns; `SELECT *` is forbidden.
-- [ ] Add indexes for foreign keys and frequent filters.
-- [ ] Required Japanese comments must be present for every new DDL column.
-- [ ] Final table columns must be ordered as `delete_flg`, `created_at`, `updated_at` when those columns are applicable.
-
-### PHP — Global
-
-- [ ] Domain and installation directory must always be configurable (no hardcoding). Using CI3 config `$this->config->load(...)`
-- [ ] No municipality/user-specific hardcoded branching — use config or DB flags (on/off) to toggle features per tenant instead
-- [ ] Internal DB IDs are never exposed to the client or external systems — use aliases, codes, or slugs instead
-- [ ] PHPDoc on every public method/class/property (params, return, throws), including `@property` for CI3 magic-loaded dependencies and code jumping
-- [ ] Type hints on all new method parameters and return values
-- [ ] No direct `$_POST` / `$_GET` access — use `$this->input->post(null, true)` / `$this->input->get(key, true)` with XSS filter enabled
-- [ ] No N+1 queries inside loops
-- [ ] All user-facing messages (flash notifications, success/error responses, validation feedback) must be loaded from a `*_lang.php` file via `$this->lang->load('xxx_lang')` — no hardcoded strings inline
-- [ ] Session keys are strings — no numeric keys or ambiguous types stored
-- [ ] No dead code (unused variables, unreachable branches)
-- [ ] If loops too many times (more than 2) `array_unique(array_diff(array_column(...)))` replaced with `foreach` loops
-- [ ] Model loaded with uppercase first char: `$this->load->model('Order_model')`
-- [ ] No magic numbers — use named constants
-- [ ] Input trimmed before saving: `trim()`
-- [ ] Prioritize using CI3's loading mechanism instead of `require`, `require_once`, `include`, `include_once`
-- [ ] `foreach ($nullable_var ?? [] as ...)` guards on nullable arrays
-- [ ] `??` null-coalescing instead of `isset()` ternaries
-- [ ] New constants follow `SCREAMING_SNAKE_CASE`
-- [ ] Unit comment present for numeric constants (seconds, days, pixels, etc.)
-- [ ] New comments explain **Why** the code exists rather than only **What** it does; comments are written in English.
-- [ ] Files stay under 1000 lines and methods remain short; split oversized files/methods into focused units.
-- [ ] Function parameters are explicit and typed where possible; avoid ambiguous array parameters for new code.
-- [ ] Do not use reference parameters for new functions unless there is a proven technical need.
-- [ ] Use existing date/time helpers where possible, such as `current_time()` and `create_time_from_format()`.
-- [ ] Code should produce no PHP errors, warnings, or notices under development error reporting.
-
-### PHP — Controllers (`application/controllers/`)
-
-- [ ] Extends `MY_Controller`; acts as a thin coordinator only — receives input, delegates to models/libraries, and returns/renders output. No business or validation logic in the controller; that lives in the model.
-- [ ] `My_Controller` must stay slim — only truly universal logic/loads belong there; per-request helpers/models/libraries must be loaded in each controller, not in `My_Controller`
-- [ ] No raw SQL; uses CI3 Query Builder via model calls
-- [ ] `redirect()` + `return` after every error flash — execution never falls through
-- [ ] `html_escape()` on all dynamic view data passed through
-- [ ] API/AJAX controller responses use proper HTTP status codes and JSON structure.
-
-### PHP — Models (`application/models/`)
-
-- [ ] Extends `CI_Model`; one model per table
-- [ ] No cross-table queries that belong in another model
-- [ ] Uses `$this->db->trans_start()` / `trans_complete()` for multi-step writes
-- [ ] Returns typed data (array, int, bool) — never silently returns `null` on failure
-- [ ] DB insert/update returns input data, not a re-query
-- [ ] `SELECT *` forbidden — list only needed columns
-- [ ] `delete_flg` filter applied on all relevant queries
-- [ ] No direct model-to-model `$this->load->model()` orchestration (belongs in controller or library)
-- [ ] `GROUP BY` present whenever `SUM()` / `COUNT()` + `ORDER BY` are used
-- [ ] No JSON stored in a single string column unless absolutely unavoidable; prefer proper relational columns with FK constraints
-- [ ] If JSON-like storage is unavoidable, the column uses text storage rather than MySQL `JSON` type.
-- [ ] Data retrieval, processing, and validation rules live in models where they represent business/data rules.
-- [ ] Query result limits and pagination are applied to prevent large data loads.
-- [ ] Cache expensive lookups only where sensible and safe for the business rules.
-
-### PHP — Language Files (`application/language/japanese/*_lang.php`)
-
-- [ ] All user-facing strings (notifications, success/error messages, validation messages, API response messages) are stored in a `*_lang.php` file — never hardcoded inline in controllers, models, libraries, or views
-- [ ] Lang file named after its feature domain: `order_lang.php`, `vms_lang.php`, etc. — one file per feature area
-- [ ] Key names follow the pattern `[module].[domain]_[status_or_error]` — e.g.:
-  ```php
-  $lang['vms.validation_error']
-  $lang['vms.store_not_found']
-  $lang['vms.product_invalid']
-  $lang['vms.service_type_not_enabled']
-  ```
-- [ ] Lang file loaded in the controller that uses it: `$this->lang->load('xxx_lang')`; accessed via `$this->lang->line('key')`
-- [ ] No duplicate keys within a lang file or across lang files for the same feature
-- [ ] New lang keys added alongside the code change — never leave strings hardcoded as a "temporary" measure
-
-### PHP — Views (`application/views/`)
-
-- [ ] All dynamic output wrapped in `html_escape()` — no bare `echo $var`
-- [ ] No inline `<style>` blocks — CSS in separate files
-- [ ] No inline `<script>` blocks — JS in separate files
-- [ ] No PHP logic (calculations, DB format, array building) — view is presentational only
-- [ ] Uses `asset_url()` for assets, not `base_url() . 'asset/...'`
-- [ ] CSS/JS versioned with `ASSET_VERSION` constant (e.g. `?v=<?= ASSET_VERSION ?>`) — no `rand()` cache-busting
-- [ ] Uses `number_format()` on coins/yen — never raw integer output
-- [ ] IDs and classes follow `kebab-case`
-- [ ] Bootstrap 3 classes and ARIA attributes present where needed
-- [ ] `form_open()`, `set_value()`, and `form_error()` used for CI3 CSRF and validation display
-- [ ] Do not use abbreviations for class names
-- [ ] CDN links are not loaded directly in views; required assets are downloaded into source code.
-- [ ] Limit `!important` usage in CSS.
-- [ ] Prefer `rem` and `1px` units where appropriate.
-- [ ] Default image URLs fall back to a placeholder image.
-- [ ] PHP variables passed to JavaScript use `json_encode()`.
-- [ ] Lists are paginated.
-- [ ] Views do not query the database.
-
-### PHP — Constants
-
-- [ ] Constants defined with `defined('X') or define('X', value)` pattern
-- [ ] No unused constants added
-- [ ] Shared constants for both AdminPage and FrontEnd go in `/application/helpers/common/constants_helper.php`; app-specific constants go in each app's `/application/config/constants.php`
-
-### PHP — Helpers (`application/helpers/`)
-
-- [ ] Helpers are **pure assistants** — stateless utility functions only; no database queries and no business logic inside a helper
-- [ ] A helper must not load models or libraries (allow load library if this helper only return a library instance) — if DB access is needed, move the logic to a model
-- [ ] Helper functions are globally available; keep them generic and reusable, not feature-specific
-- [ ] Function names follow `snake_case` and are descriptive of what they return/do
-- [ ] No side effects (no session writes, no redirects, no output) unless the helper's sole purpose is output (e.g., `log_message_helper`)
-- [ ] Shared helpers used by both AdminPage and FrontEnd live in `application/helpers/common/`
-
-### PHP — Migrations (`application/migrations/`)
-
-- [ ] Filename: `<timestamp>_<desc>_<ticket_id>_<index>.php`
-- [ ] Class name: `Migration_<Desc>_<Ticket_id>_<Index>`
-- [ ] `up()` and `down()` both implemented and tested
-- [ ] Migration includes author and purpose in comments/docblock.
-- [ ] Wrapped in `$this->db->trans_start()` / `trans_complete()`
-- [ ] No `SET`, `USING BTREE`, or non-default DB params
-- [ ] `CHECK EXISTS`: verify existing columns, indexes, and constraints before adding, changing, or dropping them
-- [ ] Japanese column comments present in DDL for every schema, table, and column (mandatory)
-- [ ] Foreign key constraints created for all relationships; reference action must be `RESTRICT` only — `CASCADE`, `SET NULL`, and `NO ACTION` are forbidden
-- [ ] Indexes added for FK and frequently filtered columns
-- [ ] Table column order ends with: `delete_flg`, `created_at`, `updated_at` (omit any that are not applicable)
-- [ ] No direct staging/production DB SQL execution — all DB structure changes go through migration files only
-
-### PHP — Tests (`application/tests/`)
-
-- [ ] Data provider name rule `provide_{Noun}` — e.g. 'provide_datetime', 'provide_product_code'
-- [ ] Tests are deterministic and can pass locally without relying on external services or unstable time/data.
-- [ ] PHPUnit coverage includes success, validation failure, authorization/security, and edge cases where relevant.
-
-### JAVASCRIPT
-
-- [ ] Written as a named module object (named JS module pattern per `${CLAUDE_PLUGIN_ROOT}/rules/clean-code-javascript.md`)
-- [ ] `constants: {}` block present with named constants for all magic numbers, hardcoded values, and fallback values — no literals inline
-- [ ] `elements: {}` block caches all jQuery selectors at definition time
-- [ ] Private methods prefixed with `_` (`_bindToggle`, `_openCard`)
-- [ ] Protected methods prefixed with `__`
-- [ ] Public methods have no prefix
-- [ ] `init()` guards with early return if primary element not found
-- [ ] No always-truthy guards like `if ($)` or `if (window)`
-- [ ] Event listeners use `document.addEventListener('DOMContentLoaded', ...)` not `$(function() {...})`
-- [ ] Timers created with `setInterval` must call `clearInterval` when completed
-- [ ] PHP variables passed to JS via `json_encode`, not inline echoed values
-- [ ] `alert()` only for user-facing errors — no debug alerts
-- [ ] If you need to access data from PHP, set data to `window.App = { ... }` at view
-- [ ] JavaScript code is modular and avoids global side effects beyond the agreed module/window data entry point.
-- [ ] Select directly on the target tag/element instead of broad document delegation unless delegation is necessary for dynamic elements.
 
 ---
 
@@ -370,7 +205,7 @@ a finding.
 
 - Base style: **CodeIgniter 3 Style Guide**; everything else follows **PSR-12**.
 - Auto-formatter is available in the development environment (PHPCS / PHPCBF).
-- Refactoring must be done on a **separate branch** — never mix formatting/refactoring commits with feature commits (makes diffs unreviable).
+- Refactoring must be done on a **separate branch** — never mix formatting/refactoring commits with feature commits (makes diffs unreviewable).
 - New code must produce **zero PHP errors or warnings** — all error levels should be clean.
 - Use **PHPCS** to check and **PHPCBF** to auto-fix code formatting issues in the development environment.
 - PSR-12 formatting uses 4-space indentation and Unix newlines.
@@ -396,16 +231,32 @@ a finding.
 - `$this->load->model()` calls in constructors — standard CI3 pattern
 - Trailing comma in last array item — acceptable in PHP 7.2+
 - `unset($reference)` after `foreach (&$item)` — required PHP pattern, not dead code
+- Pre-existing names that break the `is`-prefix or comment rules — those apply to **new** code only. A legacy `delete_flg` column or an untouched old comment is not a finding.
 
 ---
 
 ## Standalone use
 
-See REFERENCE → Shared stage rules → Standalone use (e.g. `/unioss-review Review this controller …`): do the task on the named file(s), write nothing under `.walkthrough/` unless asked, skip gates.
+See REFERENCE → Shared stage rules → Standalone use (e.g. `/unioss-review Review this controller …`): do the task on the named file(s), write nothing under `.walkthrough/` unless asked, skip gates. Select checklists by the named file's path exactly as in Step 2.
+
+Then close with a menu (REFERENCE → Ending a run) rather than leaving the findings on screen:
+
+```
+Review complete — 🔴 <n>  🟡 <n>  🟢 <n>. What would you like to do?
+
+1. Fix the findings
+2. Walk through a specific finding
+3. Stop here
+
+Which option?
+```
+
+`1` → `unioss-pipeline:unioss-implement` (this skill never edits). With zero findings, offer *"Nothing to fix"* as the first option instead of a fix pass. Inside the pipeline, ask nothing — GATE 3 owns this decision.
 
 ## Related files
 
-- `rules/clean-code-php.md`, `rules/clean-code-javascript.md` — the standards enforced here.
+- `./checklists/` — the per-filetype checklists Step 2 selects from.
+- `rules/clean-code-php.md`, `rules/clean-code-javascript.md` — the underlying standards. Read one only when a finding needs the fuller rationale; the checklists already carry the reviewable rules.
 - `agents/unioss-reviewer.md` — the subagent that runs this.
 - `skills/unioss-implement/SKILL.md` — applies the fixes at GATE 3; this skill never edits.
 - `skills/unioss-receiving-code-review/SKILL.md` — reception rigor for evaluating feedback (verify before implementing).

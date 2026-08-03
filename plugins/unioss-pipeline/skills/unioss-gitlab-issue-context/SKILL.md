@@ -40,4 +40,4 @@ Writes only to `.walkthrough/.pipeline/<PREFIX>-[IID]/` (hidden tracking files).
 
 - `./scripts/fetch-ticket.js` — the fetcher.
 - `skills/unioss-investigate/SKILL.md` — invokes this as its Step 1.
-- `skills/unioss-pipeline/REFERENCE.md` — GitLab endpoints, URL regex, read-only rule.
+- `skills/unioss-pipeline/REFERENCE.md` — GitLab reads: endpoints, URL regex, read-only rule.

@@ -14,6 +14,7 @@ Apply these rules when writing or refactoring JavaScript. Optimize for readabili
 
 ## Variables
 
+- **Prefix booleans with `is` (or `has`/`can` where it reads better)**. Example: `$isActive`, `$isDeleted`, `$hasStock`, `$canEdit` — not `$active`, `$deleted`, `$stock`, `$edit`.
 - Use meaningful, pronounceable names.
 - Use one vocabulary per concept (don’t call the same thing `userInfo`, `clientData`, `customerRecord`).
 - Make names searchable:

@@ -1,6 +1,6 @@
 ---
 name: unioss-subagent-driven-development
-description: Use when executing implementation plans with independent tasks in the current session
+description: Use when executing a UNIOSS implementation plan task-by-task in the current session, dispatching a fresh subagent per task with review between tasks. Standalone alternative to the gated /unioss-pipeline flow — inside that flow the coder is unioss-implement at GATE 2.
 ---
 
 # Subagent-Driven Development

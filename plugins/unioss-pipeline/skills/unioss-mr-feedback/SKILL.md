@@ -9,7 +9,7 @@ description: Use when a ticket's GitLab merge request(s) received review comment
 
 Turn another developer's merge-request review comments into verified, tested, pushed fixes. Standalone: no ticket, no round, no gates, no `.walkthrough/` artifacts.
 
-Follow `../unioss-pipeline/REFERENCE.md` — its Branches, Protected-branch, Submodule, and Commit-message rules are binding. This skill is the second (and only other) place GitLab writes are permitted — see REFERENCE → GitLab: it may `git push` a feature branch; it must never create or merge an MR. **Core principle:** verify every comment against the code as it stands now — a reviewer's suggestion is not gospel just because someone else wrote it.
+Follow `../unioss-pipeline/REFERENCE.md` → Shared stage rules, and `../unioss-pipeline/REFERENCE-git.md` — its Branches, Protected-branch, Submodule, and Commit-message rules are binding. This skill is the second (and only other) place GitLab writes are permitted — see REFERENCE-git → GitLab writes: it may `git push` a feature branch; it must never create or merge an MR. **Core principle:** verify every comment against the code as it stands now — a reviewer's suggestion is not gospel just because someone else wrote it.
 
 ## Input
 
@@ -54,7 +54,7 @@ Print one summary: what will be applied (valid comments + sweep finds — file, 
 
 ### 7 — Apply
 
-Standard project conventions apply (the target project's `CLAUDE.md`, its per-language clean-code rules, PSR-12). If a valid fix lives in an app's `application/{models,helpers}/common` path, it is `common-models`/`common-helper` territory — follow REFERENCE → Submodules: branch off `v3-master` in the canonical submodule source, edit, commit, push the submodule branch, then move the app's working-tree pointer only (never commit/push the app-side gitlink bump).
+Standard project conventions apply (the target project's `CLAUDE.md`, its per-language clean-code rules, PSR-12). If a valid fix lives in an app's `application/{models,helpers}/common` path, it is `common-models`/`common-helper` territory — follow REFERENCE-git → Submodules: branch off `v3-master` in the canonical submodule source, edit, commit, push the submodule branch, then move the app's working-tree pointer only (never commit/push the app-side gitlink bump).
 
 ### 8 — Test
 
@@ -121,5 +121,5 @@ This skill is **never** part of `/unioss-pipeline`. It writes nothing under `.wa
 ## Related files
 
 - `./scripts/fetch-mr-feedback.mjs` — the fetcher + formatter.
-- `skills/unioss-pipeline/REFERENCE.md` — branches, protected branches, submodules, commit format, the GitLab write policy this skill is named in.
+- `skills/unioss-pipeline/REFERENCE-git.md` — branches, protected branches, submodules, commit format, the GitLab write policy this skill is named in.
 - `skills/unioss-implement/SKILL.md` — the coder; shares the submodule edit flow and the PHPUnit full-mode invocation shape.
