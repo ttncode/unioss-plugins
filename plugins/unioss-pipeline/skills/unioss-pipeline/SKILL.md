@@ -109,7 +109,7 @@ Print the **Output → Step 0** blocks — the table, the branch list, the confi
     - **fix** → invoke `unioss-pipeline:unioss-implement` to apply fixes + re-run filtered tests, then ask Decision prompt **(g)**; on re-review, go to step 9.
     - **accept** → (AdminPage) invoke `unioss-pipeline:unioss-implement` full mode: full suite with a fresh DB (`phpunit-config apply --import`) → `round-<current_round>/UT_#[IID]_[YYYYMMDD]_V1.txt`.
 11. **Scope** — dispatch the `unioss-pipeline:unioss-scope` agent with the `changes.md` path + round path. Writes/updates `scope.md` at the ticket root (a sibling of `round-<N>/`, not inside it — see REFERENCE → Artifact layout); returns its path. Runs right after GATE 3 accept — the diff is final, and the scope reflects the code change, not the verification outcome. It runs **before** the tester so the tester consumes its affected features/URLs as a coverage source.
-12. **Tester** — dispatch the `unioss-pipeline:unioss-tester` agent with the `changes.md` path + acceptance criteria + the ticket-root `scope.md` path. The tester derives its case set per `unioss-pipeline:unioss-test-evidence` (changes call sites × spec ACs × scope surfaces). Writes `test-results.md`; returns a `PASS`/`PARTIAL`/`FAIL` verdict plus the skipped-case list — record skips into the round's `open_issues`/`carry_over`. Never treat SKIPPED as a pass. If the tester returns a non-zero manual-hand-off count, tell the user their `## Manual Testing (run these yourself)` checklist awaits in `test-results.md`.
+12. **Tester** — dispatch the `unioss-pipeline:unioss-tester` agent with the `changes.md` path + acceptance criteria + the ticket-root `scope.md` path. The tester is **black-box**: it derives its case set per `unioss-pipeline:unioss-test-evidence` (changes surfaces × spec ACs × scope features, across FIELD/FLOW/CROSS layers plus the risk-gated exception taxonomy) and never reads source, test code, or the PHPUnit result — never pass it `UT_*.txt` or a suite count. Writes `test-results.md`; returns a `PASS`/`PARTIAL`/`FAIL` verdict, severity counts, and the skipped-case list — record skips into the round's `open_issues`/`carry_over`. Never treat SKIPPED as a pass. **A 🔴 blocker sends the round back to the coder** (step 8 with the tester's defect list) rather than to Finalize — data loss, a partial write on a failed path, a wrong money value, or an authorization bypass never ships. If the tester returns a non-zero manual-hand-off count, tell the user their `## Manual Testing (run these yourself)` checklist awaits in `test-results.md`.
 13. **Finalize** — for every repo the coder touched, commit on its feature branch using `#[IID] - [Message]`. Per REFERENCE-git: app branches (AdminPage/FrontEnd) are committed locally only (no push, no MR) and exclude the submodule gitlink; submodule branches are pushed. Never touch a protected branch. Print the **Output → Step 13** completion report — that contract is fixed, so emit it identically every run — then ask Decision prompt **(b)**.
 
 ### Flow diagram
@@ -140,6 +140,7 @@ digraph unioss_pipeline {
   "GATE 3\n(review)" -> "Full PHPUnit" [label="2: accept"];
   "Full PHPUnit" -> Scope;
   Scope -> Tester;
+  Tester -> Coder [label="🔴 blocker"];
   Tester -> Finalize;
   Finalize -> "Decision (b)";
   "Decision (b)" -> Ship [label="1: push + MR"];
@@ -246,7 +247,7 @@ Emit exactly these blocks, in this order, every run — as markdown, **never ins
 
 - Review — 🔴 0 · 🟡 2 · 🟢 4 (fixed then accepted)
 - PHPUnit — 42/42
-- Tester — PASS (skipped: 0, manual hand-off: 3)
+- Tester — PASS · 🔴 0 · 🟡 0 · 🟢 0 (skipped: 0, manual hand-off: 3)
 
 **Artifacts**
 
@@ -264,6 +265,7 @@ Emit exactly these blocks, in this order, every run — as markdown, **never ins
 - Every artifact is a backticked absolute path on its own bullet (REFERENCE → Artifact paths). List only files that exist.
 - FrontEnd has no unit tests — write `PHPUnit — skipped (FrontEnd has no unit tests)` rather than a fake `0/0`.
 - If UI verification was SKIPPED, add `- ⚠ UI verification: SKIPPED — no browser MCP configured` as the last bullet under **Results**.
+- The tester's severity counts ride on its Results bullet. A round with any 🔴 outstanding cannot close as `passed` — it is `failed`, and the blockers go into `open_issues`.
 - If the tester handed off manual cases, add `- ⚠ <n> manual test cases await you in test-results.md`.
 - If `open_issues` is non-empty, add an **Open issues** block after **Results**, one bullet each — the next round picks these up as `carry_over`.
 
