@@ -95,10 +95,11 @@ Print the **Output → Step 0** blocks — the table, the branch list, the confi
 ### Flow
 
 1. **Parse** the URL → IID + origin repo → prefix. Determine `current_round`. Create `.walkthrough/.pipeline/<PREFIX>-[IID]/` and `.walkthrough/<PREFIX>-[IID]/round-<current_round>/`. Pass that round path to every subagent.
-2. **Investigator** — dispatch the `unioss-pipeline:unioss-investigator` agent with the URL. Writes `investigation.md` only; returns a clarity verdict + open-question count.
+2. **Investigator** — dispatch the `unioss-pipeline:unioss-investigator` agent with the URL. Writes `investigation.md` only; returns a clarity verdict + open-question count. **Announce its path the moment it returns** (Output → After every stage) — GATE 0 can run for many turns, and the link must not wait until the outline is on screen.
 3. **GATE 0 — Clarify (conditional).** If verdict is `NEEDS_CLARIFICATION`: invoke the `unioss-pipeline:unioss-brainstorming` skill in THIS thread, work the numbered Open Questions with the user, then append a `## Clarifications` section to `investigation.md`. If `CLEAR`: skip.
+   - **Step 3a — Refresh the outline (only if GATE 0 clarified anything).** Every answer the user just gave is a decision the outline must now carry — edit the `## Spec Outline` section of `investigation.md` in place: fold each answer into the lines it changes, tag those lines `(from Q<n>)`, and delete the `(pending Q<n>)` marker it resolves. **No `(pending Q<n>)` may survive into Step 3c** — a surviving marker means the question is still open, so return to the clarification loop instead of printing an outline the user cannot approve. An outline that still shows the pre-clarification shape silently discards the conversation the user just paid for.
    - **Step 3b — Reporter.** Dispatch the `unioss-pipeline:unioss-reporter` agent with the `investigation.md` path. Writes the PM-facing `report.md` at the **ticket root** (`.walkthrough/<PREFIX>-[IID]/report.md`, a deliverable that spans rounds — overwritten, not under `round-<N>/`) from the now-clarified investigation. Always runs, whether or not GATE 0 clarified anything — the report must never be built on unanswered questions.
-   - **Step 3c — Spec outline confirm.** Print the `## Spec Outline` the investigator returned (goal, in/out of scope, requirement headlines, acceptance-criteria count), then ask Decision prompt **(c)**. Runs every round, whether or not GATE 0 clarified anything. This is the cheap approval of the spec's *shape* — the user confirms scope before a full `spec.md` exists, so a wrong direction costs an outline instead of a document.
+   - **Step 3c — Spec outline confirm.** Print the **Output → Step 3c** blocks — the source path, the clarified decisions, the outline in its fixed shape — then ask Decision prompt **(c)**. Runs every round, whether or not GATE 0 clarified anything. This is the cheap approval of the spec's *shape* — the user confirms scope before a full `spec.md` exists, so a wrong direction costs an outline instead of a document. Reshape a prose-heavy subagent return into the fixed template before printing; never forward a comma-run paragraph as an outline.
 4. **Spec** — dispatch the `unioss-pipeline:unioss-spec` agent with the investigation path. It expands the **approved** `## Spec Outline` into `spec.md` (what/why — scope, requirements, acceptance criteria; no code); returns path + one-line scope. Set `spec_version`.
 5. **GATE 1 — Spec approval.** Present the spec summary + path, then ask Decision prompt **(d)**. Never proceed without approval.
 6. **Planner** — dispatch the `unioss-pipeline:unioss-planner` agent with the approved `spec.md` path. Writes `implementation.v1.md` (exact per-file code); returns path, estimate points, and the file/migration counts the GATE 2 preview needs.
@@ -122,7 +123,8 @@ digraph unioss_pipeline {
   Parse -> Investigator;
   Investigator -> "GATE 0\n(clarify?)";
   "GATE 0\n(clarify?)" -> Brainstorm [label="NEEDS_CLARIFICATION"];
-  Brainstorm -> Reporter;
+  Brainstorm -> "3a\n(refresh outline)";
+  "3a\n(refresh outline)" -> Reporter;
   "GATE 0\n(clarify?)" -> Reporter [label="CLEAR"];
   Reporter -> "3c\n(spec outline)";
   "3c\n(spec outline)" -> Brainstorm [label="3: back"];
@@ -158,6 +160,46 @@ The instant a stage returns, print the absolute path to each file it wrote as a 
 ```markdown
 - 📄 `/abs/workspace/.walkthrough/AP-1583/round-1/investigation.md`
 ```
+
+### Step 3c — the spec outline (fixed template)
+
+The outline is what the user approves in place of a spec, so its **shape** is fixed — a wall of comma-separated prose is unapprovable even when every fact in it is right. Emit exactly these blocks as markdown (never fenced), then Decision prompt **(c)**:
+
+```markdown
+**Source** — 📄 `/abs/…/round-<N>/investigation.md` (option 2 edits its `## Spec Outline` in place)
+
+**Clarified** — <n> questions answered at GATE 0
+
+- Q1 <the question, one line> → <the user's decision>
+- Q2 …
+
+**Spec Outline — <PREFIX>#[IID]**
+
+**Goal** — one line.
+
+**In scope**
+
+- <one item per bullet>
+
+**Out of scope**
+
+- <one item per bullet, each with its reason or owning ticket>
+
+**Requirements**
+
+1. REQ-1 — <headline, no body>
+2. CON-1 — <headline, no body>
+
+**Acceptance criteria** — <exact n> criteria across <surface>, <surface>, <surface>.
+```
+
+Rules:
+
+- **One item per bullet.** A bullet is a file, feature, screen, or behaviour name — not a sentence, never a comma-run list of thirty things.
+- **Requirements are numbered, one line each, no bodies** — the user must be able to say "drop REQ-4". A count in a parenthetical (`9 REQs (…)`) is not an outline.
+- **Acceptance criteria take an exact count**, not a range. If it genuinely depends on an unanswered question, the outline is not ready — go back to clarification.
+- Lines the user's own answers produced keep their `(from Q<n>)` tag, so they can see their decision landed.
+- **Omit the `Clarified` block entirely when GATE 0 was skipped** — never print an empty one.
 
 ### Step 0 — the run opener (fixed template)
 
@@ -329,8 +371,8 @@ Which option?
 ```
 
 - `1` → dispatch `unioss-spec` (Flow step 4).
-- `2` → ask what to change, edit the `## Spec Outline` section of `investigation.md` in place, and re-present the outline + this prompt.
-- `3` → re-enter `unioss-pipeline:unioss-brainstorming` on the unresolved point, append to `## Clarifications`, refresh the outline, re-present.
+- `2` → ask what to change, edit the `## Spec Outline` section of `investigation.md` in place, and re-present the **Output → Step 3c** blocks + this prompt.
+- `3` → re-enter `unioss-pipeline:unioss-brainstorming` on the unresolved point, append to `## Clarifications`, refresh the outline per Step 3a (fold the new answers in, tag them `(from Q<n>)`, clear the resolved `(pending Q<n>)`), re-present.
 
 **(d) GATE 1 — spec approval** — at Flow step 5:
 

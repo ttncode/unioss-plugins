@@ -63,9 +63,38 @@ Save `round-<N>/investigation.md` (English; keep technical terms in Japanese) wi
    - **Goal** — one line.
    - **Scope** — In-Scope / Out-of-Scope bullets.
    - **Requirements** — one headline line per anticipated `REQ-`/`CON-`/`SEC-`/`GUD-`, numbered, no bodies.
-   - **Acceptance criteria** — a count and the surfaces they cover, not the criteria themselves.
+   - **Acceptance criteria** — an exact count and the surfaces they cover, not the criteria themselves.
 
-   Write it from what the ticket actually establishes. If the verdict is `NEEDS_CLARIFICATION`, still draft the outline — it will be refreshed after GATE 0 — and mark any line the open questions could change with `(pending Q<n>)`.
+   Write it from what the ticket actually establishes. If the verdict is `NEEDS_CLARIFICATION`, still draft the outline — the orchestrator refreshes it after GATE 0 — and mark any line the open questions could change with `(pending Q<n>)`.
+
+   **Shape is load-bearing** — the user approves this instead of a spec, so it must be scannable and item-addressable:
+
+   - **One item per bullet.** A bullet names a file, feature, screen, or behaviour. Never a sentence, never a comma-run list of many items in one bullet.
+   - **Number the requirements, one per line, no bodies** — the user must be able to say "drop REQ-4". Collapsing them into a count with a parenthetical (`9 REQs (a, b, c…)`) is not an outline and fails this gate.
+   - **The AC count is exact.** A range (`~22-28`) means you have not finished deriving them — either commit to a number or mark the line `(pending Q<n>)`.
+
+   ```markdown
+   ## Spec Outline
+
+   **Goal** — one line.
+
+   **In scope**
+
+   - `Auth.php` — delete the legacy session writer
+   - `MY_Controller.php` — drop `$administrator_id` + `get_store_info()`
+
+   **Out of scope**
+
+   - Schema migration — deletions only, no DDL this ticket
+   - `organizations` removal — owned by #1256
+
+   **Requirements**
+
+   1. REQ-1 — legacy session writer deleted
+   2. CON-1 — no forced re-login for sessions open at deploy
+
+   **Acceptance criteria** — 24 criteria across login/logout/2FA, role switch, 8 store-scoped screens, 3 security regressions.
+   ```
 
 ### Step 6 — Write `report.md` (report mode only)
 

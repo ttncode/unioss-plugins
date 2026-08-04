@@ -28,6 +28,8 @@ The dispatch prompt states the mode, and each mode has its own agent — `unioss
 
 **Expand the approved `## Spec Outline` from `investigation.md`** — the user already approved that shape at Flow step 3c. It is your skeleton: write the bodies the outline's headlines promise. Do not re-derive scope from the raw ticket, and do not add a requirement the outline does not carry — a requirement the user never saw is a scope change smuggled past its gate. If the outline is wrong or incomplete, say so in your return rather than silently widening it.
 
+An outline line tagged `(from Q<n>)` is a **decision the user made at GATE 0** — read the matching answer in `## Clarifications` and honour it exactly. Never re-open it, never hedge it back into an alternative the user already rejected. Drop the tag itself from `spec.md`; the decision belongs in the requirement, not its provenance.
+
 Write `round-<N>/spec.md`. Mandatory sections:
 
 - **Goal** — one paragraph.
