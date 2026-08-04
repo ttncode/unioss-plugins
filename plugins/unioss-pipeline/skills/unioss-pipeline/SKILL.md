@@ -179,6 +179,7 @@ It is already flush — never hand-draw, re-pad, reflow, rebuild, or summarize i
 **Branches**
 
 - AdminPage — `feature/v3/#1586`
+- FrontEnd — `feature/v3/AP#1586` (if touched)
 - common-models — `feature/v3/AP#1586` (if touched)
 - common-helper — `feature/v3/AP#1586` (if touched)
 ```
@@ -191,7 +192,12 @@ It is already flush — never hand-draw, re-pad, reflow, rebuild, or summarize i
 **Block 3 — the confirm line.** Verbatim, on its own line, nothing after it:
 
 ```
-Confirm to start the Investigate stage? (yes / no)
+Confirm to start the Investigate stage?
+
+1. Yes
+2. No
+
+Which option?
 ```
 
 Then **stop**. Run no stage until the user answers.
