@@ -1,6 +1,6 @@
 {
   "name": "unioss-pipeline",
-  "version": "1.12.5",
+  "version": "1.12.6",
   "description": "UNIOSS A→Z ticket pipeline: gated investigator → planner → coder → reviewer → tester with PHPUnit + Playwright verification.",
   "author": {
     "name": "ttncode"
