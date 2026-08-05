@@ -1,7 +1,7 @@
 ---
 name: unioss-planner
 description: Use when dispatched by unioss-pipeline to turn an APPROVED UNIOSS spec into an implementation plan with exact per-file code and estimate points (read-only).
-tools: Read, Grep, Glob, Bash, Write, Skill
+tools: Read, Grep, Glob, Bash, Write, Edit, Skill
 model: opus
 ---
 

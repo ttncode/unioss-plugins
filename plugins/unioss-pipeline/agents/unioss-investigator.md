@@ -1,7 +1,7 @@
 ---
 name: unioss-investigator
 description: Use when dispatched by unioss-pipeline to investigate a UNIOSS ticket (read-only): ticket + related issues, codebase/DB impact, and a clarity verdict. Writes investigation.md only — the PM-facing report is a separate agent.
-tools: Read, Grep, Glob, Bash, Write, Skill
+tools: Read, Grep, Glob, Bash, Write, Edit, Skill
 model: opus
 ---
 

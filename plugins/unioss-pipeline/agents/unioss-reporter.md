@@ -1,7 +1,7 @@
 ---
 name: unioss-reporter
 description: Use when dispatched by unioss-pipeline after GATE 0 to write the PM-facing Vietnamese report.md from an already-clarified investigation.md.
-tools: Read, Grep, Glob, Write, Skill
+tools: Read, Grep, Glob, Write, Edit, Skill
 model: haiku
 ---
 

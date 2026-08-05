@@ -1,7 +1,7 @@
 ---
 name: unioss-scope
 description: Use when dispatched by unioss-pipeline after GATE 3 accept (before the tester) to write/update the PM/QC-facing scope.md (read-only to source).
-tools: Read, Grep, Glob, Bash, Write, Skill
+tools: Read, Grep, Glob, Bash, Write, Edit, Skill
 model: sonnet
 ---
 
