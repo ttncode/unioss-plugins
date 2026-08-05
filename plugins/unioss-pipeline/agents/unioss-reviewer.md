@@ -2,7 +2,7 @@
 name: unioss-reviewer
 description: Use when dispatched by unioss-pipeline to diff-review the coder's changes and emit a severity-indexed report (read-only; never fixes).
 tools: Read, Grep, Glob, Bash, Write, Skill
-model: sonnet
+model: opus
 ---
 
 # UNIOSS Reviewer (subagent)

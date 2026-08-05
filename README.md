@@ -5,11 +5,18 @@
     A GitLab ticket in — an investigated, planned, coded, reviewed, tested, ship-ready change out.
   </p>
 
-[![version](https://img.shields.io/badge/version-1.11.3-blue)](./plugins/unioss-pipeline/.claude-plugin/plugin.json)
+[![version](https://img.shields.io/badge/version-1.12.5-blue)](./plugins/unioss-pipeline/.claude-plugin/plugin.json)
 [![Claude Code](https://img.shields.io/badge/Claude%20Code-plugin-d97757)](#)
 [![Antigravity](https://img.shields.io/badge/Antigravity-plugin-4285f4)](#)
 [![Codex](https://img.shields.io/badge/Codex-plugin-00a67e)](#)
 [![license](https://img.shields.io/badge/license-MIT-green)](./LICENSE)
+
+[![plugins](https://img.shields.io/badge/plugins-2-6f42c1)](./plugins)
+[![skills](https://img.shields.io/badge/skills-32-0969da)](./plugins/unioss-pipeline/skills)
+[![agents](https://img.shields.io/badge/agents-7-1f883d)](./plugins/unioss-pipeline/agents)
+[![commands](https://img.shields.io/badge/commands-14-bf8700)](./plugins/unioss-pipeline/commands)
+[![hooks](https://img.shields.io/badge/hooks-6-cf222e)](./plugins/unioss-pipeline/hooks)
+[![tests](https://img.shields.io/badge/tests-27-2da44e)](./plugins/unioss-pipeline/scripts)
 
 <sub>An AI Agent plugin by <strong>ttncode</strong>.</sub>
 
@@ -54,15 +61,16 @@
 │  ───────────────────────────────────────────────────────────────     │
 │  1   Investigate  subagent · opus    INVESTIGATION + REPORT          │
 │  ⛔  GATE 0       you                clarify (only if unclear)       │
-│  2   Spec         subagent · opus    SPEC.md                         │
+│  2   Spec         subagent · sonnet  SPEC.md                         │
 │  ⛔  GATE 1       you                approve spec / edit             │
 │  3   Plan         subagent · opus    IMPLEMENTATION_V1               │
 │  ⛔  GATE 2       you                approve plan / edit             │
-│  4   Code         main · sonnet      CHANGES.md + fast tests         │
+│  4   Code         main               CHANGES.md + fast tests         │
 │  5   Review       subagent · opus    REVIEW.md                       │
 │  ⛔  GATE 3       you                fix / accept                    │
-│  6   Verify       subagent · sonnet  TEST_RESULTS.md (DB+UI)         │
-│  7   Finalize     main               branch + commit (no push/MR)    │
+│  6   Scope        subagent · sonnet  SCOPE.md                        │
+│  7   Verify       subagent · sonnet  TEST_RESULTS.md (DB+UI)         │
+│  8   Finalize     main               branch + commit (no push/MR)    │
 │                                                                      │
 │  Gates stop for approval. Nothing runs until you confirm.            │
 ╰──────────────────────────────────────────────────────────────────────╯

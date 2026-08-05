@@ -425,7 +425,7 @@ Which option?
 **(f) GATE 3 — review** — at Flow step 10, after the findings:
 
 ```
-Review complete — 🔴 <n>  🟡 <n>  🟢 <n>. What would you like to do?
+Review complete — 🔴 <n> · 🟡 <n> · 🟢 <n>. What would you like to do?
 
 1. Fix the findings
 2. Accept as-is — run the full suite
@@ -437,6 +437,22 @@ Which option?
 - `1` → invoke `unioss-pipeline:unioss-implement` with the findings, then ask Decision prompt **(g)**.
 - `2` → record `gate_decisions.gate_3 = "accepted"`, run the full suite (AdminPage), continue to Flow step 11.
 - `3` → STOP. The code stays uncommitted on its feature branch.
+
+**Clean variant — 🔴 0 and 🟡 0.** 🟢 is *Good / Style* (`unioss-review` → severity table): it records what the coder got right and carries no action item. Offering "Fix the findings" first misreads the report, so print this instead:
+
+```
+Review clean — 🔴 0 · 🟡 0 · 🟢 <n> good changes. What would you like to do?
+
+1. Continue — run the full suite
+2. Stop here, keep artifacts
+
+Which option?
+```
+
+- `1` → same as option `2` above: record `gate_decisions.gate_3 = "accepted"`, run the full suite (AdminPage), continue to Flow step 11.
+- `2` → STOP. The code stays uncommitted on its feature branch.
+- Zero findings of any colour → identical menu with the lead line `Review clean — no findings.`
+- Choose the variant from the **counts**, never from the reviewer's prose. One 🔴 or one 🟡 → the standard prompt above, fix at option `1`.
 
 **(g) After a GATE 3 fix pass** — once the coder has applied fixes:
 

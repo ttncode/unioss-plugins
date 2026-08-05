@@ -64,7 +64,9 @@ Assign every finding to one of three severity levels:
 | ---- | ---------------- | ----------------------------------------------------------------------------- |
 | 🔴   | **Critical**     | Bug, data corruption risk, security vulnerability, or execution-stopping flaw |
 | 🟡   | **Violation**    | Breaks a rule; degrades maintainability or safety                             |
-| 🟢   | **Good / Style** | Noteworthy improvement or minor style note                                    |
+| 🟢   | **Good / Style** | Noteworthy improvement or minor style note — **no action required**           |
+
+**🟢 never carries an action item.** It records what the coder got right, so the gate treats a 🟢-only review as clean and offers no fix pass. If you want something changed, it is 🟡 — a request for work filed as 🟢 is silently dropped.
 
 ### Step 5 — Assign sequential indices
 
@@ -242,7 +244,7 @@ See REFERENCE → Shared stage rules → Standalone use (e.g. `/unioss-review Re
 Then close with a menu (REFERENCE → Ending a run) rather than leaving the findings on screen:
 
 ```
-Review complete — 🔴 <n>  🟡 <n>  🟢 <n>. What would you like to do?
+Review complete — 🔴 <n> · 🟡 <n> · 🟢 <n>. What would you like to do?
 
 1. Fix the findings
 2. Walk through a specific finding
@@ -251,7 +253,20 @@ Review complete — 🔴 <n>  🟡 <n>  🟢 <n>. What would you like to do?
 Which option?
 ```
 
-`1` → `unioss-pipeline:unioss-implement` (this skill never edits). With zero findings, offer *"Nothing to fix"* as the first option instead of a fix pass. Inside the pipeline, ask nothing — GATE 3 owns this decision.
+`1` → `unioss-pipeline:unioss-implement` (this skill never edits).
+
+**With 🔴 0 and 🟡 0, there is nothing to fix** — 🟢 is Good/Style. Close with the clean menu instead, and never lead with a fix pass:
+
+```
+Review clean — 🔴 0 · 🟡 0 · 🟢 <n> good changes. What would you like to do?
+
+1. Walk through the good changes
+2. Stop here
+
+Which option?
+```
+
+Zero findings of any colour → `Review clean — no findings.` with the same two options. Inside the pipeline, ask nothing — GATE 3 owns this decision.
 
 ## Related files
 

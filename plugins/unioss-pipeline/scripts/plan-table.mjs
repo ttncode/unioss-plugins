@@ -14,7 +14,7 @@ const STAGES = [
   ['3', 'Plan', 'subagent · opus', 'IMPLEMENTATION_V1'],
   ['⛔', 'GATE 2', 'you', 'approve plan / edit'],
   ['4', 'Code', 'main', 'CHANGES.md + fast tests'],
-  ['5', 'Review', 'subagent · sonnet', 'REVIEW.md'],
+  ['5', 'Review', 'subagent · opus', 'REVIEW.md'],
   ['⛔', 'GATE 3', 'you', 'fix / accept'],
   ['6', 'Scope', 'subagent · sonnet', 'SCOPE.md'],
   ['7', 'Verify', 'subagent · sonnet', 'TEST_RESULTS.md (DB+UI)'],
