@@ -231,7 +231,7 @@ It is already flush — never hand-draw, re-pad, reflow, rebuild, or summarize i
 - Keep `(if touched)` on the common repos: at Step 0 the plan does not exist yet, so whether common code is involved is genuinely unknown. Never promise a branch that may not be cut.
 - **task mode** has no IID — use `feature/v3/task-<slug>` and drop the common-repo lines unless the request clearly names common code.
 
-**Block 3 — the confirm line.** Verbatim, on its own line, nothing after it:
+**Block 3 — the confirm question.** Print **verbatim** — exact wording, exact option order, numbered options on their own lines. Never collapse it into a single-line `(yes / no)` prompt, and add no commentary after it:
 
 ```
 Confirm to start the Investigate stage?
