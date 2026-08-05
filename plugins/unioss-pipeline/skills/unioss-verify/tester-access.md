@@ -35,6 +35,20 @@ Files:
 
   Use whichever the user picks for every DB verification query this round.
 
+## FrontEnd Store Site (`SITE_ID`)
+
+FrontEnd pins the store site in a constant, not the URL — switching stores means changing that constant, in the **same environment folder** as `database.php` above.
+
+File: `FrontEnd/application/config/<virtualbox_direct_domain>/constants.php`
+
+```php
+defined('SITE_ID')             OR define('SITE_ID', 25);      // site-id for demo
+```
+
+- Default is store `25`. Change the number to reach another store's site, then reload.
+- You are read-only: **never edit it yourself.** Name the current value and the one you need, ask the user to switch it, and ask them to restore the original when the round closes.
+- Record the `SITE_ID` in each ECSite case's Precondition — a screen result is meaningless without the store it came from.
+
 ## Quick Access Pages
 
 ### AdminPage
