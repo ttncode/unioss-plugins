@@ -28,7 +28,7 @@ Prints the MR's state/branches/title, every non-system discussion thread (author
 ### 2 — Resolve identity
 
 - Repo → module key via REFERENCE → Repos (`AdminPage`→`admin-page`, `FrontEnd`→`front-end`, `common-helper`→`common-helper`, `common-models`→`common-models`). This decides whether Step 8 (PHPUnit) applies.
-- Ticket ID = the digits after `#` in `source_branch` (`feature/v3/#[IID]` or `feature/v3/[ORIGIN]#[IID]`). If `source_branch` doesn't match either shape, ask the user for the ID instead of guessing.
+- Ticket ID = the digits after `#` in `source_branch` (`feature/v3/#[IID]` or `feature/v3/[ORIGIN_REPO]#[IID]`). If `source_branch` doesn't match either shape, ask the user for the ID instead of guessing.
 
 ### 3 — Get on the branch
 

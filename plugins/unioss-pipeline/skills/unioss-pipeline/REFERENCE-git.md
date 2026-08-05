@@ -51,10 +51,10 @@ Resolve config before any git work: `eval "$(node "${CLAUDE_PLUGIN_ROOT}/scripts
 
 Edit flow (common code is edited ONLY in the canonical source, never inside the apps):
 
-1. In the canonical source: `git fetch origin && git checkout v3-master && git pull && git checkout -b feature/v3/[ORIGIN]#[IID]`.
+1. In the canonical source: `git fetch origin && git checkout v3-master && git pull && git checkout -b feature/v3/[ORIGIN_REPO]#[IID]`.
 2. Edit there; commit with the `#[IID] - …` message.
 3. **Push** the submodule feature branch (required so the apps can pull it).
-4. In each consuming app, cd into the consuming path (`application/models/common` or `application/helpers/common`) and `git fetch origin && git checkout feature/v3/[ORIGIN]#[IID] && git pull` — moves the pointer in the **working tree only**.
+4. In each consuming app, cd into the consuming path (`application/models/common` or `application/helpers/common`) and `git fetch origin && git checkout feature/v3/[ORIGIN_REPO]#[IID] && git pull` — moves the pointer in the **working tree only**.
 
 **Never commit or push the pointer bump** in AdminPage/FrontEnd: do not `git add` the submodule gitlink, do not commit it, do not push the app repo for the pointer change. The pushed submodule branch alone carries the common-code change; whoever merges wires the pointer. Only submodule feature branches are pushed; app branches are committed locally only and exclude the gitlink.
 

@@ -27,7 +27,7 @@ Follow `../unioss-pipeline/REFERENCE.md` → Shared stage rules, and `../unioss-
 Determine the origin repo from the ticket. Put each repo on its correct feature branch cut from `v3-master` (REFERENCE-git → Branches):
 
 ```bash
-git fetch origin && git checkout v3-master && git pull && git checkout -b <branch>   # origin repo → feature/v3/#[IID]; other repos → feature/v3/[ORIGIN]#[IID]
+git fetch origin && git checkout v3-master && git pull && git checkout -b <branch>   # origin repo → feature/v3/#[IID]; other repos → feature/v3/[ORIGIN_REPO]#[IID]
 ```
 
 - Never commit to or modify a protected branch. Verify the current branch is a `feature/v3/...` branch before committing.

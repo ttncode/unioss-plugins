@@ -220,16 +220,30 @@ It is already flush — never hand-draw, re-pad, reflow, rebuild, or summarize i
 ```markdown
 **Branches**
 
-- AdminPage — `feature/v3/#1586`
-- FrontEnd — `feature/v3/AP#1586` (if touched)
-- common-models — `feature/v3/AP#1586` (if touched)
-- common-helper — `feature/v3/AP#1586` (if touched)
+- <ORIGIN_REPO> — `feature/v3/#[IID]`
+- <THE OTHER APP> — `feature/v3/[ORIGIN_REPO]#[IID]` (if touched)
+- common-models — `feature/v3/[ORIGIN_REPO]#[IID]` (if touched)
+- common-helper — `feature/v3/[ORIGIN_REPO]#[IID]` (if touched)
 ```
 
-- Origin repo first, named as itself (`AdminPage` / `FrontEnd`), then the two common repos.
+Worked example — ticket `…/FrontEnd/-/work_items/345`, so origin = FrontEnd:
+
+```markdown
+**Branches**
+
+- FrontEnd — `feature/v3/#345`
+- AdminPage — `feature/v3/FrontEnd#345` (if touched)
+- common-models — `feature/v3/FrontEnd#345` (if touched)
+- common-helper — `feature/v3/FrontEnd#345` (if touched)
+```
+
+- **Always four bullets, in this order:** the origin repo, **the other app**, `common-models`, `common-helper`. Three bullets is a defect — the other app is exactly as unknown at Step 0 as the common repos are, so it gets `(if touched)`, never omission.
+- Name each repo as itself (`AdminPage` / `FrontEnd`), origin first with the bare `feature/v3/#[IID]`.
+- **Branch names follow REFERENCE-git → Naming.** Every non-origin repo is `feature/v3/[ORIGIN_REPO]#[IID]`, where `[ORIGIN_REPO]` is the **full repo name** — `feature/v3/FrontEnd#345`, never `feature/v3/FE#345`.
+- **The `AP`/`FE` prefix is for artifact folders only** (`.walkthrough/FE-345/`). It never appears in a branch name. Both tokens are derived at Parse from the same URL, so keep them apart.
 - Backtick every branch name. That is the only styling — no ANSI escapes; they render as literal garbage inside a fenced block and this plugin uses none anywhere.
-- Keep `(if touched)` on the common repos: at Step 0 the plan does not exist yet, so whether common code is involved is genuinely unknown. Never promise a branch that may not be cut.
-- **task mode** has no IID — use `feature/v3/task-<slug>` and drop the common-repo lines unless the request clearly names common code.
+- Keep `(if touched)` on all three non-origin repos: at Step 0 the plan does not exist yet, so what else gets changed is genuinely unknown. Never promise a branch that may not be cut.
+- **task mode** has no IID — use `feature/v3/task-<slug>` and drop the non-origin lines unless the request clearly names another repo.
 
 **Block 3 — the confirm question.** Print **verbatim** — exact wording, exact option order, numbered options on their own lines. Never collapse it into a single-line `(yes / no)` prompt, and add no commentary after it:
 
@@ -263,7 +277,7 @@ Emit as markdown, **not inside a code fence**, so every path and branch renders 
 - **⚙ migrate** `20260731120000_add_is_active_to_users_1583_01.php`
   - `users`: + `is_active` TINYINT(1) AFTER `status`
 
-**common-models** — `feature/v3/AP#1586` (submodule — pushed, unlike app branches)
+**common-models** — `feature/v3/AdminPage#1586` (submodule — pushed, unlike app branches)
 
 - **~ modify** `Shop_model.php` (methods: getActive)
 ```
@@ -289,7 +303,7 @@ Emit exactly these blocks, in this order, every run — as markdown, **never ins
 **Branches**
 
 - AdminPage — `feature/v3/#1586` · committed (local)
-- common-models — `feature/v3/AP#1586` · committed + pushed (submodule)
+- common-models — `feature/v3/AdminPage#1586` · committed + pushed (submodule)
 
 **Results**
 
